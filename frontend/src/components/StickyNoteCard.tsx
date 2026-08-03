@@ -16,15 +16,6 @@ const colorClassMap: Record<StickyColor, string> = {
   purple: 'bg-sticky-purple',
 };
 
-const reactionEmojis = [
-  { symbol: '❤️', label: 'Love' },
-  { symbol: '🙏', label: 'Thankful' },
-  { symbol: '🌟', label: 'Star' },
-  { symbol: '🎉', label: 'Celebrate' },
-  { symbol: '🔥', label: 'Fire' },
-  { symbol: '💡', label: 'Inspired' },
-];
-
 const getInitials = (name?: string): string => {
   if (!name) return 'GW';
   const parts = name.trim().split(' ');
@@ -51,42 +42,39 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
   const { setAuthModalOpen, triggerToast } = useWallStore();
 
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
-  const [userEmoji, setUserEmoji] = useState<string | null>(post.userEmoji || (post.hasLiked ? '❤️' : null));
-  const [reactions, setReactions] = useState<Record<string, number>>(post.reactions || {});
-  const [showPicker, setShowPicker] = useState(false);
+  const [hasLiked, setHasLiked] = useState(!!(post.hasLiked || post.userEmoji));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setLikesCount(post.likesCount || 0);
-    setReactions(post.reactions || {});
-    setUserEmoji(post.userEmoji || (post.hasLiked ? '❤️' : null));
-  }, [post.likesCount, post.reactions, post.userEmoji, post.hasLiked]);
+    setHasLiked(!!(post.hasLiked || post.userEmoji));
+  }, [post.likesCount, post.hasLiked, post.userEmoji]);
 
-  const handleToggleReaction = async (emojiSymbol: string = '❤️') => {
+  const handleToggleLike = async () => {
     if (!isAuthenticated) {
       setAuthModalOpen(true);
       return;
     }
-
     if (isSubmitting) return;
+
     setIsSubmitting(true);
-    setShowPicker(false);
 
-    const isSameEmoji = userEmoji === emojiSymbol;
-    const nextEmoji = isSameEmoji ? null : emojiSymbol;
-
-    // Optimistic Single-Vote UI update
-    setUserEmoji(nextEmoji);
+    // Optimistic update
+    const nextLiked = !hasLiked;
+    setHasLiked(nextLiked);
+    setLikesCount((prev) => (nextLiked ? prev + 1 : Math.max(0, prev - 1)));
 
     try {
-      const res = await api.post(`/posts/${post._id}/like`, { emoji: emojiSymbol });
+      const res = await api.post(`/posts/${post._id}/like`, { emoji: '❤️' });
       if (res.data?.data) {
         setLikesCount(res.data.data.likesCount);
-        setReactions(res.data.data.reactions || {});
-        setUserEmoji(res.data.data.userEmoji || null);
+        setHasLiked(!!res.data.data.userEmoji);
       }
     } catch {
-      triggerToast('Could not update reaction', 'error');
+      // Revert on failure
+      setHasLiked(!nextLiked);
+      setLikesCount((prev) => (nextLiked ? Math.max(0, prev - 1) : prev + 1));
+      triggerToast('Could not update like', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -94,7 +82,6 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
 
   const firstTagged = post.taggedUsers && post.taggedUsers.length > 0 ? post.taggedUsers[0] : null;
   const avatarInitials = firstTagged ? getInitials(firstTagged.fullName) : 'GW';
-  const activeReactionEntries = Object.entries(reactions).filter(([_e, count]) => count > 0);
 
   return (
     <div
@@ -146,63 +133,25 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         </div>
       )}
 
-      {/* Card Footer: Single-Vote Like Heart + Emoji Picker */}
-      <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5 relative">
-        <div className="flex items-center gap-2 relative">
-          {/* Main Like Heart Button */}
-          <button
-            onClick={() => handleToggleReaction(userEmoji || '❤️')}
-            onMouseEnter={() => setShowPicker(true)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer shadow-2xs ${
-              userEmoji
-                ? 'bg-white border-rose-300 text-rose-600 font-bold scale-105'
-                : 'bg-white/70 hover:bg-white border-black/10 text-[#424753] hover:text-rose-600'
-            }`}
-            title="Click to Like (Hover to choose emoji)"
-          >
-            <span className="text-sm">{userEmoji || '❤️'}</span>
-            <span className="text-xs font-bold">{likesCount}</span>
-          </button>
+      {/* Card Footer: Like Button */}
+      <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5">
+        <button
+          onClick={handleToggleLike}
+          disabled={isSubmitting}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer shadow-2xs select-none ${
+            hasLiked
+              ? 'bg-white border-rose-300 text-rose-600 font-bold scale-105'
+              : 'bg-white/70 hover:bg-white border-black/10 text-[#424753] hover:text-rose-600'
+          } disabled:opacity-70`}
+          title={hasLiked ? 'Unlike' : 'Like'}
+        >
+          <span className={`text-sm transition-transform ${hasLiked ? 'scale-110' : ''}`}>
+            {hasLiked ? '❤️' : '🤍'}
+          </span>
+          <span className="text-xs font-bold">{likesCount}</span>
+        </button>
 
-          {/* Quick Hover Emoji Picker for Single Reaction */}
-          {showPicker && (
-            <div
-              onMouseLeave={() => setShowPicker(false)}
-              className="absolute bottom-full left-0 mb-2 flex items-center gap-1 bg-slate-900/90 text-white p-1.5 rounded-full shadow-2xl backdrop-blur-md z-40 animate-fade-slide-up border border-slate-700"
-            >
-              {reactionEmojis.map((e) => (
-                <button
-                  key={e.symbol}
-                  onClick={() => handleToggleReaction(e.symbol)}
-                  className={`text-base hover:scale-130 transition-transform cursor-pointer px-1 ${
-                    userEmoji === e.symbol ? 'scale-125 font-bold' : 'opacity-80 hover:opacity-100'
-                  }`}
-                  title={e.label}
-                >
-                  {e.symbol}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Active Side-by-Side Emoji Summary Badges */}
-          <div className="flex items-center gap-1 overflow-x-auto">
-            {activeReactionEntries.map(([emoji, count]) => (
-              <span
-                key={emoji}
-                className={`text-[10px] px-1.5 py-0.5 rounded-full border font-semibold ${
-                  userEmoji === emoji
-                    ? 'bg-rose-100 border-rose-300 text-rose-700 font-bold'
-                    : 'bg-white/60 border-black/5 text-slate-700'
-                }`}
-              >
-                {emoji} {count}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <span className="text-[10px] font-bold text-[#424753] opacity-60 ml-auto">#gratitude</span>
+        <span className="text-[10px] font-bold text-[#424753] opacity-60">#gratitude</span>
       </div>
     </div>
   );
