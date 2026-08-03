@@ -1,9 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Bell, User, LogOut, ShieldCheck, Tag } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
 import { StickyColor } from '../types';
 import { api } from '../services/api';
+
+const getRelativeTime = (dateStr: string) => {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+};
 
 export const Header: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -26,6 +36,20 @@ export const Header: React.FC = () => {
   const [teams, setTeams] = useState<any[]>([]);
   const [selectedTeam, setSelectedTeam] = useState('all');
   const [isTaggedMeFilter, setIsTaggedMeFilter] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  // Close notification dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setIsNotifOpen(false);
+      }
+    };
+    if (isNotifOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isNotifOpen]);
 
   useEffect(() => {
     fetchTeams();
@@ -206,49 +230,90 @@ export const Header: React.FC = () => {
               )}
 
               {/* Notification Bell */}
-              <div className="relative">
+              <div className="relative" ref={notifRef}>
                 <button
                   onClick={() => {
-                    setIsNotifOpen(!isNotifOpen);
-                    if (!isNotifOpen && unreadCount > 0) {
+                    const opening = !isNotifOpen;
+                    setIsNotifOpen(opening);
+                    if (opening && unreadCount > 0) {
                       handleMarkNotifsRead();
                     }
                   }}
-                  className="relative p-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs"
+                  className="relative p-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs transition-colors"
                   title="Notifications"
                 >
-                  <Bell className="w-3.5 h-3.5" />
+                  <Bell className={`w-3.5 h-3.5 ${unreadCount > 0 ? 'text-[#0058bd]' : ''}`} />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
-                      {unreadCount}
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white animate-pulse">
+                      {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
                 </button>
 
                 {/* Notifications Dropdown */}
                 {isNotifOpen && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 animate-fade-slide-up">
-                    <div className="px-4 pb-2 border-b border-slate-100 flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-800">Notifications</span>
-                      <button
-                        onClick={handleMarkNotifsRead}
-                        className="text-[10px] text-[#0058bd] font-semibold hover:underline"
-                      >
-                        Mark read
-                      </button>
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 animate-fade-slide-up overflow-hidden">
+                    {/* Header */}
+                    <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bell className="w-3.5 h-3.5 text-[#0058bd]" />
+                        <span className="font-bold text-xs text-slate-800">Notifications</span>
+                        {unreadCount > 0 && (
+                          <span className="text-[9px] font-bold bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full">
+                            {unreadCount} new
+                          </span>
+                        )}
+                      </div>
+                      {notifications.length > 0 && (
+                        <button
+                          onClick={handleMarkNotifsRead}
+                          className="text-[10px] text-[#0058bd] font-semibold hover:underline cursor-pointer"
+                        >
+                          Mark all read
+                        </button>
+                      )}
                     </div>
-                    <div className="max-h-56 overflow-y-auto divide-y divide-slate-100">
-                      {notifications.length === 0 ? (
-                        <p className="p-3 text-center text-xs text-slate-400">No notifications</p>
+
+                    {/* Notification Items */}
+                    <div className="max-h-72 overflow-y-auto divide-y divide-slate-50">
+                      {notifications.filter((n) => n.type !== 'NEW_POST').length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-8 gap-2 text-slate-400">
+                          <Bell className="w-6 h-6 opacity-30" />
+                          <p className="text-xs font-medium">No notifications yet</p>
+                          <p className="text-[10px] text-slate-300">You'll see tags and reactions here</p>
+                        </div>
                       ) : (
-                        notifications.map((n) => (
-                          <div key={n.id || (n as any)._id} className="p-2.5 hover:bg-slate-50 text-xs">
-                            <p className="font-semibold text-slate-800">{n.message}</p>
-                            <span className="text-[9px] text-slate-400 mt-0.5 block">
-                              {new Date(n.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                        ))
+                        notifications
+                          .filter((n) => n.type !== 'NEW_POST')
+                          .map((n) => (
+                            <div
+                              key={n.id || (n as any)._id}
+                              className={`flex items-start gap-3 p-3 hover:bg-slate-50 transition-colors ${!n.isRead ? 'bg-blue-50/60' : ''}`}
+                            >
+                              {/* Type Icon */}
+                              <div className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-sm mt-0.5 ${
+                                n.type === 'TAGGED' ? 'bg-purple-100' :
+                                n.type === 'LIKED' ? 'bg-rose-100' : 'bg-blue-100'
+                              }`}>
+                                {n.type === 'TAGGED' ? '🏷' : n.type === 'LIKED' ? '❤️' : '📢'}
+                              </div>
+
+                              {/* Content */}
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-xs leading-snug ${!n.isRead ? 'font-semibold text-slate-800' : 'font-medium text-slate-600'}`}>
+                                  {n.message}
+                                </p>
+                                <span className="text-[9px] text-slate-400 mt-0.5 block">
+                                  {getRelativeTime(n.createdAt || new Date().toISOString())}
+                                </span>
+                              </div>
+
+                              {/* Unread dot */}
+                              {!n.isRead && (
+                                <div className="w-2 h-2 rounded-full bg-[#0058bd] shrink-0 mt-1.5" />
+                              )}
+                            </div>
+                          ))
                       )}
                     </div>
                   </div>

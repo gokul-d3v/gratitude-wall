@@ -14,6 +14,24 @@ interface AuthState {
   checkAuth: () => Promise<void>;
 }
 
+const fetchAndSetNotifications = async () => {
+  try {
+    const res = await api.get('/notifications');
+    const notifs = res.data.data || [];
+    useWallStore.getState().setNotifications(notifs.map((n: any) => ({
+      id: n._id,
+      type: n.type,
+      senderName: n.senderName,
+      message: n.message,
+      postId: n.postId,
+      isRead: n.isRead,
+      createdAt: n.createdAt,
+    })));
+  } catch {
+    // Silence — user may not be authenticated yet
+  }
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
@@ -26,6 +44,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     updateSocketAuth(accessToken);
     set({ user, isAuthenticated: true });
     useWallStore.getState().fetchPosts();
+    fetchAndSetNotifications();
   },
 
   register: async (userData) => {
@@ -35,6 +54,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     updateSocketAuth(accessToken);
     set({ user, isAuthenticated: true });
     useWallStore.getState().fetchPosts();
+    fetchAndSetNotifications();
   },
 
   logout: async () => {
@@ -47,6 +67,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     updateSocketAuth(null);
     set({ user: null, isAuthenticated: false });
     useWallStore.getState().fetchPosts();
+    useWallStore.getState().setNotifications([]);
   },
 
   checkAuth: async () => {
@@ -55,6 +76,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const userRes = await api.get('/auth/me');
       set({ user: userRes.data.data, isAuthenticated: true, isLoading: false });
       useWallStore.getState().fetchPosts();
+      fetchAndSetNotifications();
     } catch {
       try {
         const refreshRes = await api.post('/auth/refresh');
@@ -66,6 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         const userRes = await api.get('/auth/me');
         set({ user: userRes.data.data, isAuthenticated: true, isLoading: false });
         useWallStore.getState().fetchPosts();
+        fetchAndSetNotifications();
       } catch {
         setAccessToken(null, null);
         updateSocketAuth(null);
@@ -74,3 +97,4 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
+
