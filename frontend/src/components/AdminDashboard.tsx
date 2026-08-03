@@ -16,6 +16,18 @@ export const AdminDashboard: React.FC = () => {
   const { setAdminViewOpen, triggerToast } = useWallStore();
   const { user, logout } = useAuthStore();
 
+  const handleAdminLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Silence
+    }
+    setAdminViewOpen(false);
+    triggerToast('Logged out of Admin Console', 'info');
+    window.history.pushState({}, '', '/admin-login');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  };
+
   const [activeNav, setActiveNav] = useState<'dashboard' | 'users' | 'posts' | 'analytics'>('dashboard');
 
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -238,13 +250,20 @@ export const AdminDashboard: React.FC = () => {
           </button>
         </nav>
 
-        <div className="mt-auto border-t border-slate-200 pt-4 px-3">
+        <div className="mt-auto border-t border-slate-200/80 pt-4 px-3 space-y-1">
           <button
             onClick={() => setAdminViewOpen(false)}
-            className="w-full flex items-center gap-3 text-slate-700 px-4 py-3 rounded-full hover:bg-slate-100 transition-all cursor-pointer text-xs font-bold"
+            className="w-full flex items-center gap-3 text-slate-700 px-4 py-2.5 rounded-full hover:bg-slate-100 transition-all cursor-pointer text-xs font-bold"
           >
             <Home className="w-4 h-4 text-[#0058bd]" />
-            <span>View Wall</span>
+            <span>Return to Wall</span>
+          </button>
+          <button
+            onClick={handleAdminLogout}
+            className="w-full flex items-center gap-3 text-rose-600 px-4 py-2.5 rounded-full hover:bg-rose-50 transition-all cursor-pointer text-xs font-bold"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Logout Admin</span>
           </button>
         </div>
       </aside>
@@ -252,9 +271,9 @@ export const AdminDashboard: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col pl-[250px] min-w-0 overflow-y-auto">
         {/* Header Bar matching BROTIFY header */}
-        <header className="sticky top-0 right-0 bg-white/80 backdrop-blur-md flex justify-between items-center h-16 px-8 w-full z-40 border-b border-slate-200 shrink-0">
+        <header className="sticky top-0 right-0 bg-white/90 backdrop-blur-md flex justify-between items-center h-16 px-8 w-full z-40 border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold text-[#191c1d] capitalize">
+            <h2 className="text-xl font-bold font-sans text-[#191c1d] capitalize">
               {activeNav === 'dashboard'
                 ? 'Dashboard Overview'
                 : activeNav === 'users'
@@ -265,7 +284,15 @@ export const AdminDashboard: React.FC = () => {
             </h2>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setAdminViewOpen(false)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#0058bd]/10 hover:bg-[#0058bd]/20 text-[#0058bd] text-xs font-bold transition-all cursor-pointer"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Wall View</span>
+            </button>
+
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs">
               <div className="w-6 h-6 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-[10px]">
                 {user?.fullName?.[0]?.toUpperCase() || 'A'}
@@ -275,11 +302,12 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <button
-              onClick={() => logout()}
-              className="p-2 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-              title="Logout"
+              onClick={handleAdminLogout}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+              title="Logout from Admin Console"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Logout</span>
             </button>
           </div>
         </header>
@@ -294,37 +322,37 @@ export const AdminDashboard: React.FC = () => {
           ) : activeNav === 'dashboard' ? (
             /* DASHBOARD TAB */
             <div className="space-y-8 animate-fade-slide-up">
-              {/* Metrics Grid */}
+              {/* Metrics Grid matching Sticky Colors */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div className="bg-sticky-yellow p-6 rounded-2xl border border-black/10 shadow-xs flex flex-col justify-between">
                   <span className="text-xs font-bold text-[#424753] uppercase tracking-wider">Total Members</span>
                   <div className="mt-3 flex items-baseline justify-between">
                     <span className="text-3xl font-extrabold text-[#191c1d]">{stats?.totalUsers || users.length}</span>
-                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Active</span>
+                    <span className="text-[10px] font-bold bg-white/80 text-emerald-800 px-2 py-0.5 rounded-full border border-black/5">Active</span>
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div className="bg-sticky-blue p-6 rounded-2xl border border-black/10 shadow-xs flex flex-col justify-between">
                   <span className="text-xs font-bold text-[#424753] uppercase tracking-wider">Gratitude Shared</span>
                   <div className="mt-3 flex items-baseline justify-between">
                     <span className="text-3xl font-extrabold text-[#191c1d]">{stats?.totalPosts || posts.length}</span>
-                    <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Notes</span>
+                    <span className="text-[10px] font-bold bg-white/80 text-[#0058bd] px-2 py-0.5 rounded-full border border-black/5">Notes</span>
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div className="bg-sticky-pink p-6 rounded-2xl border border-black/10 shadow-xs flex flex-col justify-between">
                   <span className="text-xs font-bold text-[#424753] uppercase tracking-wider">Total Reactions</span>
                   <div className="mt-3 flex items-baseline justify-between">
                     <span className="text-3xl font-extrabold text-[#191c1d]">{stats?.totalLikes || 0}</span>
-                    <span className="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">Hearts</span>
+                    <span className="text-[10px] font-bold bg-white/80 text-rose-700 px-2 py-0.5 rounded-full border border-black/5">Hearts</span>
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div className="bg-sticky-purple p-6 rounded-2xl border border-black/10 shadow-xs flex flex-col justify-between">
                   <span className="text-xs font-bold text-[#424753] uppercase tracking-wider">Quarantined</span>
                   <div className="mt-3 flex items-baseline justify-between">
-                    <span className="text-3xl font-extrabold text-amber-600">{stats?.quarantinedPosts || 0}</span>
-                    <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">Flagged</span>
+                    <span className="text-3xl font-extrabold text-amber-700">{stats?.quarantinedPosts || 0}</span>
+                    <span className="text-[10px] font-bold bg-white/80 text-amber-800 px-2 py-0.5 rounded-full border border-black/5">Flagged</span>
                   </div>
                 </div>
               </div>
