@@ -43,7 +43,7 @@ export const Header: React.FC = () => {
     <header className="animate-fade-slide-up flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
       <div>
         <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-[#191c1d]">
-          Gratitude Wall
+          BROTIFY
         </h1>
         <p className="font-display text-base sm:text-lg text-[#424753] mt-1">
           A collection of community moments to be thankful for.

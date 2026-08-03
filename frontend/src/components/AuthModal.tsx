@@ -96,7 +96,7 @@ export const AuthModal: React.FC = () => {
             <h2 className="text-xl font-bold text-slate-900">
               {isRegisterMode ? 'User Registration' : 'Employee Login'}
             </h2>
-            <p className="text-xs text-slate-500">Access the Virtual Gratitude Wall</p>
+            <p className="text-xs text-slate-500">Access BROTIFY Gratitude Wall</p>
           </div>
         </div>
 
