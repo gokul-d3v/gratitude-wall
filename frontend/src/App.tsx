@@ -211,10 +211,11 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* User Auth & Create / Edit Note Modals */}
+      {/* User Auth, Announcement Toast & Modals */}
       {(isCreateModalOpen || Boolean(editingPost)) && <CreateNoteModal />}
       <AuthModal />
       <NotificationModal />
+      <NotificationToast />
     </div>
   );
 };
