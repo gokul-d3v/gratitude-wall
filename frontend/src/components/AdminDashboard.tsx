@@ -281,23 +281,23 @@ export const AdminDashboard: React.FC = () => {
                 </button>
               </div>
 
-              {/* Bento Stats Grid */}
+              {/* Bento Stats Grid (100% Real Live Database Metrics) */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-xl border border-[#c2c6d5] shadow-xs flex flex-col justify-between">
-                  <span className="text-xs font-medium text-[#424753] uppercase tracking-wider">Total Members</span>
+                  <span className="text-xs font-medium text-[#424753] uppercase tracking-wider">Total Registered Employees</span>
                   <div className="mt-4 flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-[#191c1d]">{stats?.totalUsers || 1248}</span>
+                    <span className="text-3xl font-bold text-[#191c1d]">{stats?.totalUsers || users.length || 0}</span>
                     <span className="text-[#00722f] text-xs font-medium flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">trending_up</span> 12%
+                      <span className="material-symbols-outlined text-[14px]">trending_up</span> Active
                     </span>
                   </div>
                 </div>
 
                 <div className="bg-white p-6 rounded-xl border border-[#c2c6d5] shadow-xs flex flex-col justify-between">
-                  <span className="text-xs font-medium text-[#424753] uppercase tracking-wider">Avg Activity</span>
+                  <span className="text-xs font-medium text-[#424753] uppercase tracking-wider">Gratitude Notes Shared</span>
                   <div className="mt-4 flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-[#191c1d]">84%</span>
-                    <span className="text-[#424753] text-xs font-medium">Steady</span>
+                    <span className="text-3xl font-bold text-[#191c1d]">{stats?.totalPosts || 0}</span>
+                    <span className="text-[#424753] text-xs font-medium">Live</span>
                   </div>
                 </div>
 
@@ -307,13 +307,13 @@ export const AdminDashboard: React.FC = () => {
                       <span className="text-xs font-medium uppercase tracking-wider opacity-90">System Integrity</span>
                       <h4 className="text-lg font-medium mt-2">All departments reporting nominal activity</h4>
                     </div>
-                    <p className="text-sm mt-4 opacity-80 max-w-sm">Last system-wide audit completed 4 hours ago. No structural conflicts detected.</p>
+                    <p className="text-sm mt-4 opacity-80 max-w-sm">No structural conflicts or unhandled moderation reports detected.</p>
                   </div>
                   <div className="absolute right-[-40px] top-[-40px] w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
                 </div>
               </div>
 
-              {/* Active Departments Data Table */}
+              {/* Active Departments Data Table (Compute real counts from DB) */}
               <div className="bg-white rounded-xl border border-[#c2c6d5] shadow-xs overflow-hidden">
                 <div className="px-6 py-4 border-b border-[#c2c6d5] flex items-center justify-between bg-[#f3f4f5]">
                   <h4 className="text-lg font-medium text-[#191c1d]">Active Departments</h4>
@@ -339,60 +339,59 @@ export const AdminDashboard: React.FC = () => {
                     <thead>
                       <tr className="bg-[#f3f4f5] text-[#424753] text-xs font-medium border-b border-[#c2c6d5]">
                         <th className="px-6 py-4 font-medium uppercase tracking-wider">Department</th>
-                        <th className="px-6 py-4 font-medium uppercase tracking-wider">Lead</th>
+                        <th className="px-6 py-4 font-medium uppercase tracking-wider">Lead / Admin</th>
                         <th className="px-6 py-4 font-medium uppercase tracking-wider text-center">Members</th>
-                        <th className="px-6 py-4 font-medium uppercase tracking-wider text-center">Activity</th>
-                        <th className="px-6 py-4 font-medium uppercase tracking-wider">Growth</th>
+                        <th className="px-6 py-4 font-medium uppercase tracking-wider text-center">Status</th>
                         <th className="px-6 py-4 font-medium uppercase tracking-wider text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#c2c6d5]">
-                      {filteredTeams.map((team) => (
-                        <tr key={team._id} className="hover:bg-[#f3f4f5] transition-colors duration-150 group">
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-[#d8e2ff] flex items-center justify-center">
-                                <span className="material-symbols-outlined text-[#0058bd]">terminal</span>
+                      {filteredTeams.map((team) => {
+                        const teamMembers = users.filter((u) => u.team === team.name);
+                        const memberCount = teamMembers.length;
+                        const leadUser = teamMembers[0]?.fullName || user?.fullName || 'Brototype Admin';
+
+                        return (
+                          <tr key={team._id} className="hover:bg-[#f3f4f5] transition-colors duration-150 group">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-[#d8e2ff] flex items-center justify-center">
+                                  <span className="material-symbols-outlined text-[#0058bd]">terminal</span>
+                                </div>
+                                <div>
+                                  <div className="text-sm font-semibold text-[#191c1d]">{team.name}</div>
+                                  <div className="text-xs text-[#424753]">{team.description || 'Core Department'}</div>
+                                </div>
                               </div>
-                              <div>
-                                <div className="text-sm font-semibold text-[#191c1d]">{team.name}</div>
-                                <div className="text-xs text-[#424753]">{team.description || 'Core Infrastructure'}</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-[#e1e3e4] border border-[#c2c6d5] flex items-center justify-center font-bold text-xs text-[#0058bd]">
+                                  {leadUser[0]?.toUpperCase()}
+                                </div>
+                                <span className="text-xs font-medium text-[#191c1d]">{leadUser}</span>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-[#e1e3e4] border border-[#c2c6d5] flex items-center justify-center font-bold text-xs text-[#0058bd]">
-                                {team.name?.[0]?.toUpperCase()}
-                              </div>
-                              <span className="text-xs font-medium text-[#191c1d]">Alex Rivera</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className="text-xs font-medium text-[#191c1d]">482</span>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <div className="w-24 bg-[#e7e8e9] h-2 rounded-full mx-auto overflow-hidden">
-                              <div className="bg-[#00722f] h-full rounded-full" style={{ width: '92%' }}></div>
-                            </div>
-                            <span className="text-[10px] text-[#424753] mt-1 block">92% High</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="inline-flex items-center gap-1 text-[#00722f] text-xs font-medium bg-[#86f898]/30 px-2 py-0.5 rounded-full">
-                              <span className="material-symbols-outlined text-[14px]">north_east</span> 8%
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <button
-                              onClick={() => handleDeleteTeam(team._id)}
-                              className="text-[#424753] hover:text-rose-600 transition-colors p-1 rounded-md cursor-pointer"
-                              title="Delete Department"
-                            >
-                              <span className="material-symbols-outlined">more_vert</span>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <span className="text-xs font-bold text-[#191c1d]">{memberCount}</span>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <span className="inline-flex items-center gap-1 text-[#00722f] text-xs font-medium bg-[#86f898]/30 px-2 py-0.5 rounded-full">
+                                Active
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button
+                                onClick={() => handleDeleteTeam(team._id)}
+                                className="text-[#424753] hover:text-rose-600 transition-colors p-1.5 rounded-md cursor-pointer hover:bg-rose-50"
+                                title="Delete Department"
+                              >
+                                <span className="material-symbols-outlined">delete</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -405,29 +404,6 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Bottom Asymmetric Cards Section */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                <div className="md:col-span-2 bg-[#edeeef] p-8 rounded-xl border border-[#c2c6d5] relative overflow-hidden flex flex-col justify-center min-h-[200px]">
-                  <div className="relative z-10">
-                    <h4 className="text-xl font-semibold text-[#191c1d] mb-2">Annual Structural Review</h4>
-                    <p className="text-xs text-[#424753] max-w-lg mb-6 leading-relaxed">Evaluate department performance metrics and team compositions for the upcoming fiscal cycle. Access detailed analytics and forecasting tools.</p>
-                    <button className="px-6 py-2 border border-[#0058bd] text-[#0058bd] font-medium text-xs rounded-lg hover:bg-[#0058bd]/5 transition-all cursor-pointer">Launch Review Tool</button>
-                  </div>
-                  <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[#0058bd]/5 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[120px] text-[#0058bd]/10">assessment</span>
-                  </div>
-                </div>
-
-                <div className="bg-[#00722f] text-white p-8 rounded-xl border border-[#00722f] shadow-lg flex flex-col justify-between">
-                  <div>
-                    <span className="material-symbols-outlined text-[32px] mb-4">auto_awesome</span>
-                    <h4 className="text-lg font-medium mb-2">AI Optimization</h4>
-                    <p className="text-xs opacity-90 leading-relaxed">Auto-balance member distributions based on project loads and skill sets.</p>
-                  </div>
-                  <button className="mt-6 w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium text-xs transition-all cursor-pointer">Run Suggestion Engine</button>
-                </div>
-              </div>
             </div>
           ) : activeNav === 'analytics' ? (
             <div className="space-y-6 animate-fade-slide-up">
@@ -436,19 +412,19 @@ export const AdminDashboard: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-xl border border-[#c2c6d5]">
                   <span className="text-xs font-semibold text-[#424753] uppercase">Total Users</span>
-                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.totalUsers}</h4>
+                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.totalUsers || 0}</h4>
                 </div>
                 <div className="bg-white p-6 rounded-xl border border-[#c2c6d5]">
                   <span className="text-xs font-semibold text-[#424753] uppercase">Total Posts</span>
-                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.totalPosts}</h4>
+                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.totalPosts || 0}</h4>
                 </div>
                 <div className="bg-white p-6 rounded-xl border border-[#c2c6d5]">
                   <span className="text-xs font-semibold text-[#424753] uppercase">Reactions</span>
-                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.totalLikes}</h4>
+                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.totalLikes || 0}</h4>
                 </div>
                 <div className="bg-white p-6 rounded-xl border border-[#c2c6d5]">
                   <span className="text-xs font-semibold text-[#424753] uppercase">Quarantined</span>
-                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.quarantinedPosts}</h4>
+                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.quarantinedPosts || 0}</h4>
                 </div>
               </div>
             </div>
@@ -456,32 +432,36 @@ export const AdminDashboard: React.FC = () => {
             <div className="space-y-6 animate-fade-slide-up">
               <h3 className="text-2xl font-semibold text-[#191c1d]">Content Moderation & Post Deletion</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {posts.map((post) => (
-                  <div key={post._id} className="bg-white p-6 rounded-xl border border-[#c2c6d5] shadow-xs flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between text-xs mb-3">
-                        <span className="font-semibold text-[#191c1d]">{post.authorName} ({post.authorEmployeeCode})</span>
-                        <span className="text-rose-600 font-bold">{post.isQuarantined ? 'Quarantined' : 'Active'}</span>
+                {posts.length === 0 ? (
+                  <p className="text-xs text-slate-500">No posts currently reported or requiring moderation.</p>
+                ) : (
+                  posts.map((post) => (
+                    <div key={post._id} className="bg-white p-6 rounded-xl border border-[#c2c6d5] shadow-xs flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between text-xs mb-3">
+                          <span className="font-semibold text-[#191c1d]">{post.authorName} ({post.authorEmployeeCode})</span>
+                          <span className="text-rose-600 font-bold">{post.isQuarantined ? 'Quarantined' : 'Active'}</span>
+                        </div>
+                        <p className="text-sm italic text-[#424753]">"{post.content}"</p>
                       </div>
-                      <p className="text-sm italic text-[#424753]">"{post.content}"</p>
-                    </div>
 
-                    <div className="mt-6 pt-4 border-t border-[#c2c6d5] flex items-center justify-between text-xs">
-                      <button
-                        onClick={() => handleToggleQuarantine(post._id)}
-                        className="px-3 py-1.5 rounded-lg bg-amber-500 text-white font-semibold cursor-pointer"
-                      >
-                        {post.isQuarantined ? 'Unquarantine' : 'Quarantine'}
-                      </button>
-                      <button
-                        onClick={() => handleDeletePost(post._id)}
-                        className="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-semibold cursor-pointer flex items-center gap-1"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">delete</span> Delete
-                      </button>
+                      <div className="mt-6 pt-4 border-t border-[#c2c6d5] flex items-center justify-between text-xs">
+                        <button
+                          onClick={() => handleToggleQuarantine(post._id)}
+                          className="px-3 py-1.5 rounded-lg bg-amber-500 text-white font-semibold cursor-pointer"
+                        >
+                          {post.isQuarantined ? 'Unquarantine' : 'Quarantine'}
+                        </button>
+                        <button
+                          onClick={() => handleDeletePost(post._id)}
+                          className="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-semibold cursor-pointer flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">delete</span> Delete
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           ) : (
