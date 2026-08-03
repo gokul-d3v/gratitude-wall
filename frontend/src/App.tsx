@@ -70,16 +70,6 @@ export const App: React.FC = () => {
     const handleNewPost = (post: any) => {
       console.log('⚡ [Realtime Socket] new_post received:', post);
       useWallStore.getState().addPost(post);
-      
-      // Show notification to all users when a new post is created
-      useWallStore.getState().addNotification({
-        id: Date.now().toString(),
-        type: 'NEW_POST',
-        senderName: 'Gratitude Wall',
-        message: 'Someone shared a new gratitude!',
-        postId: post._id,
-        createdAt: new Date().toISOString(),
-      });
     };
 
     const handleLikeUpdate = ({ postId, likesCount }: { postId: string; likesCount: number }) => {

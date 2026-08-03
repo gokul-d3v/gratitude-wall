@@ -57,7 +57,7 @@ export const NotificationModal: React.FC = () => {
 
   if (!isNotifModalOpen) return null;
 
-  const filteredNotifications = notifications.filter((n) => n.type !== 'NEW_POST');
+  const filteredNotifications = notifications;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">

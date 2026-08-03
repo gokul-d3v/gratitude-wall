@@ -5,7 +5,14 @@ import { Reaction } from '../models/Reaction';
 import { User } from '../models/User';
 import { Notification } from '../models/Notification';
 import { cleanInput } from '../utils/sanitizer';
-import { broadcastNewPost, sendNotificationToUser, getIO, broadcastPostUpdate, broadcastPostDelete } from '../config/socket';
+import {
+  broadcastNewPost,
+  sendNotificationToUser,
+  getIO,
+  broadcastPostUpdate,
+  broadcastPostDelete,
+  broadcastNotificationToLoggedUsers,
+} from '../config/socket';
 
 export interface CreatePostDTO {
   content: string;
@@ -52,25 +59,48 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
   // 1. Real-time post broadcast to all clients on global wall
   broadcastNewPost(populatedPost);
 
-  // 2. Send targeted notification ONLY to tagged users
+  // 2. Broadcast announcement notification to ALL users
+  try {
+    const postAnnouncementNotif = await Notification.create({
+      recipientId: null,
+      senderId: authorUser._id,
+      senderName: authorUser.fullName,
+      postId: newPost._id,
+      type: 'NEW_POST',
+      message: `${authorUser.fullName} shared a new gratitude note!`,
+    });
+
+    broadcastNotificationToLoggedUsers({
+      id: postAnnouncementNotif._id.toString(),
+      type: 'NEW_POST',
+      senderName: authorUser.fullName,
+      message: `${authorUser.fullName} shared a new gratitude note!`,
+      postId: newPost._id.toString(),
+      createdAt: postAnnouncementNotif.createdAt.toISOString(),
+    });
+  } catch {
+    // Silence notification error
+  }
+
+  // 3. Send targeted notification to tagged users
   for (const taggedUserId of validTaggedUserIds) {
     if (taggedUserId !== authorUserId) {
       const notif = await Notification.create({
         recipientId: taggedUserId,
         senderId: authorUser._id,
-        senderName: 'Someone',
+        senderName: authorUser.fullName,
         postId: newPost._id,
         type: 'TAGGED',
         message: 'You were tagged in a new gratitude note!',
       });
 
       sendNotificationToUser(taggedUserId, {
-        id: notif._id,
+        id: notif._id.toString(),
         type: 'TAGGED',
         senderName: 'Gratitude Wall',
         message: 'You were tagged in a new gratitude note!',
-        postId: newPost._id,
-        createdAt: notif.createdAt,
+        postId: newPost._id.toString(),
+        createdAt: notif.createdAt.toISOString(),
       });
     }
   }
@@ -330,6 +360,30 @@ export const updatePost = async (
 
   // Broadcast post update to all clients
   broadcastPostUpdate(updatedPost);
+
+  // Broadcast announcement notification to ALL users
+  try {
+    const authorName = (updatedPost as any)?.authorName || (updatedPost as any)?.author?.fullName || 'A user';
+    const updateNotif = await Notification.create({
+      recipientId: null,
+      senderId: post.author,
+      senderName: authorName,
+      postId: post._id,
+      type: 'SYSTEM',
+      message: `${authorName} updated a gratitude note!`,
+    });
+
+    broadcastNotificationToLoggedUsers({
+      id: updateNotif._id.toString(),
+      type: 'SYSTEM',
+      senderName: authorName,
+      message: `${authorName} updated a gratitude note!`,
+      postId: post._id.toString(),
+      createdAt: updateNotif.createdAt.toISOString(),
+    });
+  } catch {
+    // Silence notification error
+  }
 
   return updatedPost;
 };

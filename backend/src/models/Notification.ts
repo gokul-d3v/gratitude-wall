@@ -1,9 +1,9 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
-export type NotificationType = 'NEW_POST' | 'TAGGED' | 'LIKED';
+export type NotificationType = 'NEW_POST' | 'TAGGED' | 'LIKED' | 'SYSTEM';
 
 export interface INotification extends Document {
-  recipientId?: Types.ObjectId; // null for broadcast
+  recipientId?: Types.ObjectId | null; // null for broadcast
   senderId?: Types.ObjectId;
   senderName: string;
   postId?: Types.ObjectId;
@@ -19,6 +19,7 @@ const NotificationSchema = new Schema<INotification>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       index: true,
+      default: null,
     },
     senderId: {
       type: Schema.Types.ObjectId,
@@ -34,7 +35,7 @@ const NotificationSchema = new Schema<INotification>(
     },
     type: {
       type: String,
-      enum: ['NEW_POST', 'TAGGED', 'LIKED'],
+      enum: ['NEW_POST', 'TAGGED', 'LIKED', 'SYSTEM'],
       required: true,
     },
     message: {

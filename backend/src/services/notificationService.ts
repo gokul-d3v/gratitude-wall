@@ -1,7 +1,9 @@
 import { Notification } from '../models/Notification';
 
-export const getUserNotifications = async (userId: string, limit = 20) => {
-  return Notification.find({ recipientId: userId })
+export const getUserNotifications = async (userId: string, limit = 30) => {
+  return Notification.find({
+    $or: [{ recipientId: userId }, { recipientId: null }],
+  })
     .sort({ createdAt: -1 })
     .limit(limit)
     .lean();
