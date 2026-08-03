@@ -20,8 +20,8 @@ export interface Post {
   color: StickyColor;
   likesCount: number;
   hasLiked?: boolean;
+  userEmoji?: string | null;
   reactions?: Record<string, number>;
-  userReactedEmojis?: string[];
   reportsCount?: number;
   createdAt: string;
 }

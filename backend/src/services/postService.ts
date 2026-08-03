@@ -130,7 +130,7 @@ export const getWallPosts = async (params: {
 
   const postObjectIds = rawPosts.map((p) => new mongoose.Types.ObjectId(p._id.toString()));
 
-  // Fetch Telegram-style reactions for all post IDs
+  // Fetch reactions summary per post
   const allReactions = await Reaction.aggregate([
     { $match: { postId: { $in: postObjectIds } } },
     {
@@ -141,13 +141,13 @@ export const getWallPosts = async (params: {
     },
   ]);
 
-  let userReactionsSet = new Set<string>();
+  let userReactionsMap = new Map<string, string>();
   if (params.currentUserId) {
     const myReactions = await Reaction.find({
       userId: new mongoose.Types.ObjectId(params.currentUserId),
       postId: { $in: postObjectIds },
     }).lean();
-    myReactions.forEach((r) => userReactionsSet.add(`${r.postId.toString()}_${r.emoji}`));
+    myReactions.forEach((r) => userReactionsMap.set(r.postId.toString(), r.emoji));
   }
 
   // Build reaction map per post
@@ -164,9 +164,7 @@ export const getWallPosts = async (params: {
   const posts = rawPosts.map((p) => {
     const pId = p._id.toString();
     const reactions = reactionMap.get(pId) || {};
-    const userReactedEmojis = Array.from(userReactionsSet)
-      .filter((k) => k.startsWith(`${pId}_`))
-      .map((k) => k.split('_')[1]);
+    const userEmoji = userReactionsMap.get(pId) || null;
 
     const totalLikes = Object.values(reactions).reduce((sum, val) => sum + val, 0);
 
@@ -174,7 +172,8 @@ export const getWallPosts = async (params: {
       ...p,
       likesCount: totalLikes || p.likesCount || 0,
       reactions,
-      userReactedEmojis,
+      userEmoji,
+      hasLiked: !!userEmoji,
     };
   });
 
@@ -189,7 +188,7 @@ export const getWallPosts = async (params: {
   };
 };
 
-export const toggleEmojiReaction = async (postId: string, userId: string, emoji: string) => {
+export const toggleEmojiReaction = async (postId: string, userId: string, targetEmoji: string = '❤️') => {
   const post = await Post.findById(postId);
   if (!post) {
     throw { statusCode: 404, message: 'Post not found' };
@@ -198,15 +197,29 @@ export const toggleEmojiReaction = async (postId: string, userId: string, emoji:
   const pObjId = new mongoose.Types.ObjectId(postId);
   const uObjId = new mongoose.Types.ObjectId(userId);
 
-  const existingReaction = await Reaction.findOne({ postId: pObjId, userId: uObjId, emoji });
+  // STRICT SINGLE REACTION PER USER ENFORCEMENT: Delete any existing reaction by this user on this post
+  const existingReaction = await Reaction.findOne({ postId: pObjId, userId: uObjId });
+
+  let newActiveEmoji: string | null = null;
 
   if (existingReaction) {
-    await Reaction.deleteOne({ _id: existingReaction._id });
+    if (existingReaction.emoji === targetEmoji) {
+      // Toggle off if same emoji clicked again
+      await Reaction.deleteOne({ _id: existingReaction._id });
+      newActiveEmoji = null;
+    } else {
+      // Switch reaction emoji to new selection
+      existingReaction.emoji = targetEmoji;
+      await existingReaction.save();
+      newActiveEmoji = targetEmoji;
+    }
   } else {
-    await Reaction.create({ postId: pObjId, userId: uObjId, emoji });
+    // Add single reaction
+    await Reaction.create({ postId: pObjId, userId: uObjId, emoji: targetEmoji });
+    newActiveEmoji = targetEmoji;
   }
 
-  // Aggregate updated Telegram-style reactions
+  // Aggregate updated reactions for this post
   const updatedReactions = await Reaction.aggregate([
     { $match: { postId: pObjId } },
     {
@@ -227,10 +240,6 @@ export const toggleEmojiReaction = async (postId: string, userId: string, emoji:
   post.likesCount = totalCount;
   await post.save();
 
-  // Fetch active reactions for this user
-  const userReactions = await Reaction.find({ postId: pObjId, userId: uObjId }).select('emoji').lean();
-  const userReactedEmojis = userReactions.map((r) => r.emoji);
-
   // Broadcast real-time reaction update via Socket.io
   try {
     const io = getIO();
@@ -243,7 +252,13 @@ export const toggleEmojiReaction = async (postId: string, userId: string, emoji:
     // Silence socket error
   }
 
-  return { postId, reactions: reactionSummary, likesCount: totalCount, userReactedEmojis };
+  return {
+    postId,
+    reactions: reactionSummary,
+    likesCount: totalCount,
+    userEmoji: newActiveEmoji,
+    hasLiked: !!newActiveEmoji,
+  };
 };
 
 export const reportPost = async (postId: string) => {
