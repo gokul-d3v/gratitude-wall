@@ -144,7 +144,7 @@ export const AuthModal: React.FC = () => {
                   type="text"
                   required
                   value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                   placeholder="e.g. Sarah Jenkins"
                   className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
                 />
@@ -160,9 +160,11 @@ export const AuthModal: React.FC = () => {
                 <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <select
                   value={formData.team}
-                  onChange={(e) => setFormData({ ...formData, team: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, team: e.target.value }))}
                   className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0058bd] bg-white cursor-pointer"
+                  required
                 >
+                  <option value="" disabled>Select your department</option>
                   {teams.map((t) => (
                     <option key={t._id || t.name} value={t.name}>
                       {t.name}
@@ -182,7 +184,7 @@ export const AuthModal: React.FC = () => {
                 type="text"
                 required
                 value={formData.employeeCode}
-                onChange={(e) => setFormData({ ...formData, employeeCode: e.target.value })}
+                onChange={(e) => setFormData(prev => ({ ...prev, employeeCode: e.target.value }))}
                 placeholder="e.g. BROTOTYPE or EMP1004"
                 className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 uppercase focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
               />
@@ -198,7 +200,7 @@ export const AuthModal: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                 placeholder="••••••••"
                 className="w-full pl-9 pr-10 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
               />
@@ -223,7 +225,7 @@ export const AuthModal: React.FC = () => {
                   type={showConfirmPassword ? 'text' : 'password'}
                   required
                   value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                   placeholder="••••••••"
                   className="w-full pl-9 pr-10 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
                 />
