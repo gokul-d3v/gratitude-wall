@@ -26,6 +26,7 @@ export const getPostsHandler = async (req: AuthRequest, res: Response, next: Nex
       search: search as string,
       page: page ? parseInt(page as string, 10) : 1,
       limit: limit ? parseInt(limit as string, 10) : 30,
+      currentUserId: req.user?.userId,
     });
 
     res.json({ success: true, ...result });

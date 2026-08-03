@@ -3,7 +3,7 @@ import { Like } from '../models/Like';
 import { User } from '../models/User';
 import { Notification } from '../models/Notification';
 import { cleanInput } from '../utils/sanitizer';
-import { broadcastNewPost, broadcastNotificationToAll, sendNotificationToUser, broadcastLikeUpdate } from '../config/socket';
+import { broadcastNewPost, sendNotificationToUser, broadcastLikeUpdate } from '../config/socket';
 
 export interface CreatePostDTO {
   content: string;
@@ -46,10 +46,10 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
     .populate('taggedUsers', 'employeeCode fullName avatarColor')
     .lean();
 
-  // 1. Real-time post broadcast to all clients on global wall (updates feed for everyone)
+  // 1. Real-time post broadcast to all clients on global wall
   broadcastNewPost(populatedPost);
 
-  // 2. Send targeted notification ONLY to tagged users (without revealing poster identity)
+  // 2. Send targeted notification ONLY to tagged users
   for (const taggedUserId of validTaggedUserIds) {
     if (taggedUserId !== authorUserId) {
       const notif = await Notification.create({
@@ -81,6 +81,7 @@ export const getWallPosts = async (params: {
   search?: string;
   page?: number;
   limit?: number;
+  currentUserId?: string;
 }) => {
   const page = params.page && params.page > 0 ? params.page : 1;
   const limit = params.limit && params.limit > 0 ? Math.min(params.limit, 50) : 30;
@@ -105,7 +106,7 @@ export const getWallPosts = async (params: {
     ];
   }
 
-  const [posts, total] = await Promise.all([
+  const [rawPosts, total] = await Promise.all([
     Post.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -114,6 +115,20 @@ export const getWallPosts = async (params: {
       .lean(),
     Post.countDocuments(query),
   ]);
+
+  let likedPostIdsSet = new Set<string>();
+  if (params.currentUserId && rawPosts.length > 0) {
+    const postIds = rawPosts.map((p) => p._id);
+    const userLikes = await Like.find({ userId: params.currentUserId, postId: { $in: postIds } })
+      .select('postId')
+      .lean();
+    userLikes.forEach((l) => likedPostIdsSet.add(l.postId.toString()));
+  }
+
+  const posts = rawPosts.map((p) => ({
+    ...p,
+    hasLiked: likedPostIdsSet.has(p._id.toString()),
+  }));
 
   return {
     posts,

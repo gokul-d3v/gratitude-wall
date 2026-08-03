@@ -46,7 +46,10 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
 
   useEffect(() => {
     setLikesCount(post.likesCount || 0);
-  }, [post.likesCount]);
+    if (post.hasLiked !== undefined) {
+      setHasLiked(post.hasLiked);
+    }
+  }, [post.likesCount, post.hasLiked]);
 
   const handleLikeToggle = async () => {
     if (!isAuthenticated) {
@@ -119,22 +122,27 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         </div>
       )}
 
-      {/* Card Footer: Material Symbols Like Heart + Hashtag */}
+      {/* Card Footer: Material Symbols Like Heart (Vibrant Red when liked) */}
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5">
         <button
           onClick={handleLikeToggle}
           className={`flex items-center gap-1.5 transition-transform hover:scale-110 cursor-pointer ${
-            hasLiked ? 'text-[#ba1a1a]' : 'text-[#424753] hover:text-[#ba1a1a]'
+            hasLiked ? 'text-red-600' : 'text-[#424753] hover:text-red-600'
           }`}
           title="Like this post"
         >
           <span
-            className="material-symbols-outlined text-lg"
-            style={{ fontVariationSettings: hasLiked ? "'FILL' 1" : "'FILL' 0" }}
+            className="material-symbols-outlined text-xl transition-colors"
+            style={{
+              fontVariationSettings: hasLiked ? "'FILL' 1, 'wght' 600" : "'FILL' 0, 'wght' 400",
+              color: hasLiked ? '#dc2626' : 'inherit',
+            }}
           >
             favorite
           </span>
-          <span className="text-xs font-bold">{likesCount}</span>
+          <span className={`text-xs font-bold ${hasLiked ? 'text-red-600' : 'text-[#424753]'}`}>
+            {likesCount}
+          </span>
         </button>
 
         <span className="text-[10px] font-bold text-[#424753] opacity-60">#gratitude</span>
