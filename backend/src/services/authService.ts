@@ -33,7 +33,7 @@ export const registerUser = async (data: RegisterDTO) => {
     fullName: data.fullName.trim(),
     passwordHash,
     avatarColor: randomAvatarColor,
-    team: data.team || 'Engineering',
+    team: data.team?.trim() || '',
   });
 
   const tokenPayload = { userId: newUser._id.toString(), employeeCode: newUser.employeeCode, role: newUser.role };

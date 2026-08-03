@@ -66,6 +66,10 @@ export const AuthModal: React.FC = () => {
         setError('Password and Confirm Password do not match');
         return;
       }
+      if (!formData.team) {
+        setError('Please select a department / team');
+        return;
+      }
     } else {
       if (!formData.employeeCode.trim() || !formData.password) {
         setError('Employee Code and Password are required');
