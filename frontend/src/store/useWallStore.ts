@@ -4,9 +4,11 @@ import { Post, StickyColor, NotificationItem } from '../types';
 interface WallState {
   posts: Post[];
   activeColor: StickyColor | 'all';
+  activeTab: 'latest' | 'trending';
   searchQuery: string;
   isCreateModalOpen: boolean;
   isAuthModalOpen: boolean;
+  isAdminViewOpen: boolean;
   notifications: NotificationItem[];
   unreadCount: number;
   toastNotification: NotificationItem | null;
@@ -15,9 +17,11 @@ interface WallState {
   addPost: (post: Post) => void;
   updateLikeCount: (postId: string, likesCount: number) => void;
   setActiveColor: (color: StickyColor | 'all') => void;
+  setActiveTab: (tab: 'latest' | 'trending') => void;
   setSearchQuery: (query: string) => void;
   setCreateModalOpen: (open: boolean) => void;
   setAuthModalOpen: (open: boolean) => void;
+  setAdminViewOpen: (open: boolean) => void;
   setNotifications: (notifications: NotificationItem[]) => void;
   addNotification: (notification: NotificationItem) => void;
   triggerToast: (message: string, variant?: 'success' | 'error' | 'info') => void;
@@ -27,9 +31,11 @@ interface WallState {
 export const useWallStore = create<WallState>((set) => ({
   posts: [],
   activeColor: 'all',
+  activeTab: 'latest',
   searchQuery: '',
   isCreateModalOpen: false,
   isAuthModalOpen: false,
+  isAdminViewOpen: false,
   notifications: [],
   unreadCount: 0,
   toastNotification: null,
@@ -51,11 +57,15 @@ export const useWallStore = create<WallState>((set) => ({
 
   setActiveColor: (activeColor) => set({ activeColor }),
 
+  setActiveTab: (activeTab) => set({ activeTab }),
+
   setSearchQuery: (searchQuery) => set({ searchQuery }),
 
   setCreateModalOpen: (isCreateModalOpen) => set({ isCreateModalOpen }),
 
   setAuthModalOpen: (isAuthModalOpen) => set({ isAuthModalOpen }),
+
+  setAdminViewOpen: (isAdminViewOpen) => set({ isAdminViewOpen }),
 
   setNotifications: (notifications) =>
     set({

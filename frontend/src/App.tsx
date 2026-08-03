@@ -4,6 +4,8 @@ import { StickyNoteCard } from './components/StickyNoteCard';
 import { FloatingActionButton } from './components/FloatingActionButton';
 import { CreateNoteModal } from './components/CreateNoteModal';
 import { AuthModal } from './components/AuthModal';
+import { AdminDashboard } from './components/AdminDashboard';
+import { TopGratitudeSpotlight } from './components/TopGratitudeSpotlight';
 import { NotificationToast } from './components/NotificationToast';
 import { useWallStore } from './store/useWallStore';
 import { useAuthStore } from './store/useAuthStore';
@@ -12,14 +14,17 @@ import { initSocketClient } from './services/socket';
 import { Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const { checkAuth } = useAuthStore();
+  const { checkAuth, isAuthenticated } = useAuthStore();
   const {
     posts,
     setPosts,
     activeColor,
+    activeTab,
     searchQuery,
     isCreateModalOpen,
     setCreateModalOpen,
+    setAuthModalOpen,
+    isAdminViewOpen,
   } = useWallStore();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -69,16 +74,32 @@ export const App: React.FC = () => {
     }
   };
 
-  // Filter posts based on active color filter and search query
+  const handleOpenAddPost = () => {
+    if (!isAuthenticated) {
+      setAuthModalOpen(true);
+    } else {
+      setCreateModalOpen(true);
+    }
+  };
+
+  // Filter & Sort posts based on active color filter, search query, and Latest / Trending tab
   const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
+    const list = posts.filter((post) => {
       const matchesColor = activeColor === 'all' || post.color === activeColor;
       const matchesSearch =
         !searchQuery.trim() ||
         post.content.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesColor && matchesSearch;
     });
-  }, [posts, activeColor, searchQuery]);
+
+    if (activeTab === 'trending') {
+      return [...list].sort((a, b) => (b.likesCount || 0) - (a.likesCount || 0));
+    } else {
+      return [...list].sort(
+        (a, b) => new Date(b.createdAt || Date.now()).getTime() - new Date(a.createdAt || Date.now()).getTime()
+      );
+    }
+  }, [posts, activeColor, activeTab, searchQuery]);
 
   return (
     <div className="min-h-screen">
@@ -86,6 +107,9 @@ export const App: React.FC = () => {
 
       <main className="p-4 sm:p-8 md:p-12 flex flex-col gap-8 max-w-7xl mx-auto">
         <Header />
+
+        {/* Most Appreciated / Tagged Person Spotlight */}
+        <TopGratitudeSpotlight />
 
         {/* Wall Workspace */}
         {isLoading ? (
@@ -95,9 +119,9 @@ export const App: React.FC = () => {
           </div>
         ) : (
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 grid-notes animate-fade-slide-up stagger-2">
-            {/* Add New Note Card matching HTML design spec */}
+            {/* Add New Note Card */}
             <div
-              onClick={() => setCreateModalOpen(true)}
+              onClick={handleOpenAddPost}
               className="sticky-note bg-blue-50/50 border-2 border-dashed border-[#0058bd]/30 p-8 rounded-lg flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-blue-100/50 transition-all min-h-[220px]"
             >
               <div className="w-14 h-14 rounded-full bg-[#0058bd] text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
@@ -116,11 +140,12 @@ export const App: React.FC = () => {
       </main>
 
       {/* Floating Action Button */}
-      <FloatingActionButton onClick={() => setCreateModalOpen(true)} />
+      <FloatingActionButton onClick={handleOpenAddPost} />
 
-      {/* Modals */}
+      {/* Modals & Dashboard Overlay */}
       {isCreateModalOpen && <CreateNoteModal />}
       <AuthModal />
+      {isAdminViewOpen && <AdminDashboard />}
     </div>
   );
 };

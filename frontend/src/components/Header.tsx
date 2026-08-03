@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, User, LogOut } from 'lucide-react';
+import { Search, Bell, User, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
 import { StickyColor } from '../types';
@@ -10,16 +10,18 @@ export const Header: React.FC = () => {
   const {
     activeColor,
     setActiveColor,
+    activeTab,
+    setActiveTab,
     searchQuery,
     setSearchQuery,
     setAuthModalOpen,
+    setAdminViewOpen,
     notifications,
     unreadCount,
     setNotifications,
   } = useWallStore();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'latest' | 'trending'>('latest');
 
   const filterColors: { key: StickyColor | 'all'; label: string; bg: string }[] = [
     { key: 'all', label: 'All', bg: 'bg-white text-slate-800' },
@@ -63,13 +65,13 @@ export const Header: React.FC = () => {
           />
         </div>
 
-        {/* Filter Pills Container */}
+        {/* Latest vs Trending Filter Pills */}
         <div className="flex items-center gap-1.5 bg-[#fff8f2] p-1.5 rounded-full border border-[#c2c6d5] overflow-x-auto">
           <button
             onClick={() => setActiveTab('latest')}
             className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'latest'
-                ? 'bg-[#f9ebe0] text-[#191c1d] shadow-2xs'
+                ? 'bg-[#f9ebe0] text-[#191c1d] shadow-2xs font-bold'
                 : 'text-[#424753] hover:bg-[#f5e8df]'
             }`}
           >
@@ -79,7 +81,7 @@ export const Header: React.FC = () => {
             onClick={() => setActiveTab('trending')}
             className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'trending'
-                ? 'bg-[#f9ebe0] text-[#191c1d] shadow-2xs'
+                ? 'bg-[#f9ebe0] text-[#191c1d] shadow-2xs font-bold'
                 : 'text-[#424753] hover:bg-[#f5e8df]'
             }`}
           >
@@ -103,10 +105,22 @@ export const Header: React.FC = () => {
           ))}
         </div>
 
-        {/* User Session & Notifications */}
+        {/* User Session, Admin Access & Notifications */}
         <div className="flex items-center gap-3 ml-auto md:ml-0">
           {isAuthenticated ? (
             <>
+              {/* Admin Panel Toggle for ADMIN users */}
+              {user?.role === 'ADMIN' && (
+                <button
+                  onClick={() => setAdminViewOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                  title="Open Admin Dashboard"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  Admin Panel
+                </button>
+              )}
+
               {/* Notification Bell */}
               <div className="relative">
                 <button

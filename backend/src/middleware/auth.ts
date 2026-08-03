@@ -23,6 +23,14 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   }
 };
 
+export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
+  if (!req.user || req.user.role !== 'ADMIN') {
+    res.status(403).json({ success: false, message: 'Admin access privileges required' });
+    return;
+  }
+  next();
+};
+
 export const optionalAuth = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
