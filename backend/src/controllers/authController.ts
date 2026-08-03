@@ -20,6 +20,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       data: {
         user: result.user,
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
       },
     });
   } catch (error) {
@@ -43,6 +44,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       data: {
         user: result.user,
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
       },
     });
   } catch (error) {
@@ -71,6 +73,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
       data: {
         user: result.user,
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
       },
     });
   } catch (error) {
@@ -80,9 +83,13 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
 
 export const refresh = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const refreshToken = req.cookies?.refreshToken;
+    const refreshToken =
+      req.cookies?.refreshToken ||
+      (req.headers['x-refresh-token'] as string) ||
+      req.body?.refreshToken;
+
     if (!refreshToken) {
-      res.status(401).json({ success: false, message: 'Refresh token missing' });
+      res.status(401).json({ success: false, message: 'Session expired. Please log in.' });
       return;
     }
 
@@ -93,9 +100,9 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
       role: payload.role,
     });
 
-    res.json({ success: true, data: { accessToken } });
+    res.json({ success: true, data: { accessToken, refreshToken } });
   } catch (error) {
-    res.status(401).json({ success: false, message: 'Invalid refresh token' });
+    res.status(401).json({ success: false, message: 'Session expired. Please log in.' });
   }
 };
 

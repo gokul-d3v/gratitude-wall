@@ -21,21 +21,19 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (credentials) => {
     const res = await api.post('/auth/login', credentials);
-    const { user, accessToken } = res.data.data;
-    setAccessToken(accessToken);
+    const { user, accessToken, refreshToken } = res.data.data;
+    setAccessToken(accessToken, refreshToken);
     updateSocketAuth(accessToken);
     set({ user, isAuthenticated: true });
-    // Instantly refetch posts for newly authenticated session
     useWallStore.getState().fetchPosts();
   },
 
   register: async (userData) => {
     const res = await api.post('/auth/register', userData);
-    const { user, accessToken } = res.data.data;
-    setAccessToken(accessToken);
+    const { user, accessToken, refreshToken } = res.data.data;
+    setAccessToken(accessToken, refreshToken);
     updateSocketAuth(accessToken);
     set({ user, isAuthenticated: true });
-    // Instantly refetch posts for newly registered session
     useWallStore.getState().fetchPosts();
   },
 
@@ -45,10 +43,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       // Silence
     }
-    setAccessToken(null);
+    setAccessToken(null, null);
     updateSocketAuth(null);
     set({ user: null, isAuthenticated: false });
-    // Reset wall posts for guest view
     useWallStore.getState().fetchPosts();
   },
 
@@ -62,14 +59,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       try {
         const refreshRes = await api.post('/auth/refresh');
         const token = refreshRes.data.data.accessToken;
-        setAccessToken(token);
+        const refToken = refreshRes.data.data.refreshToken;
+        setAccessToken(token, refToken);
         updateSocketAuth(token);
 
         const userRes = await api.get('/auth/me');
         set({ user: userRes.data.data, isAuthenticated: true, isLoading: false });
         useWallStore.getState().fetchPosts();
       } catch {
-        setAccessToken(null);
+        setAccessToken(null, null);
         updateSocketAuth(null);
         set({ user: null, isAuthenticated: false, isLoading: false });
       }

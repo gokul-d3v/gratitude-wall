@@ -31,8 +31,8 @@ export const AdminLoginScreen: React.FC = () => {
         password,
       });
 
-      const { accessToken } = res.data.data;
-      setAccessToken(accessToken);
+      const { accessToken, refreshToken } = res.data.data;
+      setAccessToken(accessToken, refreshToken);
       await checkAuth();
 
       triggerToast('Admin authenticated successfully! Opening console...', 'success');

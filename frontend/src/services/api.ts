@@ -9,24 +9,37 @@ export const api = axios.create({
   },
 });
 
-// Restore token from localStorage session cache
 let accessToken: string | null = localStorage.getItem('gratitude_wall_access_token');
+let refreshToken: string | null = localStorage.getItem('gratitude_wall_refresh_token');
 
-export const setAccessToken = (token: string | null) => {
+export const setAccessToken = (token: string | null, refreshTok?: string | null) => {
   accessToken = token;
   if (token) {
     localStorage.setItem('gratitude_wall_access_token', token);
   } else {
     localStorage.removeItem('gratitude_wall_access_token');
   }
+
+  if (refreshTok !== undefined) {
+    refreshToken = refreshTok;
+    if (refreshTok) {
+      localStorage.setItem('gratitude_wall_refresh_token', refreshTok);
+    } else {
+      localStorage.removeItem('gratitude_wall_refresh_token');
+    }
+  }
 };
 
 export const getAccessToken = () => accessToken;
+export const getRefreshToken = () => refreshToken;
 
 api.interceptors.request.use(
   (config) => {
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    if (refreshToken) {
+      config.headers['X-Refresh-Token'] = refreshToken;
     }
     return config;
   },
@@ -35,7 +48,6 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    // Intercept Rate Limit headers
     const remaining = response.headers['ratelimit-remaining'] || response.headers['x-ratelimit-remaining'];
     const limit = response.headers['ratelimit-limit'] || response.headers['x-ratelimit-limit'];
 
@@ -68,13 +80,23 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthUrl) {
       originalRequest._retry = true;
       try {
-        const res = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+        const storedRefresh = getRefreshToken();
+        const res = await axios.post(
+          '/api/auth/refresh',
+          { refreshToken: storedRefresh },
+          {
+            withCredentials: true,
+            headers: storedRefresh ? { 'X-Refresh-Token': storedRefresh } : {},
+          }
+        );
         const newAccessToken = res.data.data.accessToken;
-        setAccessToken(newAccessToken);
+        const newRefreshToken = res.data.data.refreshToken || storedRefresh;
+        setAccessToken(newAccessToken, newRefreshToken);
+
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        setAccessToken(null);
+        setAccessToken(null, null);
         return Promise.reject(refreshError);
       }
     }

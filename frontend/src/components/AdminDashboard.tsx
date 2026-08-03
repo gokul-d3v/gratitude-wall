@@ -55,7 +55,12 @@ export const AdminDashboard: React.FC = () => {
       setUsers(usersRes.data.data || []);
       setPosts(postsRes.data.data || []);
     } catch (err: any) {
-      triggerToast(err.response?.data?.message || 'Failed to load console telemetry', 'error');
+      if (err.response?.status === 401) {
+        window.history.pushState({}, '', '/admin-login');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      } else {
+        triggerToast(err.response?.data?.message || 'Failed to load console telemetry', 'error');
+      }
     } finally {
       setIsLoading(false);
     }
