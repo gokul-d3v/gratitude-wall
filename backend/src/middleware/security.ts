@@ -1,28 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
 
-// Global API rate limiter: 100 requests per 15 mins
+// Global API rate limiter: 200 requests per 15 mins
 export const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 200,
   message: { success: false, message: 'Too many requests from this IP, please try again after 15 minutes' },
   standardHeaders: true,
   legacyHeaders: true,
 });
 
-// Strict limiter for authentication routes: 10 attempts per 15 mins
+// Strict limiter for authentication routes: 20 attempts per 15 mins
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 20,
   message: { success: false, message: 'Too many login attempts, please try again after 15 minutes' },
   standardHeaders: true,
   legacyHeaders: true,
 });
 
-// Strict limiter for post creation: 20 posts per hour
+// Limiter for post creation: 50 posts per hour
 export const postRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 20,
+  max: 50,
   message: { success: false, message: 'Posting limit reached. Please wait before sharing more gratitude.' },
   standardHeaders: true,
   legacyHeaders: true,

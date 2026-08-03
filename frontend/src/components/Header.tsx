@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, User, LogOut, ShieldCheck, Tag, Zap } from 'lucide-react';
+import { Search, Bell, User, LogOut, ShieldCheck, Tag } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
 import { StickyColor } from '../types';
@@ -20,7 +20,6 @@ export const Header: React.FC = () => {
     unreadCount,
     setNotifications,
     fetchPosts,
-    rateLimitInfo,
   } = useWallStore();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -105,17 +104,6 @@ export const Header: React.FC = () => {
           <p className="hidden sm:block text-xs text-[#424753] font-medium">
             Virtual Gratitude & Appreciation Wall
           </p>
-
-          {/* Rate Limit Counter Badge */}
-          {rateLimitInfo && (
-            <div
-              className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-mono font-semibold text-slate-600 shadow-2xs"
-              title="API Request Quota Remaining (15 min window)"
-            >
-              <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
-              <span>Rate Limit: {rateLimitInfo.remaining}/{rateLimitInfo.limit}</span>
-            </div>
-          )}
         </div>
 
         {/* Search, Compact Filters & Sign In in SAME Header Row */}
