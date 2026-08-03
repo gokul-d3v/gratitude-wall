@@ -1,6 +1,7 @@
 import { User } from '../models/User';
 import { Post } from '../models/Post';
 import { Like } from '../models/Like';
+import { broadcastNotificationToAll } from '../config/socket';
 
 export const getAdminStats = async () => {
   const [totalUsers, totalPosts, totalLikes, quarantinedPosts, reportedPosts] = await Promise.all([
@@ -78,4 +79,22 @@ export const updateUserRole = async (userId: string, role: 'USER' | 'ADMIN') => 
   await user.save();
 
   return { userId, role: user.role };
+};
+
+export const sendSystemNotification = async (message: string) => {
+  if (!message || !message.trim()) {
+    throw { statusCode: 400, message: 'Notification message cannot be empty' };
+  }
+
+  const notifPayload = {
+    id: Date.now().toString(),
+    type: 'SYSTEM',
+    variant: 'info',
+    senderName: 'System Admin',
+    message: message.trim(),
+    createdAt: new Date().toISOString(),
+  };
+
+  broadcastNotificationToAll(notifPayload);
+  return notifPayload;
 };

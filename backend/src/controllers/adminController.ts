@@ -7,6 +7,7 @@ import {
   deletePost,
   getAdminUsers,
   updateUserRole,
+  sendSystemNotification,
 } from '../services/adminService';
 
 export const getStatsHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -62,6 +63,16 @@ export const updateRoleHandler = async (req: AuthRequest, res: Response, next: N
     const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { role } = req.body;
     const result = await updateUserRole(userId, role);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const sendNotificationHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { message } = req.body;
+    const result = await sendSystemNotification(message);
     res.json({ success: true, data: result });
   } catch (error) {
     next(error);

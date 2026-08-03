@@ -37,13 +37,23 @@ const formatTimeAgo = (dateStr: string): string => {
   return `${diffDays}d ago`;
 };
 
+const whatsappEmojis = [
+  { symbol: '❤️', label: 'Love' },
+  { symbol: '🙏', label: 'Thankful' },
+  { symbol: '🌟', label: 'Star' },
+  { symbol: '🎉', label: 'Celebrate' },
+  { symbol: '🔥', label: 'Fire' },
+  { symbol: '💡', label: 'Inspired' },
+];
+
 export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
   const { isAuthenticated } = useAuthStore();
   const { setAuthModalOpen, triggerToast } = useWallStore();
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [hasLiked, setHasLiked] = useState(post.hasLiked || false);
   const [isLiking, setIsLiking] = useState(false);
-  const [reaction, setReaction] = useState<'love' | 'thanks' | 'star'>('love');
+  const [selectedEmoji, setSelectedEmoji] = useState('❤️');
+  const [showPicker, setShowPicker] = useState(false);
 
   useEffect(() => {
     setLikesCount(post.likesCount || 0);
@@ -52,11 +62,14 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
     }
   }, [post.likesCount, post.hasLiked]);
 
-  const handleLikeToggle = async () => {
+  const handleSelectReaction = async (emojiSymbol: string) => {
     if (!isAuthenticated) {
       setAuthModalOpen(true);
       return;
     }
+
+    setSelectedEmoji(emojiSymbol);
+    setShowPicker(false);
 
     if (isLiking) return;
     setIsLiking(true);
@@ -74,7 +87,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
     } catch {
       setLikesCount(previousLikes);
       setHasLiked(previousState);
-      triggerToast('Could not update like. Please try again.', 'error');
+      triggerToast('Could not update reaction. Please try again.', 'error');
     } finally {
       setIsLiking(false);
     }
@@ -133,55 +146,45 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         </div>
       )}
 
-      {/* Card Footer: Reaction Icons & Like Heart Button */}
-      <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5">
-        <div className="flex items-center gap-2">
-          {/* Heart Like Button */}
-          <button
-            onClick={handleLikeToggle}
-            className={`flex items-center gap-1.5 transition-transform hover:scale-110 cursor-pointer ${
-              hasLiked ? 'text-red-600' : 'text-[#424753] hover:text-red-600'
-            }`}
-            title="Like / React to this post"
-          >
-            <span
-              className="material-symbols-outlined text-xl transition-colors"
-              style={{
-                fontVariationSettings: hasLiked ? "'FILL' 1, 'wght' 600" : "'FILL' 0, 'wght' 400",
-                color: hasLiked ? '#dc2626' : 'inherit',
-              }}
-            >
-              favorite
-            </span>
-            <span className={`text-xs font-bold ${hasLiked ? 'text-red-600' : 'text-[#424753]'}`}>
-              {likesCount}
-            </span>
-          </button>
+      {/* Card Footer: WhatsApp-Style Quick Reaction Bar */}
+      <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5 relative">
+        <div className="relative">
+          {/* Floating WhatsApp-Style Emoji Picker Popover */}
+          {showPicker && (
+            <div className="absolute bottom-full left-0 mb-2 flex items-center gap-1.5 bg-slate-900/90 text-white p-2 rounded-full shadow-2xl backdrop-blur-md z-40 animate-fade-slide-up border border-slate-700">
+              {whatsappEmojis.map((e) => (
+                <button
+                  key={e.symbol}
+                  onClick={() => handleSelectReaction(e.symbol)}
+                  className="text-lg hover:scale-130 transition-transform cursor-pointer px-1 active:scale-95"
+                  title={e.label}
+                >
+                  {e.symbol}
+                </button>
+              ))}
+            </div>
+          )}
 
-          {/* Quick Emoji Reaction Pill */}
-          <div className="flex items-center gap-1 bg-white/60 px-1.5 py-0.5 rounded-full border border-black/5 text-[10px]">
-            <button
-              onClick={() => setReaction('love')}
-              className={`hover:scale-125 transition-transform cursor-pointer ${reaction === 'love' ? 'scale-110' : 'opacity-70'}`}
-              title="Love"
-            >
-              ❤️
-            </button>
-            <button
-              onClick={() => setReaction('thanks')}
-              className={`hover:scale-125 transition-transform cursor-pointer ${reaction === 'thanks' ? 'scale-110' : 'opacity-70'}`}
-              title="Thanks"
-            >
-              🙏
-            </button>
-            <button
-              onClick={() => setReaction('star')}
-              className={`hover:scale-125 transition-transform cursor-pointer ${reaction === 'star' ? 'scale-110' : 'opacity-70'}`}
-              title="Star"
-            >
-              🌟
-            </button>
-          </div>
+          {/* Active Reaction Badge (WhatsApp Style) */}
+          <button
+            onClick={() => {
+              if (!hasLiked) {
+                setShowPicker(!showPicker);
+              } else {
+                handleSelectReaction(selectedEmoji);
+              }
+            }}
+            onMouseEnter={() => setShowPicker(true)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer shadow-2xs ${
+              hasLiked
+                ? 'bg-white border-rose-200 text-slate-900 font-bold scale-105'
+                : 'bg-white/70 hover:bg-white border-black/10 text-slate-700'
+            }`}
+            title="Hover or click to react (WhatsApp style)"
+          >
+            <span className="text-base">{selectedEmoji}</span>
+            <span className="text-xs font-bold">{likesCount}</span>
+          </button>
         </div>
 
         <span className="text-[10px] font-bold text-[#424753] opacity-60">#gratitude</span>

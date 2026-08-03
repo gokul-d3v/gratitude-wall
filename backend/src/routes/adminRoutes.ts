@@ -6,6 +6,7 @@ import {
   deletePostHandler,
   getUsersHandler,
   updateRoleHandler,
+  sendNotificationHandler,
 } from '../controllers/adminController';
 import { createTeamHandler, deleteTeamHandler } from '../controllers/teamController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -22,7 +23,10 @@ router.delete('/posts/:id', deletePostHandler);
 router.get('/users', getUsersHandler);
 router.put('/users/:id/role', updateRoleHandler);
 
-// Admin Team Management
+// Admin Broadcast System Notifications
+router.post('/notifications', sendNotificationHandler);
+
+// Admin Team / Department Management
 router.post('/teams', createTeamHandler);
 router.delete('/teams/:id', deleteTeamHandler);
 

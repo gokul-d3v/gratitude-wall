@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ShieldCheck, Trash2, ShieldAlert, Users, Heart, FileText, RefreshCw, Plus } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Trash2, ShieldAlert, Users, Heart, FileText, RefreshCw, Plus, BellRing, Send } from 'lucide-react';
 import { useWallStore } from '../store/useWallStore';
 import { api } from '../services/api';
 
@@ -13,13 +13,15 @@ interface AdminStats {
 
 export const AdminDashboard: React.FC = () => {
   const { setAdminViewOpen, triggerToast } = useWallStore();
-  const [activeTab, setActiveTab] = useState<'stats' | 'posts' | 'users' | 'teams'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'posts' | 'users' | 'teams' | 'notifs'>('stats');
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
   const [newTeamName, setNewTeamName] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -89,26 +91,42 @@ export const AdminDashboard: React.FC = () => {
       const res = await api.post('/admin/teams', { name: newTeamName.trim() });
       setTeams([...teams, res.data.data]);
       setNewTeamName('');
-      triggerToast('New team created successfully!', 'success');
+      triggerToast('New department team added successfully!', 'success');
     } catch (err: any) {
-      triggerToast(err.response?.data?.message || 'Failed to create team', 'error');
+      triggerToast(err.response?.data?.message || 'Failed to add department team', 'error');
     }
   };
 
   const handleDeleteTeam = async (teamId: string) => {
-    if (!confirm('Are you sure you want to delete this team?')) return;
+    if (!confirm('Are you sure you want to delete this department team?')) return;
     try {
       await api.delete(`/admin/teams/${teamId}`);
       setTeams(teams.filter((t) => t._id !== teamId));
-      triggerToast('Team deleted successfully', 'success');
+      triggerToast('Department team deleted successfully', 'success');
     } catch {
       triggerToast('Failed to delete team', 'error');
     }
   };
 
+  const handleBroadcastNotification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notifMessage.trim()) return;
+
+    setIsBroadcasting(true);
+    try {
+      await api.post('/admin/notifications', { message: notifMessage.trim() });
+      setNotifMessage('');
+      triggerToast('System announcement broadcasted to all active users!', 'success');
+    } catch (err: any) {
+      triggerToast(err.response?.data?.message || 'Failed to broadcast notification', 'error');
+    } finally {
+      setIsBroadcasting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#fffcf9] overflow-y-auto">
-      {/* Top Header */}
+      {/* Top Admin Navigation Bar */}
       <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-2xs">
         <div className="flex items-center gap-3">
           <button
@@ -123,14 +141,14 @@ export const AdminDashboard: React.FC = () => {
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="font-bold text-lg text-[#191c1d] leading-none">BROTIFY Admin Dashboard</h1>
-              <p className="text-xs text-slate-500 mt-0.5">Content Moderation & Department Control</p>
+              <h1 className="font-bold text-lg text-[#191c1d] leading-none">BROTIFY Admin Control Panel</h1>
+              <p className="text-xs text-slate-500 mt-0.5">Management, Department Control & System Broadcasts</p>
             </div>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-2 bg-[#fff8f2] p-1 rounded-full border border-[#c2c6d5]">
+        {/* Tab Controls */}
+        <div className="flex items-center gap-2 bg-[#fff8f2] p-1 rounded-full border border-[#c2c6d5] overflow-x-auto">
           <button
             onClick={() => setActiveTab('stats')}
             className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
@@ -148,6 +166,22 @@ export const AdminDashboard: React.FC = () => {
             Moderation
           </button>
           <button
+            onClick={() => setActiveTab('teams')}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'teams' ? 'bg-[#0058bd] text-white shadow-xs' : 'text-slate-700 hover:bg-white'
+            }`}
+          >
+            Departments
+          </button>
+          <button
+            onClick={() => setActiveTab('notifs')}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'notifs' ? 'bg-[#0058bd] text-white shadow-xs' : 'text-slate-700 hover:bg-white'
+            }`}
+          >
+            Notifications
+          </button>
+          <button
             onClick={() => setActiveTab('users')}
             className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'users' ? 'bg-[#0058bd] text-white shadow-xs' : 'text-slate-700 hover:bg-white'
@@ -155,18 +189,10 @@ export const AdminDashboard: React.FC = () => {
           >
             Employees
           </button>
-          <button
-            onClick={() => setActiveTab('teams')}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === 'teams' ? 'bg-[#0058bd] text-white shadow-xs' : 'text-slate-700 hover:bg-white'
-            }`}
-          >
-            Teams
-          </button>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Admin Body */}
       <main className="p-6 sm:p-10 max-w-6xl mx-auto w-full">
         {isLoading ? (
           <div className="flex items-center justify-center min-h-[40vh] gap-3 text-slate-400">
@@ -222,14 +248,17 @@ export const AdminDashboard: React.FC = () => {
         ) : activeTab === 'teams' ? (
           <div className="flex flex-col gap-8 animate-fade-slide-up">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-2xl font-bold text-[#191c1d]">Department Team Management</h2>
+              <div>
+                <h2 className="text-2xl font-bold text-[#191c1d]">Department Management</h2>
+                <p className="text-xs text-slate-500 mt-1">Add or remove departments for employee registration and filtering</p>
+              </div>
 
               <form onSubmit={handleCreateTeam} className="flex items-center gap-2">
                 <input
                   type="text"
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  placeholder="New Team Name (e.g. Operations)"
+                  placeholder="New Department Name"
                   className="px-4 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
                 />
                 <button
@@ -237,7 +266,7 @@ export const AdminDashboard: React.FC = () => {
                   className="inline-flex items-center gap-1 px-4 py-2 rounded-xl bg-[#0058bd] hover:bg-[#004494] text-white text-xs font-bold shadow-xs cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Team
+                  Add Department
                 </button>
               </form>
             </div>
@@ -252,7 +281,7 @@ export const AdminDashboard: React.FC = () => {
                   <button
                     onClick={() => handleDeleteTeam(t._id)}
                     className="p-2 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                    title="Delete Team"
+                    title="Delete Department"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -260,9 +289,41 @@ export const AdminDashboard: React.FC = () => {
               ))}
             </div>
           </div>
+        ) : activeTab === 'notifs' ? (
+          <div className="flex flex-col gap-6 animate-fade-slide-up max-w-2xl">
+            <div>
+              <h2 className="text-2xl font-bold text-[#191c1d]">Broadcast System Notification</h2>
+              <p className="text-xs text-slate-500 mt-1">Send a real-time system announcement to all active users</p>
+            </div>
+
+            <form onSubmit={handleBroadcastNotification} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
+              <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                <BellRing className="w-5 h-5 text-[#0058bd]" />
+                System Announcement Message
+              </div>
+
+              <textarea
+                value={notifMessage}
+                onChange={(e) => setNotifMessage(e.target.value)}
+                placeholder="Type system announcement (e.g. 'Monthly gratitude awards start today!')..."
+                rows={4}
+                required
+                className="w-full p-3 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
+              />
+
+              <button
+                type="submit"
+                disabled={isBroadcasting || !notifMessage.trim()}
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#0058bd] hover:bg-[#004494] text-white font-semibold text-xs sm:text-sm shadow-md transition-all cursor-pointer disabled:opacity-50 ml-auto"
+              >
+                <Send className="w-4 h-4" />
+                {isBroadcasting ? 'Broadcasting...' : 'Broadcast Alert to All Users'}
+              </button>
+            </form>
+          </div>
         ) : activeTab === 'posts' ? (
           <div className="flex flex-col gap-6 animate-fade-slide-up">
-            <h2 className="text-2xl font-bold text-[#191c1d]">Content Moderation</h2>
+            <h2 className="text-2xl font-bold text-[#191c1d]">Content Moderation & Post Deletion</h2>
 
             {posts.length === 0 ? (
               <p className="text-center p-8 text-slate-400 text-sm">No posts to display</p>
@@ -314,7 +375,7 @@ export const AdminDashboard: React.FC = () => {
                           className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-all cursor-pointer flex items-center gap-1"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          Delete
+                          Delete Post
                         </button>
                       </div>
                     </div>
@@ -333,7 +394,7 @@ export const AdminDashboard: React.FC = () => {
                   <tr>
                     <th className="p-4">Employee</th>
                     <th className="p-4">Employee Code</th>
-                    <th className="p-4">Team</th>
+                    <th className="p-4">Department</th>
                     <th className="p-4">Role</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
