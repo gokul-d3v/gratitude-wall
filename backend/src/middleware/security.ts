@@ -7,7 +7,7 @@ export const apiRateLimiter = rateLimit({
   max: 100,
   message: { success: false, message: 'Too many requests from this IP, please try again after 15 minutes' },
   standardHeaders: true,
-  legacyHeaders: false,
+  legacyHeaders: true,
 });
 
 // Strict limiter for authentication routes: 10 attempts per 15 mins
@@ -16,7 +16,7 @@ export const authRateLimiter = rateLimit({
   max: 10,
   message: { success: false, message: 'Too many login attempts, please try again after 15 minutes' },
   standardHeaders: true,
-  legacyHeaders: false,
+  legacyHeaders: true,
 });
 
 // Strict limiter for post creation: 20 posts per hour
@@ -25,7 +25,7 @@ export const postRateLimiter = rateLimit({
   max: 20,
   message: { success: false, message: 'Posting limit reached. Please wait before sharing more gratitude.' },
   standardHeaders: true,
-  legacyHeaders: false,
+  legacyHeaders: true,
 });
 
 // NoSQL Injection Defense: Strip object query selectors ($gt, $where, etc.)

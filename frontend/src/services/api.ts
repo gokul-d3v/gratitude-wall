@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useWallStore } from '../store/useWallStore';
 
 export const api = axios.create({
   baseURL: '/api',
@@ -33,8 +34,33 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Intercept Rate Limit headers
+    const remaining = response.headers['ratelimit-remaining'] || response.headers['x-ratelimit-remaining'];
+    const limit = response.headers['ratelimit-limit'] || response.headers['x-ratelimit-limit'];
+
+    if (remaining !== undefined && limit !== undefined) {
+      useWallStore.getState().setRateLimitInfo({
+        remaining: parseInt(remaining as string, 10),
+        limit: parseInt(limit as string, 10),
+      });
+    }
+
+    return response;
+  },
   async (error) => {
+    if (error.response?.headers) {
+      const remaining = error.response.headers['ratelimit-remaining'] || error.response.headers['x-ratelimit-remaining'];
+      const limit = error.response.headers['ratelimit-limit'] || error.response.headers['x-ratelimit-limit'];
+
+      if (remaining !== undefined && limit !== undefined) {
+        useWallStore.getState().setRateLimitInfo({
+          remaining: parseInt(remaining as string, 10),
+          limit: parseInt(limit as string, 10),
+        });
+      }
+    }
+
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login' && originalRequest.url !== '/auth/refresh') {
       originalRequest._retry = true;

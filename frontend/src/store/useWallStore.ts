@@ -13,6 +13,7 @@ interface WallState {
   notifications: NotificationItem[];
   unreadCount: number;
   toastNotification: NotificationItem | null;
+  rateLimitInfo: { remaining: number; limit: number } | null;
 
   setPosts: (posts: Post[]) => void;
   fetchPosts: () => Promise<void>;
@@ -28,6 +29,7 @@ interface WallState {
   addNotification: (notification: NotificationItem) => void;
   triggerToast: (message: string, variant?: 'success' | 'error' | 'info') => void;
   clearToast: () => void;
+  setRateLimitInfo: (info: { remaining: number; limit: number }) => void;
 }
 
 export const useWallStore = create<WallState>((set) => ({
@@ -41,6 +43,7 @@ export const useWallStore = create<WallState>((set) => ({
   notifications: [],
   unreadCount: 0,
   toastNotification: null,
+  rateLimitInfo: null,
 
   setPosts: (posts) => set({ posts }),
 
@@ -103,4 +106,6 @@ export const useWallStore = create<WallState>((set) => ({
     }),
 
   clearToast: () => set({ toastNotification: null }),
+
+  setRateLimitInfo: (rateLimitInfo) => set({ rateLimitInfo }),
 }));
