@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Post, StickyColor } from '../types';
-import { api } from '../services/api';
+import { api, updatePostApi, deletePostApi } from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
+import { MoreVertical, Edit2, Trash2, X } from 'lucide-react';
+import { ConfirmModal } from './ConfirmModal';
 
 interface StickyNoteCardProps {
   post: Post;
@@ -35,7 +37,7 @@ const formatTimeAgo = (dateStr: string): string => {
 };
 
 export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const { setAuthModalOpen, triggerToast } = useWallStore();
 
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
@@ -47,6 +49,50 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
   const [burstPos, setBurstPos] = useState({ x: 0, y: 0 });
   const lastTap = useRef(0);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Options menu state
+  const [showOptions, setShowOptions] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(post.content);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Check if user can edit/delete (within 10 minutes and is author, or admin)
+  const getAuthorId = (author: any): string => {
+    if (!author) return '';
+    if (typeof author === 'string') return author;
+    if (author._id) return author._id.toString();
+    if (author.id) return author.id.toString();
+    return author.toString();
+  };
+
+  const getUserId = (u: any): string => {
+    if (!u) return '';
+    if (u.id) return u.id.toString();
+    if (u._id) return u._id.toString();
+    return '';
+  };
+
+  const currentUserId = getUserId(user);
+  const authorId = getAuthorId(post.author);
+  const isAuthor = Boolean(currentUserId && authorId && currentUserId === authorId);
+  const isAdmin = user?.role === 'ADMIN';
+  const postAgeMs = Date.now() - new Date(post.createdAt).getTime();
+  const canModify = (isAuthor && postAgeMs < 10 * 60 * 1000) || isAdmin;
+
+  // Options dropdown menu click-outside ref
+  const optionsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (optionsRef.current && !optionsRef.current.contains(e.target as Node)) {
+        setShowOptions(false);
+      }
+    };
+    if (showOptions) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showOptions]);
 
   useEffect(() => {
     setLikesCount(post.likesCount || 0);
@@ -86,6 +132,56 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       setHasLiked(!nextLiked);
       setLikesCount((prev) => (nextLiked ? Math.max(0, prev - 1) : prev + 1));
       triggerToast('Could not update like', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStartEdit = () => {
+    setEditContent(post.content);
+    setIsEditing(true);
+    setShowOptions(false);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editContent.trim()) {
+      triggerToast('Post content cannot be empty', 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await updatePostApi(post._id, { content: editContent.trim() });
+      if (res.data) {
+        // Update post in store
+        useWallStore.getState().setPosts(
+          useWallStore.getState().posts.map((p) => (p._id === post._id ? { ...p, ...res.data } : p))
+        );
+        setIsEditing(false);
+        triggerToast('Post updated successfully', 'success');
+      }
+    } catch (err: any) {
+      triggerToast(err.response?.data?.message || 'Failed to update post', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+    setShowOptions(false);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setIsSubmitting(true);
+    try {
+      await deletePostApi(post._id);
+      // Remove post from store
+      useWallStore.getState().setPosts(useWallStore.getState().posts.filter((p) => p._id !== post._id));
+      setShowDeleteConfirm(false);
+      triggerToast('Post deleted successfully', 'success');
+    } catch (err: any) {
+      triggerToast(err.response?.data?.message || 'Failed to delete post', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -192,6 +288,83 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         </div>
       )}
 
+      {/* Options Menu Button */}
+      {canModify && !isEditing && (
+        <div className="absolute top-2 right-2" ref={optionsRef}>
+          <button
+            onClick={() => setShowOptions(!showOptions)}
+            className="p-1.5 rounded-full bg-white/80 hover:bg-white text-slate-600 hover:text-slate-800 transition-all cursor-pointer shadow-xs"
+            title="Post options"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+            {/* Options Dropdown */}
+          {showOptions && (
+            <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-slate-200 py-1 min-w-[120px] z-20">
+              <button
+                onClick={handleStartEdit}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                Edit
+              </button>
+              <button
+                onClick={handleDeleteClick}
+                disabled={isSubmitting}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Edit Mode */}
+      {isEditing && (
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-sm p-4 flex flex-col gap-3 z-10 rounded-lg">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-800">Edit Post</h3>
+            <button
+              onClick={() => {
+                setIsEditing(false);
+                setEditContent(post.content);
+              }}
+              className="p-1 rounded-full hover:bg-slate-100 text-slate-500 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            className="flex-1 w-full p-3 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0058bd] resize-none"
+            maxLength={500}
+            autoFocus
+          />
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={() => {
+                setIsEditing(false);
+                setEditContent(post.content);
+              }}
+              className="px-4 py-2 rounded-full text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveEdit}
+              disabled={isSubmitting || !editContent.trim()}
+              className="px-4 py-2 rounded-full bg-[#0058bd] hover:bg-[#004494] text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {isSubmitting ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Card Footer: Like Button */}
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5">
         <button
@@ -231,6 +404,19 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
 
         <span className="text-[10px] font-bold text-[#424753] opacity-60">#gratitude</span>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Post"
+        message="Are you sure you want to delete this post? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+        isLoading={isSubmitting}
+      />
 
       <style>{`
         @keyframes heartBurst {

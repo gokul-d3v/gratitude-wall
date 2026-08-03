@@ -5,7 +5,7 @@ import { Reaction } from '../models/Reaction';
 import { User } from '../models/User';
 import { Notification } from '../models/Notification';
 import { cleanInput } from '../utils/sanitizer';
-import { broadcastNewPost, sendNotificationToUser, getIO } from '../config/socket';
+import { broadcastNewPost, sendNotificationToUser, getIO, broadcastPostUpdate, broadcastPostDelete } from '../config/socket';
 
 export interface CreatePostDTO {
   content: string;
@@ -101,8 +101,8 @@ export const getWallPosts = async (params: {
     query.team = params.team;
   }
 
-  if (params.taggedUserId) {
-    query.taggedUsers = params.taggedUserId;
+  if (params.taggedUserId && mongoose.Types.ObjectId.isValid(params.taggedUserId)) {
+    query.taggedUsers = { $in: [params.taggedUserId] };
   }
 
   if (params.search) {
@@ -274,4 +274,84 @@ export const reportPost = async (postId: string) => {
   await post.save();
 
   return { message: 'Post reported successfully for moderation' };
+};
+
+export const updatePost = async (
+  postId: string,
+  userId: string,
+  updateData: { content?: string; color?: StickyColor },
+  userRole?: string
+) => {
+  const post = await Post.findById(postId);
+  if (!post) {
+    throw { statusCode: 404, message: 'Post not found' };
+  }
+
+  const isAuthor = post.author.toString() === userId;
+  const isAdmin = userRole === 'ADMIN';
+
+  if (!isAuthor && !isAdmin) {
+    throw { statusCode: 403, message: 'You can only edit your own posts' };
+  }
+
+  // Check if within 10 minutes (unless admin)
+  const postAgeMs = Date.now() - new Date(post.createdAt).getTime();
+  const tenMinutesMs = 10 * 60 * 1000;
+  if (!isAdmin && postAgeMs > tenMinutesMs) {
+    throw { statusCode: 403, message: 'You can only edit posts within 10 minutes of creation' };
+  }
+
+  if (updateData.content) {
+    const sanitizedContent = cleanInput(updateData.content);
+    if (!sanitizedContent) {
+      throw { statusCode: 400, message: 'Post content cannot be empty' };
+    }
+    post.content = sanitizedContent;
+  }
+
+  if (updateData.color) {
+    post.color = updateData.color;
+  }
+
+  await post.save();
+
+  const updatedPost = await Post.findById(postId)
+    .populate('taggedUsers', 'employeeCode fullName avatarColor team')
+    .lean();
+
+  // Broadcast post update to all clients
+  broadcastPostUpdate(updatedPost);
+
+  return updatedPost;
+};
+
+export const deletePost = async (postId: string, userId: string, userRole?: string) => {
+  const post = await Post.findById(postId);
+  if (!post) {
+    throw { statusCode: 404, message: 'Post not found' };
+  }
+
+  const isAuthor = post.author.toString() === userId;
+  const isAdmin = userRole === 'ADMIN';
+
+  if (!isAuthor && !isAdmin) {
+    throw { statusCode: 403, message: 'You can only delete your own posts' };
+  }
+
+  // Check if within 10 minutes (unless admin)
+  const postAgeMs = Date.now() - new Date(post.createdAt).getTime();
+  const tenMinutesMs = 10 * 60 * 1000;
+  if (!isAdmin && postAgeMs > tenMinutesMs) {
+    throw { statusCode: 403, message: 'You can only delete posts within 10 minutes of creation' };
+  }
+
+  await Post.findByIdAndDelete(postId);
+  await Like.deleteMany({ postId });
+  await Reaction.deleteMany({ postId });
+  await Notification.deleteMany({ postId });
+
+  // Broadcast post deletion to all clients
+  broadcastPostDelete(postId);
+
+  return { message: 'Post deleted successfully' };
 };

@@ -6,6 +6,7 @@ import { User } from '../models/User';
 
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
+    console.log('[Register] Received body:', JSON.stringify(req.body));
     const result = await registerUser(req.body);
 
     res.cookie('refreshToken', result.refreshToken, {

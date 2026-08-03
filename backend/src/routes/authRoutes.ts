@@ -11,6 +11,7 @@ const registerSchema = z.object({
   fullName: z.string().min(2, 'Full Name is required').max(100),
   employeeCode: z.string().min(2, 'Employee Code is required').max(30),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  team: z.string().optional(),
 });
 
 const loginSchema = z.object({

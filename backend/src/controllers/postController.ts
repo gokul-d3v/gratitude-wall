@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import { createPost, getWallPosts, toggleEmojiReaction, reportPost } from '../services/postService';
+import { createPost, getWallPosts, toggleEmojiReaction, reportPost, updatePost, deletePost } from '../services/postService';
 
 export const createPostHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -31,6 +31,42 @@ export const getPostsHandler = async (req: AuthRequest, res: Response, next: Nex
     });
 
     res.json({ success: true, ...result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updatePostHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const postId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+    
+    if (!userId) {
+      res.status(401).json({ success: false, message: 'Must be logged in to edit post' });
+      return;
+    }
+
+    const post = await updatePost(postId, userId, req.body, userRole);
+    res.json({ success: true, data: post });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deletePostHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const postId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+    
+    if (!userId) {
+      res.status(401).json({ success: false, message: 'Must be logged in to delete post' });
+      return;
+    }
+
+    const result = await deletePost(postId, userId, userRole);
+    res.json({ success: true, data: result });
   } catch (error) {
     next(error);
   }

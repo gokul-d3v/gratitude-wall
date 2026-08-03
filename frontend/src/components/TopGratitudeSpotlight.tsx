@@ -52,31 +52,31 @@ export const TopGratitudeSpotlight: React.FC = () => {
   const topRecipient = topUsers[0];
 
   return (
-    <div className="bg-[#fff8f2] border border-[#c2c6d5] p-4 sm:p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-xs animate-fade-slide-up transition-all duration-500">
-      <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-sm shadow-md shrink-0">
-          <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-            workspace_premium
+    <div className="bg-[#fff8f2] border border-[#c2c6d5] px-3 py-2 rounded-lg flex items-center gap-2 shadow-xs animate-fade-slide-up transition-all duration-500">
+      <div className="w-8 h-8 rounded-full bg-[#0058bd] text-white flex items-center justify-center shrink-0">
+        <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
+          workspace_premium
+        </span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <span className="text-[9px] uppercase font-bold tracking-wider text-[#0058bd]">
+          Most Appreciated Employee
+        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="font-semibold text-xs text-[#191c1d] truncate">
+            {topRecipient.user.fullName}
+          </span>
+          <span className="font-mono text-[10px] text-slate-500 flex-shrink-0">
+            ({topRecipient.user.employeeCode})
           </span>
         </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-[#0058bd] bg-[#d8e2ff] px-2 py-0.5 rounded-full">
-              Most Appreciated Employee
-            </span>
-          </div>
-          <h3 className="font-bold text-sm sm:text-base text-[#191c1d] mt-0.5">
-            {topRecipient.user.fullName} <span className="font-mono text-xs text-slate-500 font-semibold">({topRecipient.user.employeeCode})</span>
-          </h3>
-        </div>
       </div>
-
-      <div className="flex items-center gap-2 bg-white px-4 py-1.5 rounded-full border border-slate-200 shadow-2xs ml-auto">
-        <span className="material-symbols-outlined text-amber-500 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <span className="material-symbols-outlined text-amber-500 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
           star
         </span>
-        <span className="text-xs font-bold text-[#191c1d]">
-          {topRecipient.count} Gratitude {topRecipient.count === 1 ? 'Note' : 'Notes'} Received
+        <span className="text-[11px] font-bold text-[#191c1d] whitespace-nowrap">
+          {topRecipient.count}
         </span>
       </div>
     </div>

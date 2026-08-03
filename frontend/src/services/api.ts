@@ -33,6 +33,17 @@ export const setAccessToken = (token: string | null, refreshTok?: string | null)
 export const getAccessToken = () => accessToken;
 export const getRefreshToken = () => refreshToken;
 
+// Post API methods
+export const updatePostApi = async (postId: string, data: { content?: string; color?: string }) => {
+  const response = await api.put(`/posts/${postId}`, data);
+  return response.data;
+};
+
+export const deletePostApi = async (postId: string) => {
+  const response = await api.delete(`/posts/${postId}`);
+  return response.data;
+};
+
 api.interceptors.request.use(
   (config) => {
     if (accessToken) {

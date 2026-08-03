@@ -20,7 +20,7 @@ export const NotificationToast: React.FC = () => {
   const isSuccess = toastNotification.variant === 'success';
 
   return (
-    <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] max-w-md w-[92%] sm:w-auto animate-fade-slide-up">
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-md w-[92%] sm:w-auto animate-fade-slide-up">
       <div
         className={`flex items-center gap-3 px-5 py-3 rounded-full shadow-2xl border backdrop-blur-md transition-all ${
           isError

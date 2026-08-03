@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Lock, User as UserIcon, Sparkles, Eye, EyeOff, IdCard, Users } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
@@ -23,6 +23,14 @@ export const AuthModal: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const teamSelectRef = useRef<HTMLSelectElement>(null);
+
+  // When teams load, sync formData.team to first available team
+  useEffect(() => {
+    if (teams.length > 0 && !formData.team) {
+      setFormData(prev => ({ ...prev, team: teams[0].name }));
+    }
+  }, [teams]);
 
   useEffect(() => {
     if (isAuthModalOpen) {
@@ -81,11 +89,14 @@ export const AuthModal: React.FC = () => {
 
     try {
       if (isRegisterMode) {
+        // Read team directly from DOM select to bypass any React state sync lag
+        const selectedTeam = teamSelectRef.current?.value || formData.team;
+        console.log('[Register] Submitting with team:', selectedTeam, '| formData.team:', formData.team);
         await register({
           fullName: formData.fullName.trim(),
           employeeCode: formData.employeeCode.trim().toUpperCase(),
           password: formData.password,
-          team: formData.team,
+          team: selectedTeam,
         });
         triggerToast('Registration successful! Welcome to BROTIFY.', 'success');
       } else {
@@ -159,6 +170,7 @@ export const AuthModal: React.FC = () => {
               <div className="relative">
                 <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <select
+                  ref={teamSelectRef}
                   value={formData.team}
                   onChange={(e) => setFormData(prev => ({ ...prev, team: e.target.value }))}
                   className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0058bd] bg-white cursor-pointer"

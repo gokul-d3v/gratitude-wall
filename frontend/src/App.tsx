@@ -7,6 +7,7 @@ import { AdminLoginScreen } from './components/AdminLoginScreen';
 import { AdminDashboard } from './components/AdminDashboard';
 import { TopGratitudeSpotlight } from './components/TopGratitudeSpotlight';
 import { NotificationToast } from './components/NotificationToast';
+import { NotificationModal } from './components/NotificationModal';
 import { useWallStore } from './store/useWallStore';
 import { useAuthStore } from './store/useAuthStore';
 import { api } from './services/api';
@@ -68,11 +69,13 @@ export const App: React.FC = () => {
     const handleNewPost = (post: any) => {
       console.log('⚡ [Realtime Socket] new_post received:', post);
       useWallStore.getState().addPost(post);
+      
+      // Show notification to all users when a new post is created
       useWallStore.getState().addNotification({
         id: Date.now().toString(),
         type: 'NEW_POST',
         senderName: 'Gratitude Wall',
-        message: 'Someone shared a love!',
+        message: 'Someone shared a new gratitude!',
         postId: post._id,
         createdAt: new Date().toISOString(),
       });
@@ -95,11 +98,25 @@ export const App: React.FC = () => {
       useWallStore.getState().addNotification(notif);
     };
 
+    const handlePostUpdate = (updatedPost: any) => {
+      console.log('⚡ [Realtime Socket] post_update received:', updatedPost._id);
+      useWallStore.getState().setPosts(
+        useWallStore.getState().posts.map((p) => (p._id === updatedPost._id ? { ...p, ...updatedPost } : p))
+      );
+    };
+
+    const handlePostDelete = ({ postId }: { postId: string }) => {
+      console.log('⚡ [Realtime Socket] post_delete received:', postId);
+      useWallStore.getState().setPosts(useWallStore.getState().posts.filter((p) => p._id !== postId));
+    };
+
     socket.on('connect', handleConnect);
     socket.on('new_post', handleNewPost);
     socket.on('like_update', handleLikeUpdate);
     socket.on('reaction_update', handleReactionUpdate);
     socket.on('notification', handleNotification);
+    socket.on('post_update', handlePostUpdate);
+    socket.on('post_delete', handlePostDelete);
 
     return () => {
       socket.off('connect', handleConnect);
@@ -125,9 +142,13 @@ export const App: React.FC = () => {
   const filteredPosts = useMemo(() => {
     const list = posts.filter((post) => {
       const matchesColor = activeColor === 'all' || post.color === activeColor;
+      const searchLower = searchQuery.toLowerCase().trim();
       const matchesSearch =
-        !searchQuery.trim() ||
-        post.content.toLowerCase().includes(searchQuery.toLowerCase());
+        !searchLower ||
+        post.content.toLowerCase().includes(searchLower) ||
+        post.authorName?.toLowerCase().includes(searchLower) ||
+        post.author?.team?.toLowerCase().includes(searchLower) ||
+        post.authorEmployeeCode?.toLowerCase().includes(searchLower);
       return matchesColor && matchesSearch;
     });
 
@@ -202,6 +223,7 @@ export const App: React.FC = () => {
       {/* User Auth & Create Post Modals */}
       {isCreateModalOpen && <CreateNoteModal />}
       <AuthModal />
+      <NotificationModal />
     </div>
   );
 };

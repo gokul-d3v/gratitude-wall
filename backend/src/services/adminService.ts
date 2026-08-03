@@ -1,7 +1,7 @@
 import { User } from '../models/User';
 import { Post } from '../models/Post';
 import { Like } from '../models/Like';
-import { broadcastNotificationToLoggedUsers } from '../config/socket';
+import { broadcastNotificationToLoggedUsers, broadcastPostDelete } from '../config/socket';
 
 export const getAdminStats = async () => {
   const [totalUsers, totalPosts, totalLikes, quarantinedPosts, reportedPosts] = await Promise.all([
@@ -58,6 +58,8 @@ export const deletePost = async (postId: string) => {
     Post.deleteOne({ _id: postId }),
     Like.deleteMany({ postId }),
   ]);
+
+  broadcastPostDelete(postId);
 
   return { postId, deleted: true };
 };

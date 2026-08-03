@@ -10,6 +10,7 @@ interface WallState {
   isCreateModalOpen: boolean;
   isAuthModalOpen: boolean;
   isAdminViewOpen: boolean;
+  isNotifModalOpen: boolean;
   notifications: NotificationItem[];
   unreadCount: number;
   toastNotification: NotificationItem | null;
@@ -25,6 +26,7 @@ interface WallState {
   setCreateModalOpen: (open: boolean) => void;
   setAuthModalOpen: (open: boolean) => void;
   setAdminViewOpen: (open: boolean) => void;
+  setNotifModalOpen: (open: boolean) => void;
   setNotifications: (notifications: NotificationItem[]) => void;
   addNotification: (notification: NotificationItem) => void;
   triggerToast: (message: string, variant?: 'success' | 'error' | 'info') => void;
@@ -40,6 +42,7 @@ export const useWallStore = create<WallState>((set) => ({
   isCreateModalOpen: false,
   isAuthModalOpen: false,
   isAdminViewOpen: false,
+  isNotifModalOpen: false,
   notifications: [],
   unreadCount: 0,
   toastNotification: null,
@@ -80,6 +83,8 @@ export const useWallStore = create<WallState>((set) => ({
   setAuthModalOpen: (isAuthModalOpen) => set({ isAuthModalOpen }),
 
   setAdminViewOpen: (isAdminViewOpen) => set({ isAdminViewOpen }),
+
+  setNotifModalOpen: (isNotifModalOpen) => set({ isNotifModalOpen }),
 
   setNotifications: (notifications) =>
     set({

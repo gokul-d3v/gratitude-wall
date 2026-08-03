@@ -95,3 +95,19 @@ export const broadcastLikeUpdate = (postId: string, likesCount: number): void =>
     io.emit('like_update', { postId, likesCount });
   }
 };
+
+// Broadcast post update in real-time to ALL clients
+export const broadcastPostUpdate = (post: any): void => {
+  if (io) {
+    console.log(`[Socket Gateway] Broadcasting post_update for post:${post._id}`);
+    io.emit('post_update', post);
+  }
+};
+
+// Broadcast post deletion in real-time to ALL clients
+export const broadcastPostDelete = (postId: string): void => {
+  if (io) {
+    console.log(`[Socket Gateway] Broadcasting post_delete for post:${postId}`);
+    io.emit('post_delete', { postId });
+  }
+};
