@@ -278,10 +278,10 @@ export const Header: React.FC = () => {
                   setIsMobileMenuOpen(false);
                 }}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-[#0058bd] hover:bg-[#004494] text-white font-semibold text-sm transition-all shadow-sm cursor-pointer"
-                title="Sign In / Register"
+                title="Sign In"
               >
                 <User className="w-4 h-4" />
-                Sign In / Register
+                Sign In
               </button>
             )}
           </div>
@@ -423,10 +423,10 @@ export const Header: React.FC = () => {
             <button
               onClick={() => setAuthModalOpen(true)}
               className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0058bd] hover:bg-[#004494] text-white font-bold text-xs sm:text-sm transition-all shadow-md cursor-pointer"
-              title="Sign In / Register"
+              title="Sign In"
             >
               <User className="w-4 h-4" />
-              Sign In / Register
+              Sign In
             </button>
           )}
         </div>

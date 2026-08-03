@@ -20,3 +20,10 @@ export const markNotificationsAsRead = async (userId: string, notificationIds?: 
   }
   return { success: true };
 };
+
+export const clearAllNotifications = async (userId: string) => {
+  await Notification.deleteMany({
+    $or: [{ recipientId: userId }, { recipientId: null }],
+  });
+  return { success: true };
+};

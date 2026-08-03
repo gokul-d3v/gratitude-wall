@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { X, Bell, Check } from 'lucide-react';
+import { X, Bell, Check, Trash2 } from 'lucide-react';
 import { useWallStore } from '../store/useWallStore';
 import { api } from '../services/api';
 
@@ -47,6 +47,15 @@ export const NotificationModal: React.FC = () => {
     setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
   };
 
+  const handleClearAll = async () => {
+    try {
+      await api.delete('/notifications/clear');
+    } catch {
+      // Silence api error
+    }
+    setNotifications([]);
+  };
+
   if (!isNotifModalOpen) return null;
 
   return (
@@ -72,7 +81,7 @@ export const NotificationModal: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
@@ -80,6 +89,16 @@ export const NotificationModal: React.FC = () => {
               >
                 <Check className="w-3.5 h-3.5" />
                 Mark all read
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button
+                onClick={handleClearAll}
+                className="text-[11px] text-rose-600 font-bold hover:underline cursor-pointer flex items-center gap-1 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 transition-all"
+                title="Clear all notifications"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Clear all
               </button>
             )}
             <button
