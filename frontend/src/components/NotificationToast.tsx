@@ -54,11 +54,6 @@ export const NotificationToast: React.FC = () => {
 
         {/* Text Content */}
         <div className="flex-1 min-w-0 pr-1">
-          {isAnnouncement && (
-            <span className="text-[9px] uppercase font-bold tracking-wider text-[#0058bd] bg-[#0058bd]/10 px-2 py-0.5 rounded-md border border-[#0058bd]/20 inline-block mb-1">
-              📢 Announcement
-            </span>
-          )}
           <p className="text-xs sm:text-sm font-bold text-[#191c1d] leading-snug break-words">
             {toastNotification.message}
           </p>
