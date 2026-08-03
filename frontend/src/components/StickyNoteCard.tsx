@@ -3,6 +3,7 @@ import { Post, StickyColor } from '../types';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
+import { Plus } from 'lucide-react';
 
 interface StickyNoteCardProps {
   post: Post;
@@ -15,6 +16,8 @@ const colorClassMap: Record<StickyColor, string> = {
   green: 'bg-sticky-green',
   purple: 'bg-sticky-purple',
 };
+
+const defaultEmojis = ['❤️', '🙏', '🌟', '🎉', '🔥', '💡'];
 
 const getInitials = (name?: string): string => {
   if (!name) return 'GW';
@@ -37,64 +40,68 @@ const formatTimeAgo = (dateStr: string): string => {
   return `${diffDays}d ago`;
 };
 
-const whatsappEmojis = [
-  { symbol: '❤️', label: 'Love' },
-  { symbol: '🙏', label: 'Thankful' },
-  { symbol: '🌟', label: 'Star' },
-  { symbol: '🎉', label: 'Celebrate' },
-  { symbol: '🔥', label: 'Fire' },
-  { symbol: '💡', label: 'Inspired' },
-];
-
 export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
   const { isAuthenticated } = useAuthStore();
   const { setAuthModalOpen, triggerToast } = useWallStore();
-  const [likesCount, setLikesCount] = useState(post.likesCount || 0);
-  const [hasLiked, setHasLiked] = useState(post.hasLiked || false);
-  const [isLiking, setIsLiking] = useState(false);
-  const [selectedEmoji, setSelectedEmoji] = useState('❤️');
+
+  const [reactions, setReactions] = useState<Record<string, number>>(post.reactions || { '❤️': post.likesCount || 0 });
+  const [myReactedEmojis, setMyReactedEmojis] = useState<string[]>(post.userReactedEmojis || []);
   const [showPicker, setShowPicker] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    setLikesCount(post.likesCount || 0);
-    if (post.hasLiked !== undefined) {
-      setHasLiked(post.hasLiked);
+    setReactions(post.reactions || (post.likesCount ? { '❤️': post.likesCount } : {}));
+    if (post.userReactedEmojis) {
+      setMyReactedEmojis(post.userReactedEmojis);
     }
-  }, [post.likesCount, post.hasLiked]);
+  }, [post.reactions, post.userReactedEmojis, post.likesCount]);
 
-  const handleSelectReaction = async (emojiSymbol: string) => {
+  const handleToggleReaction = async (emoji: string) => {
     if (!isAuthenticated) {
       setAuthModalOpen(true);
       return;
     }
 
-    setSelectedEmoji(emojiSymbol);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     setShowPicker(false);
 
-    if (isLiking) return;
-    setIsLiking(true);
+    const isAlreadyReacted = myReactedEmojis.includes(emoji);
+    const updatedMyReactions = isAlreadyReacted
+      ? myReactedEmojis.filter((e) => e !== emoji)
+      : [...myReactedEmojis, emoji];
 
-    const previousLikes = likesCount;
-    const previousState = hasLiked;
+    const currentCount = reactions[emoji] || 0;
+    const updatedCount = isAlreadyReacted ? Math.max(0, currentCount - 1) : currentCount + 1;
 
-    setLikesCount(hasLiked ? Math.max(0, likesCount - 1) : likesCount + 1);
-    setHasLiked(!hasLiked);
+    const updatedReactionsObj = { ...reactions };
+    if (updatedCount > 0) {
+      updatedReactionsObj[emoji] = updatedCount;
+    } else {
+      delete updatedReactionsObj[emoji];
+    }
+
+    setMyReactedEmojis(updatedMyReactions);
+    setReactions(updatedReactionsObj);
 
     try {
-      const res = await api.post(`/posts/${post._id}/like`);
-      setLikesCount(res.data.data.likesCount);
-      setHasLiked(res.data.data.hasLiked);
+      const res = await api.post(`/posts/${post._id}/like`, { emoji });
+      if (res.data?.data) {
+        setReactions(res.data.data.reactions || {});
+        setMyReactedEmojis(res.data.data.userReactedEmojis || []);
+      }
     } catch {
-      setLikesCount(previousLikes);
-      setHasLiked(previousState);
-      triggerToast('Could not update reaction. Please try again.', 'error');
+      triggerToast('Could not toggle reaction', 'error');
     } finally {
-      setIsLiking(false);
+      setIsSubmitting(false);
     }
   };
 
   const firstTagged = post.taggedUsers && post.taggedUsers.length > 0 ? post.taggedUsers[0] : null;
   const avatarInitials = firstTagged ? getInitials(firstTagged.fullName) : 'GW';
+
+  // Extract active non-zero reaction list for Telegram-style pill bar
+  const activeReactionEntries = Object.entries(reactions).filter(([_e, count]) => count > 0);
 
   return (
     <div
@@ -146,48 +153,57 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         </div>
       )}
 
-      {/* Card Footer: WhatsApp-Style Quick Reaction Bar */}
-      <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5 relative">
-        <div className="relative">
-          {/* Floating WhatsApp-Style Emoji Picker Popover */}
-          {showPicker && (
-            <div className="absolute bottom-full left-0 mb-2 flex items-center gap-1.5 bg-slate-900/90 text-white p-2 rounded-full shadow-2xl backdrop-blur-md z-40 animate-fade-slide-up border border-slate-700">
-              {whatsappEmojis.map((e) => (
-                <button
-                  key={e.symbol}
-                  onClick={() => handleSelectReaction(e.symbol)}
-                  className="text-lg hover:scale-130 transition-transform cursor-pointer px-1 active:scale-95"
-                  title={e.label}
-                >
-                  {e.symbol}
-                </button>
-              ))}
-            </div>
-          )}
+      {/* Card Footer: Telegram-Style Multi-Emoji Reaction Pills */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-4 mt-4 border-t border-black/5 relative">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Active Telegram-Style Reaction Pills */}
+          {activeReactionEntries.map(([emoji, count]) => {
+            const isMyReaction = myReactedEmojis.includes(emoji);
+            return (
+              <button
+                key={emoji}
+                onClick={() => handleToggleReaction(emoji)}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer shadow-2xs border ${
+                  isMyReaction
+                    ? 'bg-[#0058bd] text-white border-transparent scale-105'
+                    : 'bg-white/80 hover:bg-white text-slate-800 border-black/10'
+                }`}
+                title={`Reaction ${emoji}`}
+              >
+                <span>{emoji}</span>
+                <span className="text-[11px] font-mono">{count}</span>
+              </button>
+            );
+          })}
 
-          {/* Active Reaction Badge (WhatsApp Style) */}
-          <button
-            onClick={() => {
-              if (!hasLiked) {
-                setShowPicker(!showPicker);
-              } else {
-                handleSelectReaction(selectedEmoji);
-              }
-            }}
-            onMouseEnter={() => setShowPicker(true)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer shadow-2xs ${
-              hasLiked
-                ? 'bg-white border-rose-200 text-slate-900 font-bold scale-105'
-                : 'bg-white/70 hover:bg-white border-black/10 text-slate-700'
-            }`}
-            title="Hover or click to react (WhatsApp style)"
-          >
-            <span className="text-base">{selectedEmoji}</span>
-            <span className="text-xs font-bold">{likesCount}</span>
-          </button>
+          {/* Quick (+) Add Reaction Popover Button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowPicker(!showPicker)}
+              className="w-7 h-7 rounded-full bg-white/80 hover:bg-white text-slate-600 border border-black/10 flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-110"
+              title="Add Emoji Reaction"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Telegram-Style Emoji Picker Dropdown */}
+            {showPicker && (
+              <div className="absolute bottom-full left-0 mb-2 flex items-center gap-1.5 bg-slate-900/90 text-white p-2 rounded-full shadow-2xl backdrop-blur-md z-40 animate-fade-slide-up border border-slate-700">
+                {defaultEmojis.map((emojiSymbol) => (
+                  <button
+                    key={emojiSymbol}
+                    onClick={() => handleToggleReaction(emojiSymbol)}
+                    className="text-lg hover:scale-130 transition-transform cursor-pointer px-1 active:scale-95"
+                  >
+                    {emojiSymbol}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        <span className="text-[10px] font-bold text-[#424753] opacity-60">#gratitude</span>
+        <span className="text-[10px] font-bold text-[#424753] opacity-60 ml-auto">#gratitude</span>
       </div>
     </div>
   );

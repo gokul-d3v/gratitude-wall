@@ -81,6 +81,13 @@ export const App: React.FC = () => {
       useWallStore.getState().updateLikeCount(postId, likesCount);
     };
 
+    const handleReactionUpdate = ({ postId, reactions, likesCount }: any) => {
+      console.log('⚡ [Realtime Socket] reaction_update received:', postId, reactions, likesCount);
+      useWallStore.setState((state) => ({
+        posts: state.posts.map((p) => (p._id === postId ? { ...p, reactions, likesCount } : p)),
+      }));
+    };
+
     const handleNotification = (notif: any) => {
       console.log('⚡ [Realtime Socket] notification received:', notif);
       useWallStore.getState().addNotification(notif);
@@ -89,6 +96,7 @@ export const App: React.FC = () => {
     socket.on('connect', handleConnect);
     socket.on('new_post', handleNewPost);
     socket.on('like_update', handleLikeUpdate);
+    socket.on('reaction_update', handleReactionUpdate);
     socket.on('notification', handleNotification);
 
     return () => {
@@ -96,6 +104,7 @@ export const App: React.FC = () => {
       socket.off('connect', handleConnect);
       socket.off('new_post', handleNewPost);
       socket.off('like_update', handleLikeUpdate);
+      socket.off('reaction_update', handleReactionUpdate);
       socket.off('notification', handleNotification);
     };
   }, []);

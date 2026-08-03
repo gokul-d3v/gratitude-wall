@@ -1,9 +1,11 @@
+import mongoose from 'mongoose';
 import { Post, StickyColor } from '../models/Post';
 import { Like } from '../models/Like';
+import { Reaction } from '../models/Reaction';
 import { User } from '../models/User';
 import { Notification } from '../models/Notification';
 import { cleanInput } from '../utils/sanitizer';
-import { broadcastNewPost, sendNotificationToUser, broadcastLikeUpdate } from '../config/socket';
+import { broadcastNewPost, sendNotificationToUser, getIO } from '../config/socket';
 
 export interface CreatePostDTO {
   content: string;
@@ -122,19 +124,59 @@ export const getWallPosts = async (params: {
     Post.countDocuments(query),
   ]);
 
-  let likedPostIdsSet = new Set<string>();
-  if (params.currentUserId && rawPosts.length > 0) {
-    const postIds = rawPosts.map((p) => p._id);
-    const userLikes = await Like.find({ userId: params.currentUserId, postId: { $in: postIds } })
-      .select('postId')
-      .lean();
-    userLikes.forEach((l) => likedPostIdsSet.add(l.postId.toString()));
+  if (rawPosts.length === 0) {
+    return { posts: [], pagination: { page, limit, total: 0, totalPages: 0 } };
   }
 
-  const posts = rawPosts.map((p) => ({
-    ...p,
-    hasLiked: likedPostIdsSet.has(p._id.toString()),
-  }));
+  const postObjectIds = rawPosts.map((p) => new mongoose.Types.ObjectId(p._id.toString()));
+
+  // Fetch Telegram-style reactions for all post IDs
+  const allReactions = await Reaction.aggregate([
+    { $match: { postId: { $in: postObjectIds } } },
+    {
+      $group: {
+        _id: { postId: '$postId', emoji: '$emoji' },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  let userReactionsSet = new Set<string>();
+  if (params.currentUserId) {
+    const myReactions = await Reaction.find({
+      userId: new mongoose.Types.ObjectId(params.currentUserId),
+      postId: { $in: postObjectIds },
+    }).lean();
+    myReactions.forEach((r) => userReactionsSet.add(`${r.postId.toString()}_${r.emoji}`));
+  }
+
+  // Build reaction map per post
+  const reactionMap = new Map<string, Record<string, number>>();
+  allReactions.forEach((r) => {
+    const pId = r._id.postId.toString();
+    const emoji = r._id.emoji;
+    if (!reactionMap.has(pId)) {
+      reactionMap.set(pId, {});
+    }
+    reactionMap.get(pId)![emoji] = r.count;
+  });
+
+  const posts = rawPosts.map((p) => {
+    const pId = p._id.toString();
+    const reactions = reactionMap.get(pId) || {};
+    const userReactedEmojis = Array.from(userReactionsSet)
+      .filter((k) => k.startsWith(`${pId}_`))
+      .map((k) => k.split('_')[1]);
+
+    const totalLikes = Object.values(reactions).reduce((sum, val) => sum + val, 0);
+
+    return {
+      ...p,
+      likesCount: totalLikes || p.likesCount || 0,
+      reactions,
+      userReactedEmojis,
+    };
+  });
 
   return {
     posts,
@@ -147,51 +189,61 @@ export const getWallPosts = async (params: {
   };
 };
 
-export const toggleLikePost = async (postId: string, userId: string) => {
+export const toggleEmojiReaction = async (postId: string, userId: string, emoji: string) => {
   const post = await Post.findById(postId);
   if (!post) {
     throw { statusCode: 404, message: 'Post not found' };
   }
 
-  const existingLike = await Like.findOne({ postId, userId });
+  const pObjId = new mongoose.Types.ObjectId(postId);
+  const uObjId = new mongoose.Types.ObjectId(userId);
 
-  let hasLiked = false;
-  if (existingLike) {
-    await Like.deleteOne({ _id: existingLike._id });
-    post.likesCount = Math.max(0, post.likesCount - 1);
-    await post.save();
+  const existingReaction = await Reaction.findOne({ postId: pObjId, userId: uObjId, emoji });
+
+  if (existingReaction) {
+    await Reaction.deleteOne({ _id: existingReaction._id });
   } else {
-    await Like.create({ postId, userId });
-    post.likesCount += 1;
-    await post.save();
-    hasLiked = true;
-
-    // Send notification to post author if not self-like
-    if (post.author && post.author.toString() !== userId) {
-      const notif = await Notification.create({
-        recipientId: post.author,
-        senderId: userId,
-        senderName: 'Someone',
-        postId: post._id,
-        type: 'LIKED',
-        message: 'Someone liked your gratitude note!',
-      });
-
-      sendNotificationToUser(post.author.toString(), {
-        id: notif._id,
-        type: 'LIKED',
-        senderName: 'Gratitude Wall',
-        message: 'Someone liked your gratitude note!',
-        postId: post._id,
-        createdAt: notif.createdAt,
-      });
-    }
+    await Reaction.create({ postId: pObjId, userId: uObjId, emoji });
   }
 
-  // Realtime Socket broadcast for updated like count
-  broadcastLikeUpdate(postId, post.likesCount);
+  // Aggregate updated Telegram-style reactions
+  const updatedReactions = await Reaction.aggregate([
+    { $match: { postId: pObjId } },
+    {
+      $group: {
+        _id: '$emoji',
+        count: { $sum: 1 },
+      },
+    },
+  ]);
 
-  return { postId, likesCount: post.likesCount, hasLiked };
+  const reactionSummary: Record<string, number> = {};
+  let totalCount = 0;
+  updatedReactions.forEach((r) => {
+    reactionSummary[r._id] = r.count;
+    totalCount += r.count;
+  });
+
+  post.likesCount = totalCount;
+  await post.save();
+
+  // Fetch active reactions for this user
+  const userReactions = await Reaction.find({ postId: pObjId, userId: uObjId }).select('emoji').lean();
+  const userReactedEmojis = userReactions.map((r) => r.emoji);
+
+  // Broadcast real-time reaction update via Socket.io
+  try {
+    const io = getIO();
+    io.emit('reaction_update', {
+      postId,
+      reactions: reactionSummary,
+      likesCount: totalCount,
+    });
+  } catch {
+    // Silence socket error
+  }
+
+  return { postId, reactions: reactionSummary, likesCount: totalCount, userReactedEmojis };
 };
 
 export const reportPost = async (postId: string) => {
