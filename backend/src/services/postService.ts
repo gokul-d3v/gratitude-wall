@@ -41,7 +41,7 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
     authorName: authorUser.fullName,
     authorEmployeeCode: authorUser.employeeCode,
     taggedUsers: validTaggedUserIds,
-    team: authorUser.team || 'Engineering',
+    team: authorUser.team || 'General',
     color: dto.color || 'yellow',
   });
 

@@ -36,7 +36,7 @@ const UserSchema = new Schema<IUser>(
     },
     team: {
       type: String,
-      default: 'Engineering',
+      default: '',
       trim: true,
       index: true,
     },

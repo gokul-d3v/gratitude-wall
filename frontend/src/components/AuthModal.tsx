@@ -16,7 +16,7 @@ export const AuthModal: React.FC = () => {
     employeeCode: '',
     password: '',
     confirmPassword: '',
-    team: 'Engineering',
+    team: '',
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -33,21 +33,13 @@ export const AuthModal: React.FC = () => {
   const fetchTeams = async () => {
     try {
       const res = await api.get('/teams');
-      setTeams(res.data.data || []);
-      if (res.data.data?.length > 0) {
-        setFormData((prev) => ({ ...prev, team: res.data.data[0].name }));
+      const teamList = res.data.data || [];
+      setTeams(teamList);
+      if (teamList.length > 0) {
+        setFormData((prev) => ({ ...prev, team: teamList[0].name }));
       }
     } catch {
-      // Fallback default teams
-      setTeams([
-        { _id: '1', name: 'Engineering' },
-        { _id: '2', name: 'Design' },
-        { _id: '3', name: 'Product' },
-        { _id: '4', name: 'Marketing' },
-        { _id: '5', name: 'Sales' },
-        { _id: '6', name: 'HR' },
-        { _id: '7', name: 'Support' },
-      ]);
+      setTeams([]);
     }
   };
 

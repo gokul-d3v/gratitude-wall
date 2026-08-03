@@ -59,12 +59,6 @@ export const App: React.FC = () => {
     fetchPosts();
     checkAuth();
 
-    const retryTimers = [
-      setTimeout(fetchPosts, 800),
-      setTimeout(fetchPosts, 2000),
-      setTimeout(fetchPosts, 4000),
-    ];
-
     const socket = initSocketClient();
 
     const handleConnect = () => {
@@ -109,7 +103,6 @@ export const App: React.FC = () => {
     socket.on('notification', handleNotification);
 
     return () => {
-      retryTimers.forEach(clearTimeout);
       socket.off('connect', handleConnect);
       socket.off('new_post', handleNewPost);
       socket.off('like_update', handleLikeUpdate);
