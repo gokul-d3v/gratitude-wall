@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Bell, User, LogOut, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Bell, User, LogOut, ShieldCheck, Tag, Users } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
 import { StickyColor } from '../types';
@@ -19,9 +19,26 @@ export const Header: React.FC = () => {
     notifications,
     unreadCount,
     setNotifications,
+    fetchPosts,
   } = useWallStore();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [teams, setTeams] = useState<any[]>([]);
+  const [selectedTeam, setSelectedTeam] = useState('all');
+  const [isTaggedMeFilter, setIsTaggedMeFilter] = useState(false);
+
+  useEffect(() => {
+    fetchTeams();
+  }, []);
+
+  const fetchTeams = async () => {
+    try {
+      const res = await api.get('/teams');
+      setTeams(res.data.data || []);
+    } catch {
+      setTeams([]);
+    }
+  };
 
   const filterColors: { key: StickyColor | 'all'; label: string; dot: string }[] = [
     { key: 'all', label: 'All', dot: 'bg-[#0058bd]' },
@@ -41,9 +58,42 @@ export const Header: React.FC = () => {
     }
   };
 
+  const handleTeamFilterChange = (teamName: string) => {
+    setSelectedTeam(teamName);
+    setIsTaggedMeFilter(false);
+    useWallStore.setState({ activeColor: 'all' });
+
+    // Refetch posts with team query
+    api.get(`/posts?team=${teamName}`).then((res) => {
+      if (res.data?.posts) {
+        useWallStore.getState().setPosts(res.data.posts);
+      }
+    });
+  };
+
+  const handleTaggedMeToggle = () => {
+    if (!isAuthenticated || !user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    const nextState = !isTaggedMeFilter;
+    setIsTaggedMeFilter(nextState);
+
+    if (nextState) {
+      api.get(`/posts?taggedUserId=${user.id}`).then((res) => {
+        if (res.data?.posts) {
+          useWallStore.getState().setPosts(res.data.posts);
+        }
+      });
+    } else {
+      fetchPosts();
+    }
+  };
+
   return (
     <header className="animate-fade-slide-up flex flex-col gap-4 mb-6">
-      {/* Main Single Navbar Row */}
+      {/* Main Navbar Row */}
       <div className="flex flex-wrap items-center justify-between gap-3 w-full">
         {/* Brand Title & Subtitle */}
         <div className="flex items-center gap-3">
@@ -56,10 +106,10 @@ export const Header: React.FC = () => {
           </p>
         </div>
 
-        {/* Compact Search & Compact Filters & Sign In in SAME Row */}
+        {/* Search, Compact Filters & Sign In in SAME Header Row */}
         <div className="flex items-center gap-2 flex-wrap ml-auto">
-          {/* Search Bar */}
-          <div className="relative w-40 sm:w-48">
+          {/* Search Input */}
+          <div className="relative w-36 sm:w-44">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
             <input
               type="text"
@@ -69,6 +119,37 @@ export const Header: React.FC = () => {
               className="w-full pl-8 pr-3 py-1.5 rounded-full bg-white border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-[#0058bd]"
             />
           </div>
+
+          {/* Team-Wise Filter Dropdown */}
+          <div className="relative">
+            <select
+              value={selectedTeam}
+              onChange={(e) => handleTeamFilterChange(e.target.value)}
+              className="px-3 py-1.5 rounded-full bg-[#fff8f2] border border-[#c2c6d5] text-[11px] font-semibold text-slate-700 focus:outline-none cursor-pointer"
+            >
+              <option value="all">All Teams</option>
+              {teams.map((t) => (
+                <option key={t._id || t.name} value={t.name}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tagged Me Quick Filter Button */}
+          {isAuthenticated && (
+            <button
+              onClick={handleTaggedMeToggle}
+              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all cursor-pointer ${
+                isTaggedMeFilter
+                  ? 'bg-[#0058bd] text-white border-transparent shadow-2xs'
+                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              <Tag className="w-3 h-3" />
+              Tagged Me
+            </button>
+          )}
 
           {/* Compact Filter Strip (Latest / Trending + Color Dots) */}
           <div className="flex items-center gap-1 bg-[#fff8f2] p-1 rounded-full border border-[#c2c6d5]">
@@ -110,7 +191,7 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* User Session & Sign In Button in SAME Header Row */}
+          {/* User Session & Sign In Button */}
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
               {user?.role === 'ADMIN' && (

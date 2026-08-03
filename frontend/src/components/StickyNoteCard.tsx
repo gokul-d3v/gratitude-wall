@@ -43,6 +43,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [hasLiked, setHasLiked] = useState(post.hasLiked || false);
   const [isLiking, setIsLiking] = useState(false);
+  const [reaction, setReaction] = useState<'love' | 'thanks' | 'star'>('love');
 
   useEffect(() => {
     setLikesCount(post.likesCount || 0);
@@ -86,11 +87,11 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
     <div
       className={`sticky-note ${
         colorClassMap[post.color || 'yellow']
-      } p-6 flex flex-col justify-between rounded-lg font-sans transition-all`}
+      } p-6 flex flex-col justify-between rounded-lg font-sans transition-all relative group`}
     >
       {/* Top Header with Gratified Person Avatar & Label */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
           {avatarInitials}
         </div>
         <div>
@@ -100,9 +101,16 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
           <h4 className="text-sm font-bold text-[#191c1d] mt-0.5">
             {firstTagged ? `@${firstTagged.fullName}` : 'General Appreciation'}
           </h4>
-          <p className="text-[10px] uppercase tracking-tighter text-[#424753]">
-            {formatTimeAgo(post.createdAt)}
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-tighter text-[#424753]">
+              {formatTimeAgo(post.createdAt)}
+            </span>
+            {post.team && (
+              <span className="text-[9px] font-semibold text-slate-600 bg-white/60 px-1.5 py-0.2 rounded-full border border-black/5">
+                {post.team}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -125,28 +133,56 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         </div>
       )}
 
-      {/* Card Footer: Material Symbols Like Heart (Vibrant Red when liked) */}
+      {/* Card Footer: Reaction Icons & Like Heart Button */}
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5">
-        <button
-          onClick={handleLikeToggle}
-          className={`flex items-center gap-1.5 transition-transform hover:scale-110 cursor-pointer ${
-            hasLiked ? 'text-red-600' : 'text-[#424753] hover:text-red-600'
-          }`}
-          title="Like this post"
-        >
-          <span
-            className="material-symbols-outlined text-xl transition-colors"
-            style={{
-              fontVariationSettings: hasLiked ? "'FILL' 1, 'wght' 600" : "'FILL' 0, 'wght' 400",
-              color: hasLiked ? '#dc2626' : 'inherit',
-            }}
+        <div className="flex items-center gap-2">
+          {/* Heart Like Button */}
+          <button
+            onClick={handleLikeToggle}
+            className={`flex items-center gap-1.5 transition-transform hover:scale-110 cursor-pointer ${
+              hasLiked ? 'text-red-600' : 'text-[#424753] hover:text-red-600'
+            }`}
+            title="Like / React to this post"
           >
-            favorite
-          </span>
-          <span className={`text-xs font-bold ${hasLiked ? 'text-red-600' : 'text-[#424753]'}`}>
-            {likesCount}
-          </span>
-        </button>
+            <span
+              className="material-symbols-outlined text-xl transition-colors"
+              style={{
+                fontVariationSettings: hasLiked ? "'FILL' 1, 'wght' 600" : "'FILL' 0, 'wght' 400",
+                color: hasLiked ? '#dc2626' : 'inherit',
+              }}
+            >
+              favorite
+            </span>
+            <span className={`text-xs font-bold ${hasLiked ? 'text-red-600' : 'text-[#424753]'}`}>
+              {likesCount}
+            </span>
+          </button>
+
+          {/* Quick Emoji Reaction Pill */}
+          <div className="flex items-center gap-1 bg-white/60 px-1.5 py-0.5 rounded-full border border-black/5 text-[10px]">
+            <button
+              onClick={() => setReaction('love')}
+              className={`hover:scale-125 transition-transform cursor-pointer ${reaction === 'love' ? 'scale-110' : 'opacity-70'}`}
+              title="Love"
+            >
+              ❤️
+            </button>
+            <button
+              onClick={() => setReaction('thanks')}
+              className={`hover:scale-125 transition-transform cursor-pointer ${reaction === 'thanks' ? 'scale-110' : 'opacity-70'}`}
+              title="Thanks"
+            >
+              🙏
+            </button>
+            <button
+              onClick={() => setReaction('star')}
+              className={`hover:scale-125 transition-transform cursor-pointer ${reaction === 'star' ? 'scale-110' : 'opacity-70'}`}
+              title="Star"
+            >
+              🌟
+            </button>
+          </div>
+        </div>
 
         <span className="text-[10px] font-bold text-[#424753] opacity-60">#gratitude</span>
       </div>

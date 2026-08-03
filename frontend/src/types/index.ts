@@ -5,6 +5,7 @@ export interface User {
   fullName: string;
   employeeCode: string;
   avatarColor?: string;
+  team?: string;
   role?: string;
 }
 
@@ -15,6 +16,7 @@ export interface Post {
   authorName: string;
   authorEmployeeCode: string;
   taggedUsers?: User[];
+  team?: string;
   color: StickyColor;
   likesCount: number;
   hasLiked?: boolean;

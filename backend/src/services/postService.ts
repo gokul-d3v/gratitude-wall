@@ -21,7 +21,7 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
     throw { statusCode: 400, message: 'Post content cannot be empty' };
   }
 
-  const authorUser = await User.findById(authorUserId).select('fullName employeeCode');
+  const authorUser = await User.findById(authorUserId).select('fullName employeeCode team');
   if (!authorUser) {
     throw { statusCode: 404, message: 'Author user account not found' };
   }
@@ -39,11 +39,12 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
     authorName: authorUser.fullName,
     authorEmployeeCode: authorUser.employeeCode,
     taggedUsers: validTaggedUserIds,
+    team: authorUser.team || 'Engineering',
     color: dto.color || 'yellow',
   });
 
   const populatedPost = await Post.findById(newPost._id)
-    .populate('taggedUsers', 'employeeCode fullName avatarColor')
+    .populate('taggedUsers', 'employeeCode fullName avatarColor team')
     .lean();
 
   // 1. Real-time post broadcast to all clients on global wall
@@ -77,6 +78,7 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
 
 export const getWallPosts = async (params: {
   color?: string;
+  team?: string;
   taggedUserId?: string;
   search?: string;
   page?: number;
@@ -91,6 +93,10 @@ export const getWallPosts = async (params: {
 
   if (params.color && ['yellow', 'green', 'blue', 'pink', 'purple'].includes(params.color)) {
     query.color = params.color;
+  }
+
+  if (params.team && params.team !== 'all') {
+    query.team = params.team;
   }
 
   if (params.taggedUserId) {
@@ -111,7 +117,7 @@ export const getWallPosts = async (params: {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('taggedUsers', 'employeeCode fullName avatarColor')
+      .populate('taggedUsers', 'employeeCode fullName avatarColor team')
       .lean(),
     Post.countDocuments(query),
   ]);

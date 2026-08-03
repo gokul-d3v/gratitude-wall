@@ -8,6 +8,7 @@ export interface IPost extends Document {
   authorName: string;
   authorEmployeeCode: string;
   taggedUsers: Types.ObjectId[];
+  team?: string;
   color: StickyColor;
   likesCount: number;
   reportsCount: number;
@@ -45,6 +46,11 @@ const PostSchema = new Schema<IPost>(
         index: true,
       },
     ],
+    team: {
+      type: String,
+      default: 'General',
+      index: true,
+    },
     color: {
       type: String,
       enum: ['yellow', 'green', 'blue', 'pink', 'purple'],

@@ -5,6 +5,7 @@ dotenv.config();
 import app from './app';
 import { connectDB } from './config/db';
 import { initSocket } from './config/socket';
+import { seedInitialAdminAndTeams } from './utils/seedAdmin';
 
 const PORT = process.env.PORT || 5000;
 
@@ -14,7 +15,9 @@ const server = http.createServer(app);
 initSocket(server);
 
 // Connect to Database and start listening
-connectDB().then(() => {
+connectDB().then(async () => {
+  await seedInitialAdminAndTeams();
+
   server.listen(PORT, () => {
     console.log(`====================================================`);
     console.log(`🚀 Virtual Gratitude Wall Backend Server Running!`);

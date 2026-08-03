@@ -6,6 +6,7 @@ export interface RegisterDTO {
   fullName: string;
   employeeCode: string;
   password: string;
+  team?: string;
 }
 
 export interface LoginDTO {
@@ -24,7 +25,7 @@ export const registerUser = async (data: RegisterDTO) => {
   const salt = await bcrypt.genSalt(12);
   const passwordHash = await bcrypt.hash(data.password, salt);
 
-  const colors = ['#0066FF', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#6366F1'];
+  const colors = ['#0058bd', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#6366F1'];
   const randomAvatarColor = colors[Math.floor(Math.random() * colors.length)];
 
   const newUser = await User.create({
@@ -32,6 +33,7 @@ export const registerUser = async (data: RegisterDTO) => {
     fullName: data.fullName.trim(),
     passwordHash,
     avatarColor: randomAvatarColor,
+    team: data.team || 'Engineering',
   });
 
   const tokenPayload = { userId: newUser._id.toString(), employeeCode: newUser.employeeCode, role: newUser.role };
@@ -44,6 +46,7 @@ export const registerUser = async (data: RegisterDTO) => {
       employeeCode: newUser.employeeCode,
       fullName: newUser.fullName,
       avatarColor: newUser.avatarColor,
+      team: newUser.team,
       role: newUser.role,
     },
     accessToken,
@@ -74,6 +77,7 @@ export const loginUser = async (data: LoginDTO) => {
       employeeCode: user.employeeCode,
       fullName: user.fullName,
       avatarColor: user.avatarColor,
+      team: user.team,
       role: user.role,
     },
     accessToken,

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { X, Lock, User as UserIcon, Sparkles, Eye, EyeOff, IdCard } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Lock, User as UserIcon, Sparkles, Eye, EyeOff, IdCard, Users } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
+import { api } from '../services/api';
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, setAuthModalOpen } = useWallStore();
@@ -9,17 +10,46 @@ export const AuthModal: React.FC = () => {
   const { triggerToast } = useWallStore();
 
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [teams, setTeams] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     fullName: '',
     employeeCode: '',
     password: '',
     confirmPassword: '',
+    team: 'Engineering',
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      fetchTeams();
+    }
+  }, [isAuthModalOpen]);
+
+  const fetchTeams = async () => {
+    try {
+      const res = await api.get('/teams');
+      setTeams(res.data.data || []);
+      if (res.data.data?.length > 0) {
+        setFormData((prev) => ({ ...prev, team: res.data.data[0].name }));
+      }
+    } catch {
+      // Fallback default teams
+      setTeams([
+        { _id: '1', name: 'Engineering' },
+        { _id: '2', name: 'Design' },
+        { _id: '3', name: 'Product' },
+        { _id: '4', name: 'Marketing' },
+        { _id: '5', name: 'Sales' },
+        { _id: '6', name: 'HR' },
+        { _id: '7', name: 'Support' },
+      ]);
+    }
+  };
 
   if (!isAuthModalOpen) return null;
 
@@ -59,8 +89,9 @@ export const AuthModal: React.FC = () => {
           fullName: formData.fullName.trim(),
           employeeCode: formData.employeeCode.trim().toUpperCase(),
           password: formData.password,
+          team: formData.team,
         });
-        triggerToast('Registration successful! Welcome to the Gratitude Wall.', 'success');
+        triggerToast('Registration successful! Welcome to BROTIFY.', 'success');
       } else {
         await login({
           employeeCode: formData.employeeCode.trim().toUpperCase(),
@@ -89,7 +120,7 @@ export const AuthModal: React.FC = () => {
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white">
+          <div className="w-10 h-10 rounded-xl bg-[#0058bd] flex items-center justify-center text-white">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
@@ -119,15 +150,36 @@ export const AuthModal: React.FC = () => {
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   placeholder="e.g. Sarah Jenkins"
-                  className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
                 />
+              </div>
+            </div>
+          )}
+
+          {/* Team Dropdown Selection (Register Only) */}
+          {isRegisterMode && (
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Department / Team</label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <select
+                  value={formData.team}
+                  onChange={(e) => setFormData({ ...formData, team: e.target.value })}
+                  className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0058bd] bg-white cursor-pointer"
+                >
+                  {teams.map((t) => (
+                    <option key={t._id || t.name} value={t.name}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           )}
 
           {/* Employee Code */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Employee Code</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Employee Code / Username</label>
             <div className="relative">
               <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -135,8 +187,8 @@ export const AuthModal: React.FC = () => {
                 required
                 value={formData.employeeCode}
                 onChange={(e) => setFormData({ ...formData, employeeCode: e.target.value })}
-                placeholder="e.g. EMP1004"
-                className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g. BROTOTYPE or EMP1004"
+                className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 uppercase focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
               />
             </div>
           </div>
@@ -152,7 +204,7 @@ export const AuthModal: React.FC = () => {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="••••••••"
-                className="w-full pl-9 pr-10 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-9 pr-10 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
               />
               <button
                 type="button"
@@ -177,7 +229,7 @@ export const AuthModal: React.FC = () => {
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-10 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-9 pr-10 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
                 />
                 <button
                   type="button"
@@ -194,7 +246,7 @@ export const AuthModal: React.FC = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="mt-2 w-full py-3 rounded-lg bg-[#0066FF] hover:bg-[#0052CC] text-white font-semibold text-sm shadow-md transition-all cursor-pointer disabled:opacity-50"
+            className="mt-2 w-full py-3 rounded-lg bg-[#0058bd] hover:bg-[#004494] text-white font-semibold text-sm shadow-md transition-all cursor-pointer disabled:opacity-50"
           >
             {isSubmitting ? 'Processing...' : isRegisterMode ? 'Register Account' : 'Sign In'}
           </button>
@@ -207,7 +259,7 @@ export const AuthModal: React.FC = () => {
               setIsRegisterMode(!isRegisterMode);
               setError('');
             }}
-            className="font-bold text-blue-600 hover:underline cursor-pointer"
+            className="font-bold text-[#0058bd] hover:underline cursor-pointer"
           >
             {isRegisterMode ? 'Sign In with Employee Code' : 'Register Here'}
           </button>

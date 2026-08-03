@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ShieldCheck, Trash2, ShieldAlert, Users, Heart, FileText, CheckCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Trash2, ShieldAlert, Users, Heart, FileText, RefreshCw, Plus } from 'lucide-react';
 import { useWallStore } from '../store/useWallStore';
 import { api } from '../services/api';
 
@@ -13,11 +13,13 @@ interface AdminStats {
 
 export const AdminDashboard: React.FC = () => {
   const { setAdminViewOpen, triggerToast } = useWallStore();
-  const [activeTab, setActiveTab] = useState<'stats' | 'posts' | 'users'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'posts' | 'users' | 'teams'>('stats');
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [teams, setTeams] = useState<any[]>([]);
+  const [newTeamName, setNewTeamName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -36,6 +38,9 @@ export const AdminDashboard: React.FC = () => {
       } else if (activeTab === 'users') {
         const res = await api.get('/admin/users');
         setUsers(res.data.data || []);
+      } else if (activeTab === 'teams') {
+        const res = await api.get('/teams');
+        setTeams(res.data.data || []);
       }
     } catch (err: any) {
       triggerToast(err.response?.data?.message || 'Failed to load admin data', 'error');
@@ -76,6 +81,31 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleCreateTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTeamName.trim()) return;
+
+    try {
+      const res = await api.post('/admin/teams', { name: newTeamName.trim() });
+      setTeams([...teams, res.data.data]);
+      setNewTeamName('');
+      triggerToast('New team created successfully!', 'success');
+    } catch (err: any) {
+      triggerToast(err.response?.data?.message || 'Failed to create team', 'error');
+    }
+  };
+
+  const handleDeleteTeam = async (teamId: string) => {
+    if (!confirm('Are you sure you want to delete this team?')) return;
+    try {
+      await api.delete(`/admin/teams/${teamId}`);
+      setTeams(teams.filter((t) => t._id !== teamId));
+      triggerToast('Team deleted successfully', 'success');
+    } catch {
+      triggerToast('Failed to delete team', 'error');
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#fffcf9] overflow-y-auto">
       {/* Top Header */}
@@ -94,7 +124,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
             <div>
               <h1 className="font-bold text-lg text-[#191c1d] leading-none">BROTIFY Admin Dashboard</h1>
-              <p className="text-xs text-slate-500 mt-0.5">Content Moderation & Employee Portal Control</p>
+              <p className="text-xs text-slate-500 mt-0.5">Content Moderation & Department Control</p>
             </div>
           </div>
         </div>
@@ -115,7 +145,7 @@ export const AdminDashboard: React.FC = () => {
               activeTab === 'posts' ? 'bg-[#0058bd] text-white shadow-xs' : 'text-slate-700 hover:bg-white'
             }`}
           >
-            Moderation ({posts.filter((p) => p.isQuarantined || p.reportsCount > 0).length})
+            Moderation
           </button>
           <button
             onClick={() => setActiveTab('users')}
@@ -124,6 +154,14 @@ export const AdminDashboard: React.FC = () => {
             }`}
           >
             Employees
+          </button>
+          <button
+            onClick={() => setActiveTab('teams')}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'teams' ? 'bg-[#0058bd] text-white shadow-xs' : 'text-slate-700 hover:bg-white'
+            }`}
+          >
+            Teams
           </button>
         </div>
       </header>
@@ -179,6 +217,47 @@ export const AdminDashboard: React.FC = () => {
                   <p className="text-xs text-slate-500">Quarantined Notes</p>
                 </div>
               </div>
+            </div>
+          </div>
+        ) : activeTab === 'teams' ? (
+          <div className="flex flex-col gap-8 animate-fade-slide-up">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h2 className="text-2xl font-bold text-[#191c1d]">Department Team Management</h2>
+
+              <form onSubmit={handleCreateTeam} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newTeamName}
+                  onChange={(e) => setNewTeamName(e.target.value)}
+                  placeholder="New Team Name (e.g. Operations)"
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
+                />
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-1 px-4 py-2 rounded-xl bg-[#0058bd] hover:bg-[#004494] text-white text-xs font-bold shadow-xs cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Team
+                </button>
+              </form>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {teams.map((t) => (
+                <div key={t._id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-base text-slate-900">{t.name}</h3>
+                    <p className="text-xs text-slate-500">{t.description || 'Department'}</p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteTeam(t._id)}
+                    className="p-2 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                    title="Delete Team"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         ) : activeTab === 'posts' ? (
@@ -254,6 +333,7 @@ export const AdminDashboard: React.FC = () => {
                   <tr>
                     <th className="p-4">Employee</th>
                     <th className="p-4">Employee Code</th>
+                    <th className="p-4">Team</th>
                     <th className="p-4">Role</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
@@ -271,6 +351,7 @@ export const AdminDashboard: React.FC = () => {
                         {u.fullName}
                       </td>
                       <td className="p-4 font-mono font-semibold text-slate-600">{u.employeeCode}</td>
+                      <td className="p-4 font-medium text-slate-600">{u.team || 'Engineering'}</td>
                       <td className="p-4">
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${

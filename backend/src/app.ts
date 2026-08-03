@@ -10,6 +10,7 @@ import postRoutes from './routes/postRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import userRoutes from './routes/userRoutes';
 import adminRoutes from './routes/adminRoutes';
+import teamRoutes from './routes/teamRoutes';
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/teams', teamRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

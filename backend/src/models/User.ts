@@ -5,6 +5,7 @@ export interface IUser extends Document {
   fullName: string;
   passwordHash: string;
   avatarColor: string;
+  team: string;
   role: 'USER' | 'ADMIN';
   createdAt: Date;
   updatedAt: Date;
@@ -31,7 +32,13 @@ const UserSchema = new Schema<IUser>(
     },
     avatarColor: {
       type: String,
-      default: '#0066FF',
+      default: '#0058bd',
+    },
+    team: {
+      type: String,
+      default: 'Engineering',
+      trim: true,
+      index: true,
     },
     role: {
       type: String,

@@ -18,10 +18,11 @@ export const createPostHandler = async (req: AuthRequest, res: Response, next: N
 
 export const getPostsHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { color, taggedUserId, search, page, limit } = req.query;
+    const { color, team, taggedUserId, search, page, limit } = req.query;
 
     const result = await getWallPosts({
       color: color as string,
+      team: team as string,
       taggedUserId: taggedUserId as string,
       search: search as string,
       page: page ? parseInt(page as string, 10) : 1,
