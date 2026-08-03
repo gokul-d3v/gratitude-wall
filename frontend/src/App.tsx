@@ -29,11 +29,37 @@ export const App: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize Auth Session & Real-Time Socket Connection
+  const fetchPosts = async () => {
+    setIsLoading(true);
+    try {
+      const res = await api.get('/posts');
+      if (res.data && Array.isArray(res.data.posts)) {
+        setPosts(res.data.posts);
+      }
+    } catch {
+      // Fallback retry
+      try {
+        const retryRes = await api.get('/posts');
+        if (retryRes.data && Array.isArray(retryRes.data.posts)) {
+          setPosts(retryRes.data.posts);
+        }
+      } catch {
+        // Silence
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Cold Start Initialization
   useEffect(() => {
-    checkAuth();
+    // 1. Fetch posts immediately for instant guest view
     fetchPosts();
 
+    // 2. Perform background auth session check
+    checkAuth();
+
+    // 3. Initialize real-time Socket.io connection
     const socket = initSocketClient();
 
     const handleNewPost = (post: any) => {
@@ -62,21 +88,10 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  // Re-fetch posts whenever authentication state changes
   useEffect(() => {
     fetchPosts();
   }, [isAuthenticated]);
-
-  const fetchPosts = async () => {
-    setIsLoading(true);
-    try {
-      const res = await api.get('/posts');
-      setPosts(res.data.posts || []);
-    } catch {
-      // Fallback
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleOpenAddPost = () => {
     if (!isAuthenticated) {
@@ -116,7 +131,7 @@ export const App: React.FC = () => {
         <TopGratitudeSpotlight />
 
         {/* Wall Workspace */}
-        {isLoading ? (
+        {isLoading && posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3 text-slate-400">
             <Sparkles className="w-8 h-8 animate-spin text-[#0058bd]" />
             <p className="text-sm font-medium">Loading gratitude wall...</p>
