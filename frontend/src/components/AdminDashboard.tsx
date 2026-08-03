@@ -1,28 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  TrendingUp,
-  Settings,
-  Home,
-  Bell,
-  User as UserIcon,
-  LogOut,
-  Plus,
-  Search,
-  Filter,
-  Terminal,
-  Palette,
-  Badge,
-  Megaphone,
-  MoreVertical,
-  Trash2,
-  ShieldAlert,
-  Send,
-  Sparkles,
-  RefreshCw,
-} from 'lucide-react';
 import { useWallStore } from '../store/useWallStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { api } from '../services/api';
@@ -39,7 +15,7 @@ export const AdminDashboard: React.FC = () => {
   const { setAdminViewOpen, triggerToast } = useWallStore();
   const { user, logout } = useAuthStore();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'departments' | 'posts' | 'users' | 'announcements'>('departments');
+  const [activeNav, setActiveNav] = useState<'dashboard' | 'users' | 'posts' | 'analytics' | 'settings'>('users');
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
@@ -47,40 +23,39 @@ export const AdminDashboard: React.FC = () => {
   const [teams, setTeams] = useState<any[]>([]);
   const [filterQuery, setFilterQuery] = useState('');
 
-  // Add Department Modal Form State
+  // Add Department Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamDesc, setNewTeamDesc] = useState('');
   const [isSubmittingTeam, setIsSubmittingTeam] = useState(false);
 
-  // Announcement Form State
+  // System Announcement
   const [notifMessage, setNotifMessage] = useState('');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchAdminData();
-  }, [activeTab]);
+  }, [activeNav]);
 
   const fetchAdminData = async () => {
     setIsLoading(true);
     try {
-      if (activeTab === 'dashboard' || activeTab === 'departments') {
-        const [statsRes, teamsRes] = await Promise.all([
+      if (activeNav === 'dashboard' || activeNav === 'users' || activeNav === 'analytics') {
+        const [statsRes, teamsRes, usersRes] = await Promise.all([
           api.get('/admin/stats'),
           api.get('/teams'),
+          api.get('/admin/users'),
         ]);
         setStats(statsRes.data.data);
         setTeams(teamsRes.data.data || []);
-      } else if (activeTab === 'posts') {
+        setUsers(usersRes.data.data || []);
+      } else if (activeNav === 'posts') {
         const res = await api.get('/admin/posts');
         setPosts(res.data.data || []);
-      } else if (activeTab === 'users') {
-        const res = await api.get('/admin/users');
-        setUsers(res.data.data || []);
       }
     } catch (err: any) {
-      triggerToast(err.response?.data?.message || 'Failed to load admin data', 'error');
+      triggerToast(err.response?.data?.message || 'Failed to load console data', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -94,13 +69,13 @@ export const AdminDashboard: React.FC = () => {
     try {
       const res = await api.post('/admin/teams', {
         name: newTeamName.trim(),
-        description: newTeamDesc.trim() || 'Department Division',
+        description: newTeamDesc.trim() || 'Core Division',
       });
       setTeams([...teams, res.data.data]);
       setNewTeamName('');
       setNewTeamDesc('');
       setIsAddModalOpen(false);
-      triggerToast('Department added successfully!', 'success');
+      triggerToast('Department created successfully!', 'success');
     } catch (err: any) {
       triggerToast(err.response?.data?.message || 'Failed to create department', 'error');
     } finally {
@@ -123,7 +98,7 @@ export const AdminDashboard: React.FC = () => {
     try {
       const res = await api.put(`/admin/posts/${postId}/quarantine`);
       setPosts(posts.map((p) => (p._id === postId ? { ...p, isQuarantined: res.data.data.isQuarantined } : p)));
-      triggerToast('Post status updated', 'success');
+      triggerToast('Post moderation status updated', 'success');
     } catch {
       triggerToast('Failed to update post status', 'error');
     }
@@ -134,7 +109,7 @@ export const AdminDashboard: React.FC = () => {
     try {
       await api.delete(`/admin/posts/${postId}`);
       setPosts(posts.filter((p) => p._id !== postId));
-      triggerToast('Post permanently deleted', 'success');
+      triggerToast('Post deleted permanently', 'success');
     } catch {
       triggerToast('Failed to delete post', 'error');
     }
@@ -175,83 +150,83 @@ export const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-[#f8f9fa] text-[#191c1d] font-sans overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-[#f8f9fa] text-[#191c1d] font-sans overflow-hidden flex">
       {/* Side Navigation Shell */}
-      <aside className="fixed left-0 top-0 h-full w-[256px] bg-[#f8f9fa] border-r border-[#c2c6d5] flex flex-col py-6 z-50 shrink-0">
+      <aside className="docked fixed left-0 top-0 h-full w-[256px] bg-[#f8f9fa] border-r border-[#c2c6d5] flex flex-col py-6 z-50 shrink-0">
         <div className="px-6 mb-8">
-          <h1 className="text-2xl font-bold text-[#0058bd] tracking-tight">Admin Panel</h1>
-          <p className="text-xs font-medium text-[#424753] mt-0.5">Management Console</p>
+          <h1 className="text-2xl font-bold text-[#2771df] tracking-tight">Admin Panel</h1>
+          <p className="text-xs font-medium text-[#424753]">Management Console</p>
         </div>
 
         <nav className="flex-1 space-y-1">
           <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-              activeTab === 'dashboard'
-                ? 'bg-[#86f898] text-[#00722f] border-l-4 border-[#0058bd]'
+            onClick={() => setActiveNav('dashboard')}
+            className={`w-full flex items-center gap-3 px-4 py-3 mx-2 text-left cursor-pointer transition-colors duration-200 ${
+              activeNav === 'dashboard'
+                ? 'bg-[#86f898] text-[#00722f] rounded-lg border-l-4 border-[#0058bd] opacity-90'
                 : 'text-[#424753] hover:bg-[#e7e8e9]'
             }`}
           >
-            <LayoutDashboard className="w-4 h-4" />
-            Dashboard
+            <span className="material-symbols-outlined text-[20px]">dashboard</span>
+            <span className="text-xs font-medium">Dashboard</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('departments')}
-            className={`w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-              activeTab === 'departments'
-                ? 'bg-[#86f898] text-[#00722f] border-l-4 border-[#0058bd]'
+            onClick={() => setActiveNav('users')}
+            className={`w-full flex items-center gap-3 px-4 py-3 mx-2 text-left cursor-pointer transition-colors duration-200 ${
+              activeNav === 'users'
+                ? 'bg-[#86f898] text-[#00722f] rounded-lg border-l-4 border-[#0058bd] opacity-90'
                 : 'text-[#424753] hover:bg-[#e7e8e9]'
             }`}
           >
-            <Users className="w-4 h-4" />
-            Departments
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>group</span>
+            <span className="text-xs font-medium">Users & Departments</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('posts')}
-            className={`w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-              activeTab === 'posts'
-                ? 'bg-[#86f898] text-[#00722f] border-l-4 border-[#0058bd]'
+            onClick={() => setActiveNav('posts')}
+            className={`w-full flex items-center gap-3 px-4 py-3 mx-2 text-left cursor-pointer transition-colors duration-200 ${
+              activeNav === 'posts'
+                ? 'bg-[#86f898] text-[#00722f] rounded-lg border-l-4 border-[#0058bd] opacity-90'
                 : 'text-[#424753] hover:bg-[#e7e8e9]'
             }`}
           >
-            <FileText className="w-4 h-4" />
-            Posts Moderation
+            <span className="material-symbols-outlined text-[20px]">description</span>
+            <span className="text-xs font-medium">Posts</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('users')}
-            className={`w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-              activeTab === 'users'
-                ? 'bg-[#86f898] text-[#00722f] border-l-4 border-[#0058bd]'
+            onClick={() => setActiveNav('analytics')}
+            className={`w-full flex items-center gap-3 px-4 py-3 mx-2 text-left cursor-pointer transition-colors duration-200 ${
+              activeNav === 'analytics'
+                ? 'bg-[#86f898] text-[#00722f] rounded-lg border-l-4 border-[#0058bd] opacity-90'
                 : 'text-[#424753] hover:bg-[#e7e8e9]'
             }`}
           >
-            <Users className="w-4 h-4" />
-            Users Directory
+            <span className="material-symbols-outlined text-[20px]">analytics</span>
+            <span className="text-xs font-medium">Analytics</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('announcements')}
-            className={`w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-              activeTab === 'announcements'
-                ? 'bg-[#86f898] text-[#00722f] border-l-4 border-[#0058bd]'
+            onClick={() => setActiveNav('settings')}
+            className={`w-full flex items-center gap-3 px-4 py-3 mx-2 text-left cursor-pointer transition-colors duration-200 ${
+              activeNav === 'settings'
+                ? 'bg-[#86f898] text-[#00722f] rounded-lg border-l-4 border-[#0058bd] opacity-90'
                 : 'text-[#424753] hover:bg-[#e7e8e9]'
             }`}
           >
-            <Bell className="w-4 h-4" />
-            Announcements
+            <span className="material-symbols-outlined text-[20px]">settings</span>
+            <span className="text-xs font-medium">Settings & Announcements</span>
           </button>
         </nav>
 
         <div className="mt-auto border-t border-[#c2c6d5] pt-4">
           <button
             onClick={() => setAdminViewOpen(false)}
-            className="w-full flex items-center gap-3 text-[#424753] px-4 py-3 mx-2 hover:bg-[#e7e8e9] transition-colors cursor-pointer rounded-lg text-xs font-semibold"
+            className="w-full flex items-center gap-3 text-[#424753] px-4 py-3 mx-2 hover:bg-[#e7e8e9] transition-colors duration-200 cursor-pointer rounded-lg text-xs font-medium"
           >
-            <Home className="w-4 h-4 text-[#0058bd]" />
-            View Wall
+            <span className="material-symbols-outlined text-[20px] text-[#0058bd]">home</span>
+            <span className="text-xs font-medium">View Wall</span>
           </button>
         </div>
       </aside>
@@ -261,15 +236,15 @@ export const AdminDashboard: React.FC = () => {
         {/* Top App Bar */}
         <header className="sticky top-0 right-0 bg-[#f8f9fa] flex justify-between items-center h-16 px-8 w-full z-40 border-b border-[#c2c6d5] shrink-0">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-medium text-[#191c1d] capitalize">{activeTab}</h2>
+            <h2 className="text-xl font-medium text-[#191c1d] capitalize">{activeNav}</h2>
           </div>
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-4">
               <button className="p-2 text-[#424753] hover:text-[#0058bd] transition-colors cursor-pointer">
-                <Bell className="w-5 h-5" />
+                <span className="material-symbols-outlined">notifications</span>
               </button>
               <button className="p-2 text-[#424753] hover:text-[#0058bd] transition-colors cursor-pointer">
-                <UserIcon className="w-5 h-5" />
+                <span className="material-symbols-outlined">account_circle</span>
               </button>
             </div>
             <div className="h-8 w-px bg-[#c2c6d5]"></div>
@@ -286,12 +261,12 @@ export const AdminDashboard: React.FC = () => {
         <main className="min-h-screen p-8 max-w-[1440px] w-full mx-auto">
           {isLoading ? (
             <div className="flex items-center justify-center min-h-[50vh] gap-3 text-slate-500">
-              <RefreshCw className="w-6 h-6 animate-spin text-[#0058bd]" />
-              <span className="text-sm font-medium">Loading console data...</span>
+              <span className="material-symbols-outlined text-[#0058bd] animate-spin">refresh</span>
+              <span className="text-sm font-medium">Loading management data...</span>
             </div>
-          ) : activeTab === 'departments' || activeTab === 'dashboard' ? (
+          ) : activeNav === 'users' || activeNav === 'dashboard' ? (
             <div className="space-y-6 animate-fade-slide-up">
-              {/* Header Section with Stats & Add Department Button */}
+              {/* Header Section with Stats */}
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
                   <h3 className="text-2xl font-semibold text-[#191c1d]">Organization Overview</h3>
@@ -299,9 +274,9 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="flex items-center gap-2 bg-[#0058bd] hover:bg-[#004494] text-white px-6 py-2.5 rounded-lg font-medium text-xs shadow-sm transition-all cursor-pointer active:scale-95"
+                  className="flex items-center gap-2 bg-[#0058bd] text-white px-6 py-2.5 rounded-lg font-medium text-xs hover:opacity-90 transition-all shadow-xs active:scale-95 cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
+                  <span className="material-symbols-outlined text-[18px]">add</span>
                   Add Department
                 </button>
               </div>
@@ -311,9 +286,9 @@ export const AdminDashboard: React.FC = () => {
                 <div className="bg-white p-6 rounded-xl border border-[#c2c6d5] shadow-xs flex flex-col justify-between">
                   <span className="text-xs font-medium text-[#424753] uppercase tracking-wider">Total Members</span>
                   <div className="mt-4 flex items-baseline gap-2">
-                    <span className="text-3xl font-semibold text-[#191c1d]">{stats?.totalUsers || 1248}</span>
+                    <span className="text-3xl font-bold text-[#191c1d]">{stats?.totalUsers || 1248}</span>
                     <span className="text-[#00722f] text-xs font-medium flex items-center gap-1">
-                      <TrendingUp className="w-3.5 h-3.5" /> 12%
+                      <span className="material-symbols-outlined text-[14px]">trending_up</span> 12%
                     </span>
                   </div>
                 </div>
@@ -321,7 +296,7 @@ export const AdminDashboard: React.FC = () => {
                 <div className="bg-white p-6 rounded-xl border border-[#c2c6d5] shadow-xs flex flex-col justify-between">
                   <span className="text-xs font-medium text-[#424753] uppercase tracking-wider">Avg Activity</span>
                   <div className="mt-4 flex items-baseline gap-2">
-                    <span className="text-3xl font-semibold text-[#191c1d]">84%</span>
+                    <span className="text-3xl font-bold text-[#191c1d]">84%</span>
                     <span className="text-[#424753] text-xs font-medium">Steady</span>
                   </div>
                 </div>
@@ -338,13 +313,13 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Data Table Section */}
+              {/* Active Departments Data Table */}
               <div className="bg-white rounded-xl border border-[#c2c6d5] shadow-xs overflow-hidden">
                 <div className="px-6 py-4 border-b border-[#c2c6d5] flex items-center justify-between bg-[#f3f4f5]">
                   <h4 className="text-lg font-medium text-[#191c1d]">Active Departments</h4>
                   <div className="flex gap-2">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#424753] w-4 h-4" />
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#424753] text-[18px]">search</span>
                       <input
                         value={filterQuery}
                         onChange={(e) => setFilterQuery(e.target.value)}
@@ -353,8 +328,8 @@ export const AdminDashboard: React.FC = () => {
                         type="text"
                       />
                     </div>
-                    <button className="p-2 border border-[#c2c6d5] rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
-                      <Filter className="w-4 h-4 text-[#424753]" />
+                    <button className="p-2 border border-[#c2c6d5] rounded-lg hover:bg-[#edeeef] transition-colors cursor-pointer">
+                      <span className="material-symbols-outlined text-[18px]">filter_list</span>
                     </button>
                   </div>
                 </div>
@@ -377,11 +352,11 @@ export const AdminDashboard: React.FC = () => {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-lg bg-[#d8e2ff] flex items-center justify-center">
-                                <Terminal className="w-5 h-5 text-[#0058bd]" />
+                                <span className="material-symbols-outlined text-[#0058bd]">terminal</span>
                               </div>
                               <div>
                                 <div className="text-sm font-semibold text-[#191c1d]">{team.name}</div>
-                                <div className="text-xs text-[#424753]">{team.description || 'Division'}</div>
+                                <div className="text-xs text-[#424753]">{team.description || 'Core Infrastructure'}</div>
                               </div>
                             </div>
                           </td>
@@ -390,30 +365,30 @@ export const AdminDashboard: React.FC = () => {
                               <div className="w-8 h-8 rounded-full bg-[#e1e3e4] border border-[#c2c6d5] flex items-center justify-center font-bold text-xs text-[#0058bd]">
                                 {team.name?.[0]?.toUpperCase()}
                               </div>
-                              <span className="text-xs font-medium text-[#191c1d]">Lead Manager</span>
+                              <span className="text-xs font-medium text-[#191c1d]">Alex Rivera</span>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-center">
                             <span className="text-xs font-medium text-[#191c1d]">482</span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <div className="w-24 bg-[#e1e3e4] h-2 rounded-full mx-auto overflow-hidden">
-                              <div className="bg-[#006e2c] h-full rounded-full" style={{ width: '92%' }}></div>
+                            <div className="w-24 bg-[#e7e8e9] h-2 rounded-full mx-auto overflow-hidden">
+                              <div className="bg-[#00722f] h-full rounded-full" style={{ width: '92%' }}></div>
                             </div>
                             <span className="text-[10px] text-[#424753] mt-1 block">92% High</span>
                           </td>
                           <td className="px-6 py-4">
                             <span className="inline-flex items-center gap-1 text-[#00722f] text-xs font-medium bg-[#86f898]/30 px-2 py-0.5 rounded-full">
-                              <TrendingUp className="w-3 h-3" /> 8%
+                              <span className="material-symbols-outlined text-[14px]">north_east</span> 8%
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
                             <button
                               onClick={() => handleDeleteTeam(team._id)}
-                              className="text-slate-400 hover:text-rose-600 transition-colors p-1.5 rounded-md hover:bg-rose-50 cursor-pointer"
+                              className="text-[#424753] hover:text-rose-600 transition-colors p-1 rounded-md cursor-pointer"
                               title="Delete Department"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <span className="material-symbols-outlined">more_vert</span>
                             </button>
                           </td>
                         </tr>
@@ -426,7 +401,7 @@ export const AdminDashboard: React.FC = () => {
                   <span>Showing {filteredTeams.length} departments</span>
                   <div className="flex gap-2">
                     <button className="px-4 py-2 text-[#424753] border border-[#c2c6d5] rounded-lg hover:bg-slate-200 cursor-pointer">Previous</button>
-                    <button className="px-4 py-2 text-[#0058bd] border border-[#0058bd] rounded-lg hover:bg-[#d8e2ff] cursor-pointer">Next</button>
+                    <button className="px-4 py-2 text-[#0058bd] border border-[#0058bd] rounded-lg hover:bg-[#d8e2ff] cursor-pointer font-medium">Next</button>
                   </div>
                 </div>
               </div>
@@ -439,11 +414,14 @@ export const AdminDashboard: React.FC = () => {
                     <p className="text-xs text-[#424753] max-w-lg mb-6 leading-relaxed">Evaluate department performance metrics and team compositions for the upcoming fiscal cycle. Access detailed analytics and forecasting tools.</p>
                     <button className="px-6 py-2 border border-[#0058bd] text-[#0058bd] font-medium text-xs rounded-lg hover:bg-[#0058bd]/5 transition-all cursor-pointer">Launch Review Tool</button>
                   </div>
+                  <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[#0058bd]/5 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[120px] text-[#0058bd]/10">assessment</span>
+                  </div>
                 </div>
 
-                <div className="bg-[#006e2c] text-white p-8 rounded-xl border border-[#0058bd] shadow-lg flex flex-col justify-between">
+                <div className="bg-[#00722f] text-white p-8 rounded-xl border border-[#00722f] shadow-lg flex flex-col justify-between">
                   <div>
-                    <Sparkles className="w-8 h-8 mb-4" />
+                    <span className="material-symbols-outlined text-[32px] mb-4">auto_awesome</span>
                     <h4 className="text-lg font-medium mb-2">AI Optimization</h4>
                     <p className="text-xs opacity-90 leading-relaxed">Auto-balance member distributions based on project loads and skill sets.</p>
                   </div>
@@ -451,36 +429,32 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-          ) : activeTab === 'announcements' ? (
-            <div className="max-w-2xl bg-white p-8 rounded-xl border border-[#c2c6d5] shadow-xs space-y-6 animate-fade-slide-up">
-              <div>
-                <h3 className="text-xl font-semibold text-[#191c1d]">Broadcast System Announcement</h3>
-                <p className="text-xs text-[#424753] mt-1">Publish live notifications to all active employees on the gratitude wall</p>
-              </div>
-
-              <form onSubmit={handleBroadcastNotification} className="space-y-4">
-                <textarea
-                  value={notifMessage}
-                  onChange={(e) => setNotifMessage(e.target.value)}
-                  placeholder="Type announcement message (e.g. 'Monthly gratitude awards start today!')..."
-                  rows={5}
-                  required
-                  className="w-full p-4 rounded-xl border border-[#c2c6d5] text-xs focus:ring-2 focus:ring-[#0058bd] outline-none leading-relaxed"
-                />
-
-                <button
-                  type="submit"
-                  disabled={isBroadcasting || !notifMessage.trim()}
-                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#0058bd] hover:bg-[#004494] text-white font-medium text-xs shadow-sm cursor-pointer disabled:opacity-50"
-                >
-                  <Send className="w-4 h-4" />
-                  {isBroadcasting ? 'Broadcasting...' : 'Broadcast Alert to All Users'}
-                </button>
-              </form>
-            </div>
-          ) : activeTab === 'posts' ? (
+          ) : activeNav === 'analytics' ? (
             <div className="space-y-6 animate-fade-slide-up">
-              <h3 className="text-xl font-semibold text-[#191c1d]">Content Moderation & Post Deletion</h3>
+              <h3 className="text-2xl font-semibold text-[#191c1d]">Platform Telemetry & Analytics</h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="bg-white p-6 rounded-xl border border-[#c2c6d5]">
+                  <span className="text-xs font-semibold text-[#424753] uppercase">Total Users</span>
+                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.totalUsers}</h4>
+                </div>
+                <div className="bg-white p-6 rounded-xl border border-[#c2c6d5]">
+                  <span className="text-xs font-semibold text-[#424753] uppercase">Total Posts</span>
+                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.totalPosts}</h4>
+                </div>
+                <div className="bg-white p-6 rounded-xl border border-[#c2c6d5]">
+                  <span className="text-xs font-semibold text-[#424753] uppercase">Reactions</span>
+                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.totalLikes}</h4>
+                </div>
+                <div className="bg-white p-6 rounded-xl border border-[#c2c6d5]">
+                  <span className="text-xs font-semibold text-[#424753] uppercase">Quarantined</span>
+                  <h4 className="text-3xl font-bold text-[#191c1d] mt-2">{stats?.quarantinedPosts}</h4>
+                </div>
+              </div>
+            </div>
+          ) : activeNav === 'posts' ? (
+            <div className="space-y-6 animate-fade-slide-up">
+              <h3 className="text-2xl font-semibold text-[#191c1d]">Content Moderation & Post Deletion</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {posts.map((post) => (
                   <div key={post._id} className="bg-white p-6 rounded-xl border border-[#c2c6d5] shadow-xs flex flex-col justify-between">
@@ -503,7 +477,7 @@ export const AdminDashboard: React.FC = () => {
                         onClick={() => handleDeletePost(post._id)}
                         className="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-semibold cursor-pointer flex items-center gap-1"
                       >
-                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                        <span className="material-symbols-outlined text-[16px]">delete</span> Delete
                       </button>
                     </div>
                   </div>
@@ -511,39 +485,31 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="space-y-6 animate-fade-slide-up">
-              <h3 className="text-xl font-semibold text-[#191c1d]">User Directory & Roles</h3>
-              <div className="bg-white rounded-xl border border-[#c2c6d5] overflow-hidden">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#f3f4f5] text-[#424753] font-semibold border-b border-[#c2c6d5]">
-                    <tr>
-                      <th className="p-4">Name</th>
-                      <th className="p-4">Employee Code</th>
-                      <th className="p-4">Department</th>
-                      <th className="p-4">Role</th>
-                      <th className="p-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#c2c6d5]">
-                    {users.map((u) => (
-                      <tr key={u._id} className="hover:bg-[#f3f4f5]">
-                        <td className="p-4 font-semibold text-[#191c1d]">{u.fullName}</td>
-                        <td className="p-4 font-mono text-[#424753]">{u.employeeCode}</td>
-                        <td className="p-4 text-[#424753]">{u.team || 'Engineering'}</td>
-                        <td className="p-4 font-bold text-[#0058bd]">{u.role}</td>
-                        <td className="p-4 text-right">
-                          <button
-                            onClick={() => handleRoleToggle(u._id, u.role)}
-                            className="px-3 py-1 border border-[#c2c6d5] rounded-lg hover:bg-slate-100 cursor-pointer"
-                          >
-                            Toggle Role
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="max-w-2xl bg-white p-8 rounded-xl border border-[#c2c6d5] shadow-xs space-y-6 animate-fade-slide-up">
+              <div>
+                <h3 className="text-xl font-semibold text-[#191c1d]">Broadcast Announcement</h3>
+                <p className="text-xs text-[#424753] mt-1">Publish live notifications to all active employees on the wall</p>
               </div>
+
+              <form onSubmit={handleBroadcastNotification} className="space-y-4">
+                <textarea
+                  value={notifMessage}
+                  onChange={(e) => setNotifMessage(e.target.value)}
+                  placeholder="Type announcement message (e.g. 'Monthly gratitude awards start today!')..."
+                  rows={5}
+                  required
+                  className="w-full p-4 rounded-xl border border-[#c2c6d5] text-xs focus:ring-2 focus:ring-[#0058bd] outline-none leading-relaxed text-[#191c1d]"
+                />
+
+                <button
+                  type="submit"
+                  disabled={isBroadcasting || !notifMessage.trim()}
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#0058bd] text-white font-medium text-xs shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined text-[18px]">send</span>
+                  {isBroadcasting ? 'Broadcasting...' : 'Broadcast Alert to All Users'}
+                </button>
+              </form>
             </div>
           )}
         </main>
@@ -563,7 +529,7 @@ export const AdminDashboard: React.FC = () => {
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
                   placeholder="e.g. Operations"
-                  className="w-full px-3 py-2 rounded-lg border border-[#c2c6d5] text-xs focus:ring-2 focus:ring-[#0058bd] outline-none"
+                  className="w-full px-3 py-2 rounded-lg border border-[#c2c6d5] text-xs focus:ring-2 focus:ring-[#0058bd] outline-none text-[#191c1d]"
                 />
               </div>
 
@@ -574,7 +540,7 @@ export const AdminDashboard: React.FC = () => {
                   value={newTeamDesc}
                   onChange={(e) => setNewTeamDesc(e.target.value)}
                   placeholder="e.g. Infrastructure & Logistics"
-                  className="w-full px-3 py-2 rounded-lg border border-[#c2c6d5] text-xs focus:ring-2 focus:ring-[#0058bd] outline-none"
+                  className="w-full px-3 py-2 rounded-lg border border-[#c2c6d5] text-xs focus:ring-2 focus:ring-[#0058bd] outline-none text-[#191c1d]"
                 />
               </div>
 
@@ -582,14 +548,14 @@ export const AdminDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-[#c2c6d5] text-xs font-medium cursor-pointer hover:bg-slate-100"
+                  className="px-4 py-2 rounded-lg border border-[#c2c6d5] text-xs font-medium cursor-pointer hover:bg-[#edeeef]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingTeam}
-                  className="px-4 py-2 rounded-lg bg-[#0058bd] hover:bg-[#004494] text-white text-xs font-medium cursor-pointer shadow-sm disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-[#0058bd] text-white text-xs font-medium cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   {isSubmittingTeam ? 'Adding...' : 'Create Department'}
                 </button>
