@@ -23,13 +23,13 @@ export const Header: React.FC = () => {
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
-  const filterColors: { key: StickyColor | 'all'; label: string; bg: string }[] = [
-    { key: 'all', label: 'All', bg: 'bg-white text-slate-800' },
-    { key: 'yellow', label: 'Yellow', bg: 'bg-sticky-yellow text-slate-800' },
-    { key: 'blue', label: 'Blue', bg: 'bg-sticky-blue text-slate-800' },
-    { key: 'pink', label: 'Pink', bg: 'bg-sticky-pink text-slate-800' },
-    { key: 'green', label: 'Green', bg: 'bg-sticky-green text-slate-800' },
-    { key: 'purple', label: 'Purple', bg: 'bg-sticky-purple text-slate-800' },
+  const filterColors: { key: StickyColor | 'all'; label: string; dot: string }[] = [
+    { key: 'all', label: 'All', dot: 'bg-[#0058bd]' },
+    { key: 'yellow', label: 'Yellow', dot: 'bg-amber-300' },
+    { key: 'blue', label: 'Blue', dot: 'bg-blue-300' },
+    { key: 'pink', label: 'Pink', dot: 'bg-pink-300' },
+    { key: 'green', label: 'Green', dot: 'bg-emerald-300' },
+    { key: 'purple', label: 'Purple', dot: 'bg-purple-300' },
   ];
 
   const handleMarkNotifsRead = async () => {
@@ -42,82 +42,85 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="animate-fade-slide-up flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
-      <div>
-        <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-[#191c1d]">
-          BROTIFY
-        </h1>
-        <p className="font-display text-base sm:text-lg text-[#424753] mt-1">
-          A collection of community moments to be thankful for.
-        </p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-        {/* Search Bar */}
-        <div className="relative flex-1 md:w-56">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search notes..."
-            className="w-full pl-9 pr-4 py-2 rounded-full bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0058bd]/40"
-          />
+    <header className="animate-fade-slide-up flex flex-col gap-4 mb-6">
+      {/* Main Single Navbar Row */}
+      <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+        {/* Brand Title & Subtitle */}
+        <div className="flex items-center gap-3">
+          <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-[#191c1d]">
+            BROTIFY
+          </h1>
+          <span className="hidden sm:inline-block h-5 w-px bg-slate-300" />
+          <p className="hidden sm:block text-xs text-[#424753] font-medium">
+            Virtual Gratitude & Appreciation Wall
+          </p>
         </div>
 
-        {/* Latest vs Trending Filter Pills */}
-        <div className="flex items-center gap-1.5 bg-[#fff8f2] p-1.5 rounded-full border border-[#c2c6d5] overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('latest')}
-            className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === 'latest'
-                ? 'bg-[#f9ebe0] text-[#191c1d] shadow-2xs font-bold'
-                : 'text-[#424753] hover:bg-[#f5e8df]'
-            }`}
-          >
-            Latest
-          </button>
-          <button
-            onClick={() => setActiveTab('trending')}
-            className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === 'trending'
-                ? 'bg-[#f9ebe0] text-[#191c1d] shadow-2xs font-bold'
-                : 'text-[#424753] hover:bg-[#f5e8df]'
-            }`}
-          >
-            Trending
-          </button>
+        {/* Compact Search & Compact Filters & Sign In in SAME Row */}
+        <div className="flex items-center gap-2 flex-wrap ml-auto">
+          {/* Search Bar */}
+          <div className="relative w-40 sm:w-48">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search..."
+              className="w-full pl-8 pr-3 py-1.5 rounded-full bg-white border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-[#0058bd]"
+            />
+          </div>
 
-          {/* Color Pills */}
-          <div className="h-4 w-px bg-slate-300 mx-1" />
-          {filterColors.map((c) => (
+          {/* Compact Filter Strip (Latest / Trending + Color Dots) */}
+          <div className="flex items-center gap-1 bg-[#fff8f2] p-1 rounded-full border border-[#c2c6d5]">
             <button
-              key={c.key}
-              onClick={() => setActiveColor(c.key)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-                activeColor === c.key
-                  ? 'ring-2 ring-[#0058bd] border-transparent scale-105 shadow-2xs'
-                  : 'border-slate-200/60 hover:opacity-80'
-              } ${c.bg}`}
+              onClick={() => setActiveTab('latest')}
+              className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                activeTab === 'latest'
+                  ? 'bg-white text-[#191c1d] shadow-2xs font-bold'
+                  : 'text-[#424753] hover:text-black'
+              }`}
             >
-              {c.label}
+              Latest
             </button>
-          ))}
-        </div>
+            <button
+              onClick={() => setActiveTab('trending')}
+              className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                activeTab === 'trending'
+                  ? 'bg-white text-[#191c1d] shadow-2xs font-bold'
+                  : 'text-[#424753] hover:text-black'
+              }`}
+            >
+              Trending
+            </button>
 
-        {/* User Session, Admin Access & Notifications */}
-        <div className="flex items-center gap-3 ml-auto md:ml-0">
+            <span className="h-3 w-px bg-slate-300 mx-0.5" />
+
+            {/* Compact Color Dots */}
+            <div className="flex items-center gap-1 px-1">
+              {filterColors.map((c) => (
+                <button
+                  key={c.key}
+                  onClick={() => setActiveColor(c.key)}
+                  className={`w-4 h-4 rounded-full ${c.dot} transition-transform cursor-pointer border border-black/10 ${
+                    activeColor === c.key ? 'ring-2 ring-[#0058bd] scale-125' : 'hover:scale-110 opacity-70'
+                  }`}
+                  title={`Filter by ${c.label}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* User Session & Sign In Button in SAME Header Row */}
           {isAuthenticated ? (
-            <>
-              {/* Admin Panel Toggle for ADMIN users */}
+            <div className="flex items-center gap-2">
               {user?.role === 'ADMIN' && (
                 <button
                   onClick={() => setAdminViewOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold shadow-2xs transition-all cursor-pointer"
                   title="Open Admin Dashboard"
                 >
-                  <ShieldCheck className="w-4 h-4" />
-                  Admin Panel
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Admin
                 </button>
               )}
 
@@ -130,12 +133,12 @@ export const Header: React.FC = () => {
                       handleMarkNotifsRead();
                     }
                   }}
-                  className="relative p-2.5 rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 transition-all cursor-pointer shadow-2xs"
+                  className="relative p-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs"
                   title="Notifications"
                 >
-                  <Bell className="w-4 h-4" />
+                  <Bell className="w-3.5 h-3.5" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-xs">
+                    <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
                       {unreadCount}
                     </span>
                   )}
@@ -143,24 +146,24 @@ export const Header: React.FC = () => {
 
                 {/* Notifications Dropdown */}
                 {isNotifOpen && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 animate-fade-slide-up">
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 animate-fade-slide-up">
                     <div className="px-4 pb-2 border-b border-slate-100 flex items-center justify-between">
-                      <span className="font-bold text-sm text-slate-800">Notifications</span>
+                      <span className="font-bold text-xs text-slate-800">Notifications</span>
                       <button
                         onClick={handleMarkNotifsRead}
-                        className="text-xs text-[#0058bd] font-semibold hover:underline"
+                        className="text-[10px] text-[#0058bd] font-semibold hover:underline"
                       >
-                        Mark all read
+                        Mark read
                       </button>
                     </div>
-                    <div className="max-h-64 overflow-y-auto divide-y divide-slate-100">
+                    <div className="max-h-56 overflow-y-auto divide-y divide-slate-100">
                       {notifications.length === 0 ? (
-                        <p className="p-4 text-center text-xs text-slate-400">No notifications yet</p>
+                        <p className="p-3 text-center text-xs text-slate-400">No notifications</p>
                       ) : (
                         notifications.map((n) => (
-                          <div key={n.id || (n as any)._id} className="p-3 hover:bg-slate-50 text-xs">
+                          <div key={n.id || (n as any)._id} className="p-2.5 hover:bg-slate-50 text-xs">
                             <p className="font-semibold text-slate-800">{n.message}</p>
-                            <span className="text-[10px] text-slate-400 mt-1 block">
+                            <span className="text-[9px] text-slate-400 mt-0.5 block">
                               {new Date(n.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
@@ -171,33 +174,32 @@ export const Header: React.FC = () => {
                 )}
               </div>
 
-              {/* Employee Session Badge */}
-              <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-2xs">
+              {/* Employee Badge */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs">
                 <div
                   style={{ backgroundColor: user?.avatarColor || '#0058bd' }}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-xs"
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
                 >
                   {user?.fullName?.[0]?.toUpperCase() || 'E'}
                 </div>
                 <div className="flex flex-col text-left">
                   <span className="text-xs font-bold text-[#191c1d] leading-none">{user?.fullName}</span>
-                  <span className="text-[10px] font-mono text-slate-500 font-semibold">{user?.employeeCode}</span>
                 </div>
                 <button
                   onClick={() => logout()}
-                  className="p-1 hover:text-rose-600 transition-colors cursor-pointer ml-1"
+                  className="p-0.5 hover:text-rose-600 transition-colors cursor-pointer ml-1"
                   title="Logout"
                 >
-                  <LogOut className="w-4 h-4 text-slate-400 hover:text-rose-500" />
+                  <LogOut className="w-3.5 h-3.5 text-slate-400 hover:text-rose-500" />
                 </button>
               </div>
-            </>
+            </div>
           ) : (
             <button
               onClick={() => setAuthModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#0058bd] hover:bg-[#004494] text-white font-medium text-xs transition-all shadow-md cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#0058bd] hover:bg-[#004494] text-white font-semibold text-xs transition-all shadow-sm cursor-pointer whitespace-nowrap"
             >
-              <User className="w-4 h-4" />
+              <User className="w-3.5 h-3.5" />
               Sign In / Register
             </button>
           )}

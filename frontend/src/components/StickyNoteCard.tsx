@@ -88,14 +88,17 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         colorClassMap[post.color || 'yellow']
       } p-6 flex flex-col justify-between rounded-lg font-sans transition-all`}
     >
-      {/* Top Header with Avatar & Time */}
+      {/* Top Header with Gratified Person Avatar & Label */}
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-xs shadow-xs">
           {avatarInitials}
         </div>
         <div>
-          <h4 className="text-sm font-bold text-[#191c1d]">
-            {firstTagged ? `@${firstTagged.fullName}` : 'Gratitude Post'}
+          <span className="text-[9px] uppercase font-bold tracking-wider text-[#0058bd] bg-white/80 px-1.5 py-0.5 rounded-md border border-black/5">
+            Gratified Person
+          </span>
+          <h4 className="text-sm font-bold text-[#191c1d] mt-0.5">
+            {firstTagged ? `@${firstTagged.fullName}` : 'General Appreciation'}
           </h4>
           <p className="text-[10px] uppercase tracking-tighter text-[#424753]">
             {formatTimeAgo(post.createdAt)}
