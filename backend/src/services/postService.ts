@@ -269,28 +269,62 @@ export const toggleEmojiReaction = async (postId: string, userId: string, target
     // Silence socket error
   }
 
-  // Broadcast reaction announcement notification to ALL users
-  if (newActiveEmoji) {
+  // Send smart aggregated notification ONLY to post author (prevents notification spam when 1000s like)
+  const authorIdStr = post.author.toString();
+  if (newActiveEmoji && authorIdStr !== userId) {
     try {
       const likerUser = await User.findById(userId).select('fullName');
-      const likerName = likerUser?.fullName || 'A user';
-      const likeNotif = await Notification.create({
-        recipientId: null,
-        senderId: uObjId,
-        senderName: likerName,
+      const likerName = likerUser?.fullName || 'Someone';
+
+      // Check if an unread LIKED notification for this post already exists for the author
+      const existingNotif = await Notification.findOne({
+        recipientId: post.author,
         postId: pObjId,
         type: 'LIKED',
-        message: `${likerName} liked a gratitude note!`,
+        isRead: false,
       });
 
-      broadcastNotificationToLoggedUsers({
-        id: likeNotif._id.toString(),
-        type: 'LIKED',
-        senderName: likerName,
-        message: `${likerName} liked a gratitude note!`,
-        postId: postId,
-        createdAt: likeNotif.createdAt.toISOString(),
-      });
+      if (existingNotif) {
+        // Aggregate like count (e.g. "Gokul K and 999 others liked your gratitude note!")
+        const otherLikesCount = Math.max(1, totalCount - 1);
+        const aggMessage =
+          otherLikesCount === 1
+            ? `${likerName} and 1 other liked your gratitude note!`
+            : `${likerName} and ${otherLikesCount} others liked your gratitude note!`;
+
+        existingNotif.message = aggMessage;
+        existingNotif.senderName = likerName;
+        existingNotif.createdAt = new Date();
+        await existingNotif.save();
+
+        sendNotificationToUser(authorIdStr, {
+          id: existingNotif._id.toString(),
+          type: 'LIKED',
+          senderName: likerName,
+          message: aggMessage,
+          postId: postId,
+          createdAt: existingNotif.createdAt.toISOString(),
+        });
+      } else {
+        // Create initial targeted notification for author
+        const likeNotif = await Notification.create({
+          recipientId: post.author,
+          senderId: uObjId,
+          senderName: likerName,
+          postId: pObjId,
+          type: 'LIKED',
+          message: `${likerName} liked your gratitude note!`,
+        });
+
+        sendNotificationToUser(authorIdStr, {
+          id: likeNotif._id.toString(),
+          type: 'LIKED',
+          senderName: likerName,
+          message: `${likerName} liked your gratitude note!`,
+          postId: postId,
+          createdAt: likeNotif.createdAt.toISOString(),
+        });
+      }
     } catch {
       // Silence notification error
     }

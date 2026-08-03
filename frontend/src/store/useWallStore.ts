@@ -98,11 +98,25 @@ export const useWallStore = create<WallState>((set) => ({
     }),
 
   addNotification: (notification) =>
-    set((state) => ({
-      notifications: [notification, ...state.notifications],
-      unreadCount: state.unreadCount + 1,
-      toastNotification: notification,
-    })),
+    set((state) => {
+      const notifId = notification.id || (notification as any)._id;
+      const existingIndex = state.notifications.findIndex(
+        (n) => (n.id || (n as any)._id) === notifId
+      );
+
+      let updatedList = [...state.notifications];
+      if (existingIndex !== -1) {
+        updatedList[existingIndex] = { ...notification, isRead: false };
+      } else {
+        updatedList = [{ ...notification, isRead: false }, ...state.notifications];
+      }
+
+      return {
+        notifications: updatedList,
+        unreadCount: updatedList.filter((n) => !n.isRead).length,
+        toastNotification: notification,
+      };
+    }),
 
   triggerToast: (message, variant = 'info') =>
     set({
