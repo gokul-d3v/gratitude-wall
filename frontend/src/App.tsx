@@ -30,37 +30,38 @@ export const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchPosts = async () => {
-    setIsLoading(true);
     try {
       const res = await api.get('/posts');
       if (res.data && Array.isArray(res.data.posts)) {
         setPosts(res.data.posts);
       }
-    } catch {
-      // Fallback retry
-      try {
-        const retryRes = await api.get('/posts');
-        if (retryRes.data && Array.isArray(retryRes.data.posts)) {
-          setPosts(retryRes.data.posts);
-        }
-      } catch {
-        // Silence
-      }
+    } catch (error) {
+      console.warn('⚠️ Initial post fetch retry queued...', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Cold Start Initialization
+  // Cold Start & Realtime Connection Management
   useEffect(() => {
-    // 1. Fetch posts immediately for instant guest view
+    // 1. Initial Post Fetch & Auth Check
     fetchPosts();
-
-    // 2. Perform background auth session check
     checkAuth();
 
-    // 3. Initialize real-time Socket.io connection
+    // 2. Fallback Polling if Server was restarting or MongoDB connecting
+    const retryTimers = [
+      setTimeout(fetchPosts, 800),
+      setTimeout(fetchPosts, 2000),
+      setTimeout(fetchPosts, 4000),
+    ];
+
+    // 3. Socket Gateway Setup with Reconnect Auto-Fetch
     const socket = initSocketClient();
+
+    const handleConnect = () => {
+      console.log('⚡ Connected/Reconnected to Gateway - Auto Refetching Wall Posts');
+      fetchPosts();
+    };
 
     const handleNewPost = (post: any) => {
       console.log('⚡ [Realtime Socket] new_post received:', post);
@@ -77,11 +78,14 @@ export const App: React.FC = () => {
       useWallStore.getState().addNotification(notif);
     };
 
+    socket.on('connect', handleConnect);
     socket.on('new_post', handleNewPost);
     socket.on('like_update', handleLikeUpdate);
     socket.on('notification', handleNotification);
 
     return () => {
+      retryTimers.forEach(clearTimeout);
+      socket.off('connect', handleConnect);
       socket.off('new_post', handleNewPost);
       socket.off('like_update', handleLikeUpdate);
       socket.off('notification', handleNotification);
