@@ -61,48 +61,35 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
 
   // 2. Broadcast announcement notification to ALL users
   try {
+    const taggedList = populatedPost?.taggedUsers && (populatedPost.taggedUsers as any[]).length > 0
+      ? (populatedPost.taggedUsers as any[]).map((u: any) => `@${u.fullName}`).join(', ')
+      : '';
+
+    const notifMessage = taggedList
+      ? `${authorUser.fullName} tagged ${taggedList} in a gratitude note!`
+      : `${authorUser.fullName} shared a new gratitude note!`;
+
+    const notifType = taggedList ? 'TAGGED' : 'NEW_POST';
+
     const postAnnouncementNotif = await Notification.create({
       recipientId: null,
       senderId: authorUser._id,
       senderName: authorUser.fullName,
       postId: newPost._id,
-      type: 'NEW_POST',
-      message: `${authorUser.fullName} shared a new gratitude note!`,
+      type: notifType,
+      message: notifMessage,
     });
 
     broadcastNotificationToLoggedUsers({
       id: postAnnouncementNotif._id.toString(),
-      type: 'NEW_POST',
+      type: notifType,
       senderName: authorUser.fullName,
-      message: `${authorUser.fullName} shared a new gratitude note!`,
+      message: notifMessage,
       postId: newPost._id.toString(),
       createdAt: postAnnouncementNotif.createdAt.toISOString(),
     });
   } catch {
     // Silence notification error
-  }
-
-  // 3. Send targeted notification to tagged users
-  for (const taggedUserId of validTaggedUserIds) {
-    if (taggedUserId !== authorUserId) {
-      const notif = await Notification.create({
-        recipientId: taggedUserId,
-        senderId: authorUser._id,
-        senderName: authorUser.fullName,
-        postId: newPost._id,
-        type: 'TAGGED',
-        message: 'You were tagged in a new gratitude note!',
-      });
-
-      sendNotificationToUser(taggedUserId, {
-        id: notif._id.toString(),
-        type: 'TAGGED',
-        senderName: 'Gratitude Wall',
-        message: 'You were tagged in a new gratitude note!',
-        postId: newPost._id.toString(),
-        createdAt: notif.createdAt.toISOString(),
-      });
-    }
   }
 
   return populatedPost;
@@ -280,6 +267,33 @@ export const toggleEmojiReaction = async (postId: string, userId: string, target
     });
   } catch {
     // Silence socket error
+  }
+
+  // Broadcast reaction announcement notification to ALL users
+  if (newActiveEmoji) {
+    try {
+      const likerUser = await User.findById(userId).select('fullName');
+      const likerName = likerUser?.fullName || 'A user';
+      const likeNotif = await Notification.create({
+        recipientId: null,
+        senderId: uObjId,
+        senderName: likerName,
+        postId: pObjId,
+        type: 'LIKED',
+        message: `${likerName} liked a gratitude note!`,
+      });
+
+      broadcastNotificationToLoggedUsers({
+        id: likeNotif._id.toString(),
+        type: 'LIKED',
+        senderName: likerName,
+        message: `${likerName} liked a gratitude note!`,
+        postId: postId,
+        createdAt: likeNotif.createdAt.toISOString(),
+      });
+    } catch {
+      // Silence notification error
+    }
   }
 
   return {
