@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Trash2, AlertCircle } from 'lucide-react';
 
 interface ConfirmModalProps {
@@ -24,10 +25,19 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isDestructive = true,
   isLoading = false,
 }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
       <div className="relative w-full max-w-md bg-[#fffcf9] rounded-2xl shadow-2xl border border-black/10 p-6 sm:p-8 animate-fade-slide-up">
         {/* Close Button */}
         <button
@@ -79,6 +89,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
