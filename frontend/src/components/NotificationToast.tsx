@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { CheckCircle2, AlertCircle, Info, X, Megaphone, Heart } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Info, X, Megaphone, Heart, Sparkles } from 'lucide-react';
 import { useWallStore } from '../store/useWallStore';
 
 export const NotificationToast: React.FC = () => {
@@ -26,44 +26,49 @@ export const NotificationToast: React.FC = () => {
 
   return (
     <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] max-w-lg w-[92%] sm:w-auto animate-fade-slide-up pointer-events-auto">
-      <div
-        className={`flex items-center gap-3.5 px-5 py-3.5 rounded-full shadow-2xl border backdrop-blur-md transition-all ${
-          isError
-            ? 'bg-rose-950/95 text-white border-rose-700/80 shadow-rose-950/40'
-            : isSuccess
-            ? 'bg-emerald-950/95 text-white border-emerald-700/80 shadow-emerald-950/40'
-            : isAnnouncement
-            ? 'bg-[#003c82]/95 text-white border-[#0058bd] shadow-[#0058bd]/30 ring-2 ring-[#0058bd]/30'
-            : 'bg-slate-900/95 text-white border-slate-700 shadow-slate-900/40'
-        }`}
-      >
-        {isError ? (
-          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
-        ) : isSuccess ? (
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-        ) : isLike ? (
-          <Heart className="w-5 h-5 text-rose-400 fill-rose-500 shrink-0" />
-        ) : isAnnouncement ? (
-          <Megaphone className="w-5 h-5 text-amber-300 animate-bounce shrink-0" />
-        ) : (
-          <Info className="w-5 h-5 text-blue-400 shrink-0" />
-        )}
+      <div className="bg-[#fffcf9]/95 backdrop-blur-md border border-black/10 rounded-2xl p-4 sm:p-5 shadow-2xl flex items-center gap-4">
+        {/* Icon Badge */}
+        <div
+          className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 shadow-inner ${
+            isError
+              ? 'bg-rose-100 text-rose-600 ring-4 ring-rose-50'
+              : isSuccess
+              ? 'bg-emerald-100 text-emerald-600 ring-4 ring-emerald-50'
+              : isLike
+              ? 'bg-rose-100 text-rose-600 ring-4 ring-rose-50'
+              : 'bg-blue-100 text-[#0058bd] ring-4 ring-blue-50'
+          }`}
+        >
+          {isError ? (
+            <AlertCircle className="w-5 h-5" />
+          ) : isSuccess ? (
+            <CheckCircle2 className="w-5 h-5" />
+          ) : isLike ? (
+            <Heart className="w-5 h-5 fill-rose-600" />
+          ) : isAnnouncement ? (
+            <Megaphone className="w-5 h-5" />
+          ) : (
+            <Info className="w-5 h-5" />
+          )}
+        </div>
 
-        <div className="flex-1 min-w-0 pr-2">
+        {/* Text Content */}
+        <div className="flex-1 min-w-0 pr-1">
           {isAnnouncement && (
-            <span className="text-[9px] uppercase font-extrabold tracking-wider text-amber-300 bg-white/10 px-2 py-0.5 rounded-full inline-block mb-0.5">
-              Announcement
+            <span className="text-[9px] uppercase font-bold tracking-wider text-[#0058bd] bg-[#0058bd]/10 px-2 py-0.5 rounded-md border border-[#0058bd]/20 inline-block mb-1">
+              📢 Announcement
             </span>
           )}
-          <p className="text-xs sm:text-sm font-semibold leading-snug break-words">
+          <p className="text-xs sm:text-sm font-bold text-[#191c1d] leading-snug break-words">
             {toastNotification.message}
           </p>
         </div>
 
+        {/* Dismiss Button */}
         <button
           onClick={clearToast}
-          className="p-1 rounded-full hover:bg-white/20 text-white/70 hover:text-white transition-colors cursor-pointer shrink-0"
-          title="Dismiss announcement"
+          className="p-1.5 rounded-full hover:bg-black/5 text-slate-400 hover:text-slate-700 transition-all cursor-pointer shrink-0"
+          title="Dismiss notification"
         >
           <X className="w-4 h-4" />
         </button>
