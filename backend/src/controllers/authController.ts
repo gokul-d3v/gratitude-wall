@@ -50,6 +50,34 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
   }
 };
 
+export const adminLogin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const result = await loginUser(req.body);
+
+    if (result.user.role !== 'ADMIN') {
+      res.status(403).json({ success: false, message: 'Access denied. Admin privileges required.' });
+      return;
+    }
+
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        user: result.user,
+        accessToken: result.accessToken,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const refresh = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const refreshToken = req.cookies?.refreshToken;
