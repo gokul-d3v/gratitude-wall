@@ -288,25 +288,25 @@ export const Header: React.FC = () => {
         )}
 
         {/* Desktop: Search, Filters & Sign In */}
-        <div className="hidden lg:flex items-center gap-2 flex-1 max-w-3xl ml-auto">
+        <div className="hidden lg:flex items-center gap-2.5 flex-1 max-w-4xl ml-auto">
           {/* Search Input */}
-          <div className="relative w-40 xl:w-44">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <div className="relative w-48 xl:w-56">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by content, name, or dept..."
+              placeholder="Search content, name, dept..."
               title="Search posts by content, author name, or department"
-              className="w-full pl-8 pr-3 py-1.5 rounded-full bg-white border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-[#0058bd]"
+              className="w-full pl-9 pr-3.5 py-2 rounded-full bg-white border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#0058bd] shadow-2xs"
             />
           </div>
 
           {/* Compact Filter Strip (Latest / Trending + Color Dots) */}
-          <div className="flex items-center gap-1 bg-[#fff8f2] p-1 rounded-full border border-[#c2c6d5]">
+          <div className="flex items-center gap-1.5 bg-[#fff8f2] p-1.5 rounded-full border border-[#c2c6d5] shadow-2xs">
             <button
               onClick={() => setActiveTab('latest')}
-              className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'latest'
                   ? 'bg-white text-[#191c1d] shadow-2xs font-bold'
                   : 'text-[#424753] hover:text-black'
@@ -316,7 +316,7 @@ export const Header: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('trending')}
-              className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'trending'
                   ? 'bg-white text-[#191c1d] shadow-2xs font-bold'
                   : 'text-[#424753] hover:text-black'
@@ -325,7 +325,7 @@ export const Header: React.FC = () => {
               Trending
             </button>
 
-            <span className="h-3 w-px bg-slate-300 mx-0.5" />
+            <span className="h-4 w-px bg-slate-300 mx-0.5" />
 
             {/* Compact Color Dots */}
             <div className="flex items-center gap-1 px-1">
@@ -333,8 +333,8 @@ export const Header: React.FC = () => {
                 <button
                   key={c.key}
                   onClick={() => setActiveColor(c.key)}
-                  className={`w-4 h-4 rounded-full ${c.dot} transition-transform cursor-pointer border border-black/10 ${
-                    activeColor === c.key ? 'ring-2 ring-[#0058bd] scale-125' : 'hover:scale-110 opacity-70'
+                  className={`w-5 h-5 rounded-full ${c.dot} transition-transform cursor-pointer border border-black/10 ${
+                    activeColor === c.key ? 'ring-2 ring-[#0058bd] scale-125' : 'hover:scale-110 opacity-75'
                   }`}
                   title={`Filter by ${c.label}`}
                 />
@@ -347,7 +347,7 @@ export const Header: React.FC = () => {
             <select
               value={selectedTeam}
               onChange={(e) => handleTeamFilterChange(e.target.value)}
-              className="px-3 py-1.5 rounded-full bg-[#fff8f2] border border-[#c2c6d5] text-[11px] font-semibold text-slate-700 focus:outline-none cursor-pointer"
+              className="px-3.5 py-2 rounded-full bg-[#fff8f2] border border-[#c2c6d5] text-xs font-bold text-slate-700 focus:outline-none cursor-pointer shadow-2xs"
             >
               <option value="all">All Teams</option>
               {teams.map((t) => (
@@ -363,26 +363,26 @@ export const Header: React.FC = () => {
             <button
               onClick={handleTaggedMeToggle}
               title="Tagged Me"
-              className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all cursor-pointer ${
+              className={`inline-flex items-center justify-center px-3.5 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer shadow-2xs ${
                 isTaggedMeFilter
-                  ? 'bg-[#0058bd] text-white border-transparent shadow-2xs'
+                  ? 'bg-[#0058bd] text-white border-transparent'
                   : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
               }`}
             >
-              <Tag className="w-3 h-3" />
+              <Tag className="w-3.5 h-3.5" />
             </button>
           )}
 
           {/* User Session & Sign In Button */}
           {isAuthenticated ? (
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-2.5 ml-auto">
               {user?.role === 'ADMIN' && (
                 <button
                   onClick={() => setAdminViewOpen(true)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold shadow-2xs transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-2xs transition-all cursor-pointer"
                   title="Open Admin Dashboard"
                 >
-                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <ShieldCheck className="w-4 h-4" />
                   Admin
                 </button>
               )}
@@ -390,22 +390,22 @@ export const Header: React.FC = () => {
               {/* Notification Bell */}
               <button
                 onClick={handleBellClick}
-                className="relative p-2 rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs transition-colors"
+                className="relative p-2.5 rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer shadow-2xs transition-colors"
                 title="Notifications"
               >
-                <Bell className={`w-3.5 h-3.5 ${unreadCount > 0 ? 'text-[#0058bd]' : ''}`} />
+                <Bell className={`w-4 h-4 ${unreadCount > 0 ? 'text-[#0058bd]' : ''}`} />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white animate-pulse">
+                  <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white animate-pulse">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </button>
 
               {/* Employee Badge */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs">
                 <div
                   style={{ backgroundColor: user?.avatarColor || '#0058bd' }}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
                 >
                   {user?.fullName?.[0]?.toUpperCase() || 'E'}
                 </div>
@@ -414,18 +414,18 @@ export const Header: React.FC = () => {
                   className="flex items-center gap-1.5 hover:text-rose-600 transition-colors cursor-pointer"
                   title="Logout"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-slate-400 hover:text-rose-500" />
-                  <span className="text-xs font-semibold">Logout</span>
+                  <LogOut className="w-4 h-4 text-slate-400 hover:text-rose-500" />
+                  <span className="text-xs font-bold">Logout</span>
                 </button>
               </div>
             </div>
           ) : (
             <button
               onClick={() => setAuthModalOpen(true)}
-              className="hidden lg:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#0058bd] hover:bg-[#004494] text-white font-semibold text-xs transition-all shadow-sm cursor-pointer whitespace-nowrap ml-auto"
+              className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0058bd] hover:bg-[#004494] text-white font-bold text-xs sm:text-sm transition-all shadow-md cursor-pointer"
               title="Sign In / Register"
             >
-              <User className="w-3.5 h-3.5" />
+              <User className="w-4 h-4" />
               Sign In / Register
             </button>
           )}

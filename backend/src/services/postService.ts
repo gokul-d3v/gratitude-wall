@@ -35,10 +35,10 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
     throw { statusCode: 404, message: 'Author user account not found' };
   }
 
-  // Validate tagged user IDs
+  // Validate tagged user IDs (exclude Admins)
   const validTaggedUserIds: string[] = [];
   if (dto.taggedUserIds && dto.taggedUserIds.length > 0) {
-    const users = await User.find({ _id: { $in: dto.taggedUserIds } }).select('_id employeeCode fullName');
+    const users = await User.find({ _id: { $in: dto.taggedUserIds }, role: { $ne: 'ADMIN' } }).select('_id employeeCode fullName');
     users.forEach((u) => validTaggedUserIds.push(u._id.toString()));
   }
 
@@ -360,7 +360,7 @@ export const updatePost = async (
   if (updateData.taggedUserIds !== undefined) {
     const validTaggedUserIds: string[] = [];
     if (updateData.taggedUserIds.length > 0) {
-      const users = await User.find({ _id: { $in: updateData.taggedUserIds } }).select('_id');
+      const users = await User.find({ _id: { $in: updateData.taggedUserIds }, role: { $ne: 'ADMIN' } }).select('_id');
       users.forEach((u) => validTaggedUserIds.push(u._id.toString()));
     }
     post.taggedUsers = validTaggedUserIds as any;

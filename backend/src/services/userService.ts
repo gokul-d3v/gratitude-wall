@@ -91,6 +91,7 @@ export const searchUsers = async (query: string, currentUserId?: string) => {
   }
 
   const filter: any = {
+    role: { $ne: 'ADMIN' },
     $or: [
       { employeeCode: { $regex: cleanQ, $options: 'i' } },
       { fullName: { $regex: cleanQ, $options: 'i' } },
