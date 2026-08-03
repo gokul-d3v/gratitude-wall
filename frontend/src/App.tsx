@@ -15,7 +15,7 @@ import { initSocketClient } from './services/socket';
 import { Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const { checkAuth, isAuthenticated, user } = useAuthStore();
+  const { checkAuth, isAuthenticated } = useAuthStore();
   const {
     posts,
     setPosts,
@@ -26,7 +26,6 @@ export const App: React.FC = () => {
     setCreateModalOpen,
     setAuthModalOpen,
     isAdminViewOpen,
-    setAdminViewOpen,
   } = useWallStore();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -44,20 +43,6 @@ export const App: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  // Check URL routes for direct Admin / Admin Login access
-  useEffect(() => {
-    const path = window.location.pathname.toLowerCase();
-    if (path === '/admin/login' || path === '/admin-login') {
-      setIsAdminLoginOpen(true);
-    } else if (path === '/admin') {
-      if (user?.role === 'ADMIN') {
-        setAdminViewOpen(true);
-      } else {
-        setIsAdminLoginOpen(true);
-      }
-    }
-  }, [user]);
 
   // Cold Start & Realtime Connection Management
   useEffect(() => {

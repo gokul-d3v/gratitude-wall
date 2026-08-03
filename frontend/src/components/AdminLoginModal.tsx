@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Lock, Sparkles, Eye, EyeOff, IdCard, ShieldCheck } from 'lucide-react';
+import { X, Lock, Eye, EyeOff, IdCard, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
 import { api } from '../services/api';
@@ -14,8 +14,8 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClos
   const { checkAuth } = useAuthStore();
   const { triggerToast, setAdminViewOpen } = useWallStore();
 
-  const [employeeCode, setEmployeeCode] = useState('BROTOTYPE');
-  const [password, setPassword] = useState('Brototype@321');
+  const [employeeCode, setEmployeeCode] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +43,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClos
       setAccessToken(accessToken);
       await checkAuth();
 
-      triggerToast('Admin authenticated successfully! Opening Console...', 'success');
+      triggerToast('Admin authenticated successfully!', 'success');
       onClose();
       setAdminViewOpen(true);
     } catch (err: any) {
@@ -71,7 +71,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClos
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900">Admin Portal Login</h2>
-            <p className="text-xs text-slate-500">Route: /api/auth/admin-login</p>
+            <p className="text-xs text-slate-500">Access Management Console</p>
           </div>
         </div>
 
@@ -91,7 +91,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClos
                 required
                 value={employeeCode}
                 onChange={(e) => setEmployeeCode(e.target.value)}
-                placeholder="e.g. BROTOTYPE"
+                placeholder="Enter admin employee code"
                 className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 uppercase focus:outline-none focus:ring-2 focus:ring-purple-600"
               />
             </div>
@@ -124,15 +124,9 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClos
             disabled={isSubmitting}
             className="mt-2 w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm shadow-md transition-all cursor-pointer disabled:opacity-50"
           >
-            {isSubmitting ? 'Authenticating Admin...' : 'Sign In as Admin'}
+            {isSubmitting ? 'Authenticating...' : 'Sign In as Admin'}
           </button>
         </form>
-
-        <div className="mt-6 p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
-          <span className="font-bold text-slate-800 block">Default Admin Credentials:</span>
-          <div>Employee Code: <code className="bg-slate-200 px-1 py-0.5 rounded text-purple-700 font-mono font-bold">BROTOTYPE</code></div>
-          <div>Password: <code className="bg-slate-200 px-1 py-0.5 rounded text-purple-700 font-mono font-bold">Brototype@321</code></div>
-        </div>
       </div>
     </div>
   );

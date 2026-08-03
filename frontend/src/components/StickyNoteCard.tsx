@@ -3,7 +3,6 @@ import { Post, StickyColor } from '../types';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
-import { Trash2, ShieldAlert } from 'lucide-react';
 
 interface StickyNoteCardProps {
   post: Post;
@@ -48,9 +47,8 @@ const formatTimeAgo = (dateStr: string): string => {
 };
 
 export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const { setAuthModalOpen, triggerToast } = useWallStore();
-  const isAdmin = user?.role === 'ADMIN';
 
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [userEmoji, setUserEmoji] = useState<string | null>(post.userEmoji || (post.hasLiked ? '❤️' : null));
@@ -94,21 +92,6 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
     }
   };
 
-  const handleAdminDeletePost = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirm('Admin Action: Permanently delete this gratitude post?')) return;
-
-    try {
-      await api.delete(`/admin/posts/${post._id}`);
-      triggerToast('Post deleted permanently by Admin', 'success');
-      useWallStore.setState((state) => ({
-        posts: state.posts.filter((p) => p._id !== post._id),
-      }));
-    } catch {
-      triggerToast('Failed to delete post', 'error');
-    }
-  };
-
   const firstTagged = post.taggedUsers && post.taggedUsers.length > 0 ? post.taggedUsers[0] : null;
   const avatarInitials = firstTagged ? getInitials(firstTagged.fullName) : 'GW';
   const activeReactionEntries = Object.entries(reactions).filter(([_e, count]) => count > 0);
@@ -119,17 +102,6 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         colorClassMap[post.color || 'yellow']
       } p-6 flex flex-col justify-between rounded-lg font-sans transition-all relative group`}
     >
-      {/* Admin Quick Action Button */}
-      {isAdmin && (
-        <button
-          onClick={handleAdminDeletePost}
-          className="absolute top-3 right-3 p-1.5 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-md transition-all cursor-pointer opacity-90 hover:opacity-100 group-hover:scale-110 z-20"
-          title="Admin: Delete Post"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
-      )}
-
       {/* Top Header with Gratified Person Avatar & Label */}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-10 h-10 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
