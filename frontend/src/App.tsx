@@ -4,7 +4,7 @@ import { StickyNoteCard } from './components/StickyNoteCard';
 import { FloatingActionButton } from './components/FloatingActionButton';
 import { CreateNoteModal } from './components/CreateNoteModal';
 import { AuthModal } from './components/AuthModal';
-import { AdminLoginModal } from './components/AdminLoginModal';
+import { AdminLoginScreen } from './components/AdminLoginScreen';
 import { AdminDashboard } from './components/AdminDashboard';
 import { TopGratitudeSpotlight } from './components/TopGratitudeSpotlight';
 import { NotificationToast } from './components/NotificationToast';
@@ -15,7 +15,7 @@ import { initSocketClient } from './services/socket';
 import { Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const { checkAuth, isAuthenticated } = useAuthStore();
+  const { checkAuth, isAuthenticated, user } = useAuthStore();
   const {
     posts,
     setPosts,
@@ -26,10 +26,11 @@ export const App: React.FC = () => {
     setCreateModalOpen,
     setAuthModalOpen,
     isAdminViewOpen,
+    setAdminViewOpen,
   } = useWallStore();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
+  const [currentPath, setCurrentPath] = useState(window.location.pathname.toLowerCase());
 
   const fetchPosts = async () => {
     try {
@@ -44,20 +45,26 @@ export const App: React.FC = () => {
     }
   };
 
+  // URL Router Sync
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname.toLowerCase());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   // Cold Start & Realtime Connection Management
   useEffect(() => {
-    // 1. Initial Post Fetch & Auth Check
     fetchPosts();
     checkAuth();
 
-    // 2. Fallback Polling if Server was restarting or MongoDB connecting
     const retryTimers = [
       setTimeout(fetchPosts, 800),
       setTimeout(fetchPosts, 2000),
       setTimeout(fetchPosts, 4000),
     ];
 
-    // 3. Socket Gateway Setup with Reconnect Auto-Fetch
     const socket = initSocketClient();
 
     const handleConnect = () => {
@@ -111,7 +118,6 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // Re-fetch posts whenever authentication state changes
   useEffect(() => {
     fetchPosts();
   }, [isAuthenticated]);
@@ -124,7 +130,6 @@ export const App: React.FC = () => {
     }
   };
 
-  // Filter & Sort posts based on active color filter, search query, and Latest / Trending tab
   const filteredPosts = useMemo(() => {
     const list = posts.filter((post) => {
       const matchesColor = activeColor === 'all' || post.color === activeColor;
@@ -143,6 +148,27 @@ export const App: React.FC = () => {
     }
   }, [posts, activeColor, activeTab, searchQuery]);
 
+  // Dedicated Route 1: http://localhost:5173/admin-login -> Admin Login Screen
+  if (currentPath === '/admin-login' || currentPath === '/admin/login') {
+    return (
+      <>
+        <NotificationToast />
+        <AdminLoginScreen />
+      </>
+    );
+  }
+
+  // Dedicated Route 2: http://localhost:5173/admin -> Admin Console
+  if (currentPath === '/admin' || isAdminViewOpen) {
+    return (
+      <>
+        <NotificationToast />
+        <AdminDashboard />
+      </>
+    );
+  }
+
+  // Default Route: http://localhost:5173/ -> BROTIFY Gratitude Wall (User Home Page)
   return (
     <div className="min-h-screen">
       <NotificationToast />
@@ -184,11 +210,9 @@ export const App: React.FC = () => {
       {/* Floating Action Button */}
       <FloatingActionButton onClick={handleOpenAddPost} />
 
-      {/* Modals & Dashboard Overlay */}
+      {/* User Auth & Create Post Modals */}
       {isCreateModalOpen && <CreateNoteModal />}
       <AuthModal />
-      <AdminLoginModal isOpen={isAdminLoginOpen} onClose={() => setIsAdminLoginOpen(false)} />
-      {isAdminViewOpen && <AdminDashboard />}
     </div>
   );
 };
