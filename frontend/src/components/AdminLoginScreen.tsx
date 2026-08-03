@@ -53,8 +53,14 @@ export const AdminLoginScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-6 text-slate-100 font-sans">
-      <div className="w-full max-w-md bg-white text-slate-900 rounded-3xl shadow-2xl border border-slate-200 p-8 sm:p-10 animate-fade-slide-up">
+    <div
+      className="min-h-screen bg-[#fffcf9] flex flex-col justify-center items-center p-6 text-slate-900 font-sans"
+      style={{
+        backgroundImage: 'radial-gradient(#d1d5db 1px, transparent 1px)',
+        backgroundSize: '40px 40px',
+      }}
+    >
+      <div className="w-full max-w-md bg-white/90 backdrop-blur-md text-slate-900 rounded-3xl shadow-2xl border border-slate-200 p-8 sm:p-10 animate-fade-slide-up">
         <button
           onClick={navigateToHome}
           className="inline-flex items-center gap-2 mb-6 text-xs font-semibold text-slate-500 hover:text-[#0058bd] transition-colors cursor-pointer"
@@ -90,7 +96,7 @@ export const AdminLoginScreen: React.FC = () => {
                 value={employeeCode}
                 onChange={(e) => setEmployeeCode(e.target.value)}
                 placeholder="Enter admin employee code"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 uppercase focus:outline-none focus:ring-2 focus:ring-purple-600 text-xs font-mono"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 uppercase focus:outline-none focus:ring-2 focus:ring-purple-600 text-xs font-mono bg-white"
               />
             </div>
           </div>
@@ -105,7 +111,7 @@ export const AdminLoginScreen: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-600 text-xs"
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-600 text-xs bg-white"
               />
               <button
                 type="button"
