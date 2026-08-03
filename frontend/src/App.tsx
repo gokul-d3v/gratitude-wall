@@ -5,7 +5,6 @@ import { CreateNoteModal } from './components/CreateNoteModal';
 import { AuthModal } from './components/AuthModal';
 import { AdminLoginScreen } from './components/AdminLoginScreen';
 import { AdminDashboard } from './components/AdminDashboard';
-import { TopGratitudeSpotlight } from './components/TopGratitudeSpotlight';
 import { NotificationToast } from './components/NotificationToast';
 import { NotificationModal } from './components/NotificationModal';
 import { useWallStore } from './store/useWallStore';
@@ -179,9 +178,6 @@ export const App: React.FC = () => {
 
       <main className="p-4 sm:p-8 md:p-12 flex flex-col gap-8 max-w-7xl mx-auto">
         <Header />
-
-        {/* Most Appreciated / Tagged Person Spotlight */}
-        <TopGratitudeSpotlight />
 
         {/* Wall Workspace */}
         {isLoading && posts.length === 0 ? (
