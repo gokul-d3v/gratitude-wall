@@ -46,38 +46,26 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
     .populate('taggedUsers', 'employeeCode fullName avatarColor')
     .lean();
 
-  // 1. Real-time post broadcast to all clients on global wall
+  // 1. Real-time post broadcast to all clients on global wall (updates feed for everyone)
   broadcastNewPost(populatedPost);
 
-  // 2. Real-time notification alert broadcast to ALL users on global wall
-  const globalNotif = {
-    id: newPost._id.toString(),
-    type: 'NEW_POST',
-    senderName: authorUser.fullName,
-    authorId: authorUser._id.toString(),
-    message: `${authorUser.fullName} (${authorUser.employeeCode}) shared a new gratitude note!`,
-    postId: newPost._id,
-    createdAt: newPost.createdAt,
-  };
-  broadcastNotificationToAll(globalNotif);
-
-  // 3. Create notifications & socket push alerts for tagged users
+  // 2. Send targeted notification ONLY to tagged users (without revealing poster identity)
   for (const taggedUserId of validTaggedUserIds) {
     if (taggedUserId !== authorUserId) {
       const notif = await Notification.create({
         recipientId: taggedUserId,
         senderId: authorUser._id,
-        senderName: authorUser.fullName,
+        senderName: 'Someone',
         postId: newPost._id,
         type: 'TAGGED',
-        message: `${authorUser.fullName} (${authorUser.employeeCode}) tagged you in a gratitude note!`,
+        message: 'You were tagged in a new gratitude note!',
       });
 
       sendNotificationToUser(taggedUserId, {
         id: notif._id,
         type: 'TAGGED',
-        senderName: authorUser.fullName,
-        message: notif.message,
+        senderName: 'Gratitude Wall',
+        message: 'You were tagged in a new gratitude note!',
         postId: newPost._id,
         createdAt: notif.createdAt,
       });
@@ -159,23 +147,20 @@ export const toggleLikePost = async (postId: string, userId: string) => {
 
     // Send notification to post author if not self-like
     if (post.author && post.author.toString() !== userId) {
-      const user = await User.findById(userId).select('fullName employeeCode');
-      const senderName = user ? `${user.fullName} (${user.employeeCode})` : 'Someone';
-
       const notif = await Notification.create({
         recipientId: post.author,
         senderId: userId,
-        senderName,
+        senderName: 'Someone',
         postId: post._id,
         type: 'LIKED',
-        message: `${senderName} liked your gratitude note!`,
+        message: 'Someone liked your gratitude note!',
       });
 
       sendNotificationToUser(post.author.toString(), {
         id: notif._id,
         type: 'LIKED',
-        senderName,
-        message: notif.message,
+        senderName: 'Gratitude Wall',
+        message: 'Someone liked your gratitude note!',
         postId: post._id,
         createdAt: notif.createdAt,
       });

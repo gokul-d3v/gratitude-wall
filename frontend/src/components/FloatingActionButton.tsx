@@ -1,5 +1,4 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
 
 interface FABProps {
   onClick: () => void;
@@ -9,11 +8,16 @@ export const FloatingActionButton: React.FC<FABProps> = ({ onClick }) => {
   return (
     <button
       onClick={onClick}
-      className="fixed bottom-8 right-8 z-40 flex items-center justify-center w-14 h-14 bg-[#0066FF] hover:bg-[#0052CC] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none focus:ring-4 focus:ring-blue-300"
+      className="fixed bottom-10 right-10 w-16 h-16 bg-[#0058bd] text-white rounded-full shadow-2xl hover:shadow-blue-500/40 transition-all duration-300 flex items-center justify-center hover:scale-110 active:scale-95 group fab-pulse z-50 cursor-pointer"
       aria-label="Add Gratitude Post"
-      title="Share your gratitude"
+      title="Post your gratitude"
     >
-      <Plus className="w-7 h-7 stroke-[2.5]" />
+      <span className="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-300">
+        add
+      </span>
+      <span className="absolute right-full mr-4 bg-slate-900 text-white px-4 py-1.5 rounded-xl text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none translate-x-2 group-hover:translate-x-0 font-bold shadow-lg">
+        New Gratitude
+      </span>
     </button>
   );
 };

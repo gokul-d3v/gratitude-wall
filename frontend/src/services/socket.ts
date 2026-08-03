@@ -7,12 +7,14 @@ export const initSocketClient = (): Socket => {
   if (socket) return socket;
 
   const token = getAccessToken();
+  const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
 
-  socket = io(window.location.origin, {
+  socket = io(socketUrl, {
     auth: { token },
+    transports: ['websocket', 'polling'],
     autoConnect: true,
     reconnection: true,
-    reconnectionAttempts: 5,
+    reconnectionAttempts: 10,
     reconnectionDelay: 1000,
   });
 
@@ -20,8 +22,12 @@ export const initSocketClient = (): Socket => {
     console.log('⚡ Socket connected to Gratitude Wall Gateway:', socket?.id);
   });
 
-  socket.on('disconnect', () => {
-    console.log('⚡ Socket disconnected');
+  socket.on('disconnect', (reason) => {
+    console.log('⚡ Socket disconnected:', reason);
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('⚡ Socket connection error:', error);
   });
 
   return socket;

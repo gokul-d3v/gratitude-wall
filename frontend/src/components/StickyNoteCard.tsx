@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { Heart, Tag, Flag } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { Post, StickyColor } from '../types';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
@@ -10,19 +9,44 @@ interface StickyNoteCardProps {
 }
 
 const colorClassMap: Record<StickyColor, string> = {
-  yellow: 'note-bg-yellow',
-  green: 'note-bg-green',
-  blue: 'note-bg-blue',
-  pink: 'note-bg-pink',
-  purple: 'note-bg-purple',
+  yellow: 'bg-sticky-yellow',
+  blue: 'bg-sticky-blue',
+  pink: 'bg-sticky-pink',
+  green: 'bg-sticky-green',
+  purple: 'bg-sticky-purple',
 };
 
-export const StickyNoteCard: React.FC<StickyNoteCardProps> = React.memo(({ post }) => {
+const getInitials = (name?: string): string => {
+  if (!name) return 'GW';
+  const parts = name.trim().split(' ');
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+};
+
+const formatTimeAgo = (dateStr: string): string => {
+  if (!dateStr) return 'Just now';
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+};
+
+export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
   const { isAuthenticated } = useAuthStore();
   const { setAuthModalOpen, triggerToast } = useWallStore();
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [hasLiked, setHasLiked] = useState(post.hasLiked || false);
   const [isLiking, setIsLiking] = useState(false);
+
+  useEffect(() => {
+    setLikesCount(post.likesCount || 0);
+  }, [post.likesCount]);
 
   const handleLikeToggle = async () => {
     if (!isAuthenticated) {
@@ -52,79 +76,69 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = React.memo(({ post 
     }
   };
 
-  const handleReport = async () => {
-    try {
-      await api.post(`/posts/${post._id}/report`);
-      triggerToast('Thank you for reporting. Content has been flagged for moderation.', 'info');
-    } catch {
-      triggerToast('Could not submit report. Please try again later.', 'error');
-    }
-  };
+  const firstTagged = post.taggedUsers && post.taggedUsers.length > 0 ? post.taggedUsers[0] : null;
+  const avatarInitials = firstTagged ? getInitials(firstTagged.fullName) : 'GW';
 
   return (
     <div
-      className={`relative flex flex-col justify-between p-6 rounded-sm border shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${
+      className={`sticky-note ${
         colorClassMap[post.color || 'yellow']
-      } min-h-[220px] max-w-sm w-full font-sans-main`}
+      } p-6 flex flex-col justify-between rounded-lg font-sans transition-all`}
     >
-      {/* Tape strip graphic at top header */}
-      <div className="tape-strip" />
-
-      {/* Post Content */}
-      <div className="mt-3">
-        <p className="text-xl leading-snug font-handwriting font-bold text-slate-800 break-words whitespace-pre-wrap">
-          {post.content}
-        </p>
-
-        {/* Tagged users section */}
-        {post.taggedUsers && post.taggedUsers.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5 text-slate-500" />
-            {post.taggedUsers.map((user) => (
-              <span
-                key={user.id || user.employeeCode}
-                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-white/70 text-slate-700 border border-slate-200/60 shadow-2xs"
-              >
-                @{user.fullName} ({user.employeeCode})
-              </span>
-            ))}
-          </div>
-        )}
+      {/* Top Header with Avatar & Time */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+          {avatarInitials}
+        </div>
+        <div>
+          <h4 className="text-sm font-bold text-[#191c1d]">
+            {firstTagged ? `@${firstTagged.fullName}` : 'Gratitude Post'}
+          </h4>
+          <p className="text-[10px] uppercase tracking-tighter text-[#424753]">
+            {formatTimeAgo(post.createdAt)}
+          </p>
+        </div>
       </div>
 
-      {/* Note Footer */}
-      <div className="mt-6 pt-3 border-t border-slate-800/10 flex items-center justify-between text-xs text-slate-600">
-        <div>
-          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block">FROM</span>
-          <span className="font-semibold text-slate-700">
-            {post.authorName || 'Employee'} {post.authorEmployeeCode ? `(${post.authorEmployeeCode})` : ''}
+      {/* Message Body */}
+      <p className="text-base text-[#191c1d] italic flex-grow leading-relaxed break-words whitespace-pre-wrap">
+        "{post.content}"
+      </p>
+
+      {/* Tagged users chips if any */}
+      {post.taggedUsers && post.taggedUsers.length > 1 && (
+        <div className="mt-3 flex flex-wrap items-center gap-1">
+          {post.taggedUsers.slice(1).map((u) => (
+            <span
+              key={u.id || u.employeeCode}
+              className="text-[10px] font-semibold bg-white/70 text-slate-700 px-2 py-0.5 rounded-full border border-black/5"
+            >
+              @{u.fullName}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Card Footer: Material Symbols Like Heart + Hashtag */}
+      <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5">
+        <button
+          onClick={handleLikeToggle}
+          className={`flex items-center gap-1.5 transition-transform hover:scale-110 cursor-pointer ${
+            hasLiked ? 'text-[#ba1a1a]' : 'text-[#424753] hover:text-[#ba1a1a]'
+          }`}
+          title="Like this post"
+        >
+          <span
+            className="material-symbols-outlined text-lg"
+            style={{ fontVariationSettings: hasLiked ? "'FILL' 1" : "'FILL' 0" }}
+          >
+            favorite
           </span>
-        </div>
+          <span className="text-xs font-bold">{likesCount}</span>
+        </button>
 
-        {/* Action Buttons: Like Heart & Report */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleLikeToggle}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full font-medium transition-all duration-200 cursor-pointer ${
-              hasLiked
-                ? 'bg-rose-500 text-white shadow-xs'
-                : 'bg-white/80 text-slate-700 hover:bg-white border border-slate-200/50'
-            }`}
-            title="Like this note"
-          >
-            <Heart className={`w-3.5 h-3.5 ${hasLiked ? 'fill-white stroke-white' : 'stroke-slate-600'}`} />
-            <span>{likesCount}</span>
-          </button>
-
-          <button
-            onClick={handleReport}
-            className="p-1 rounded-full hover:bg-black/5 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-            title="Report inappropriate content"
-          >
-            <Flag className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        <span className="text-[10px] font-bold text-[#424753] opacity-60">#gratitude</span>
       </div>
     </div>
   );
-});
+};

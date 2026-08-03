@@ -7,7 +7,7 @@ let io: Server | null = null;
 export const initSocket = (httpServer: HttpServer): Server => {
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:5173',
+      origin: '*', // Allow all origins for dev real-time WebSockets
       methods: ['GET', 'POST'],
       credentials: true,
     },
@@ -20,7 +20,7 @@ export const initSocket = (httpServer: HttpServer): Server => {
         const decoded = verifyAccessToken(token);
         (socket as any).user = decoded;
       } catch {
-        // Allow connection
+        // Allow fallback guest connection
       }
     }
     next();
@@ -55,30 +55,34 @@ export const getIO = (): Server => {
   return io;
 };
 
-// Broadcast new post object to all clients on global wall
+// Broadcast new post object to ALL connected clients
 export const broadcastNewPost = (post: any): void => {
   if (io) {
-    io.to('wall:global').emit('new_post', post);
+    console.log('[Socket Gateway] Broadcasting new_post to ALL clients:', post._id);
+    io.emit('new_post', post);
   }
 };
 
-// Broadcast real-time notification alert to ALL users on global wall
+// Broadcast real-time notification alert to ALL connected clients
 export const broadcastNotificationToAll = (notification: any): void => {
   if (io) {
-    io.to('wall:global').emit('notification', notification);
+    console.log('[Socket Gateway] Broadcasting global notification to ALL clients:', notification.message);
+    io.emit('notification', notification);
   }
 };
 
 // Direct notification to specific tagged user
 export const sendNotificationToUser = (userId: string, notification: any): void => {
   if (io) {
+    console.log(`[Socket Gateway] Sending targeted notification to user:${userId}`);
     io.to(`user:${userId}`).emit('notification', notification);
   }
 };
 
-// Broadcast like updates in real-time
+// Broadcast like updates in real-time to ALL clients
 export const broadcastLikeUpdate = (postId: string, likesCount: number): void => {
   if (io) {
-    io.to('wall:global').emit('like_update', { postId, likesCount });
+    console.log(`[Socket Gateway] Broadcasting like_update for post:${postId} count:${likesCount}`);
+    io.emit('like_update', { postId, likesCount });
   }
 };

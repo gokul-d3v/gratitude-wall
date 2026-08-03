@@ -1,58 +1,75 @@
 @import "tailwindcss";
 
-@layer utilities {
-  .dotted-canvas {
-    background-color: #FBFBFC;
-    background-image: radial-gradient(#CBD5E1 1.5px, transparent 1.5px);
-    background-size: 24px 24px;
-  }
+body {
+  background-color: #fffcf9;
+  color: #191c1d;
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+  background-size: 40px 40px;
+}
 
-  .font-handwriting {
-    font-family: 'Caveat', cursive;
-  }
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+}
 
-  .font-sans-main {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+/* Animations */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Tape strip effect at top of sticky note */
-.tape-strip {
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90px;
-  height: 26px;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(2px);
-  border: 1px solid rgba(229, 231, 235, 0.5);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+.animate-fade-slide-up {
+  animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.stagger-1 { animation-delay: 100ms; }
+.stagger-2 { animation-delay: 200ms; }
+.stagger-3 { animation-delay: 300ms; }
+.stagger-4 { animation-delay: 400ms; }
+.stagger-5 { animation-delay: 500ms; }
+
+/* Sticky note card styling */
+.sticky-note {
+  min-height: 220px;
+  box-shadow: 2px 4px 8px rgba(0,0,0,0.1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.sticky-note:hover {
+  transform: scale(1.05) rotate(0deg) !important;
+  box-shadow: 8px 12px 20px rgba(0,0,0,0.15);
   z-index: 10;
 }
 
+/* Organic hand-placed rotations */
+.grid-notes > div:nth-child(5n+1) { transform: rotate(-1.5deg); }
+.grid-notes > div:nth-child(5n+2) { transform: rotate(1.2deg); }
+.grid-notes > div:nth-child(5n+3) { transform: rotate(-0.8deg); }
+.grid-notes > div:nth-child(5n+4) { transform: rotate(1.8deg); }
+.grid-notes > div:nth-child(5n+5) { transform: rotate(-2deg); }
+
+.fab-pulse:hover {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1.1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1.1); }
+}
+
 /* Color theme mappings */
-.note-bg-yellow {
-  background-color: #FFF8B6;
-  border-color: #FDE047;
-}
-
-.note-bg-green {
-  background-color: #DCFCE7;
-  border-color: #86EFAC;
-}
-
-.note-bg-blue {
-  background-color: #E0F2FE;
-  border-color: #7DD3FC;
-}
-
-.note-bg-pink {
-  background-color: #FCE7F3;
-  border-color: #F472B6;
-}
-
-.note-bg-purple {
-  background-color: #F3E8FF;
-  border-color: #C084FC;
-}
+.bg-sticky-yellow { background-color: #FFF9C4; }
+.bg-sticky-blue { background-color: #E3F2FD; }
+.bg-sticky-pink { background-color: #FCE4EC; }
+.bg-sticky-green { background-color: #E8F5E9; }
+.bg-sticky-purple { background-color: #F3E8FF; }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, Search, Bell, User, LogOut, Sparkles, Filter } from 'lucide-react';
+import { Search, Bell, User, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
 import { StickyColor } from '../types';
@@ -19,14 +19,15 @@ export const Header: React.FC = () => {
   } = useWallStore();
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'latest' | 'trending'>('latest');
 
   const filterColors: { key: StickyColor | 'all'; label: string; bg: string }[] = [
-    { key: 'all', label: 'All Notes', bg: 'bg-slate-100 text-slate-800' },
-    { key: 'yellow', label: 'Yellow', bg: 'bg-[#FFF59D] text-slate-800' },
-    { key: 'green', label: 'Green', bg: 'bg-[#C8E6C9] text-slate-800' },
-    { key: 'blue', label: 'Blue', bg: 'bg-[#BBDEFB] text-slate-800' },
-    { key: 'pink', label: 'Pink', bg: 'bg-[#F8BBD0] text-slate-800' },
-    { key: 'purple', label: 'Purple', bg: 'bg-[#E1BEE7] text-slate-800' },
+    { key: 'all', label: 'All', bg: 'bg-white text-slate-800' },
+    { key: 'yellow', label: 'Yellow', bg: 'bg-sticky-yellow text-slate-800' },
+    { key: 'blue', label: 'Blue', bg: 'bg-sticky-blue text-slate-800' },
+    { key: 'pink', label: 'Pink', bg: 'bg-sticky-pink text-slate-800' },
+    { key: 'green', label: 'Green', bg: 'bg-sticky-green text-slate-800' },
+    { key: 'purple', label: 'Purple', bg: 'bg-sticky-purple text-slate-800' },
   ];
 
   const handleMarkNotifsRead = async () => {
@@ -39,56 +40,74 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3 transition-all">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* App Title */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold font-sans-main text-slate-900 tracking-tight flex items-center gap-2">
-              Virtual Gratitude Wall
-            </h1>
-            <p className="text-xs text-slate-500">Spread appreciation & positive energy</p>
-          </div>
+    <header className="animate-fade-slide-up flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
+      <div>
+        <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-[#191c1d]">
+          Gratitude Wall
+        </h1>
+        <p className="font-display text-base sm:text-lg text-[#424753] mt-1">
+          A collection of community moments to be thankful for.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        {/* Search Bar */}
+        <div className="relative flex-1 md:w-56">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search notes..."
+            className="w-full pl-9 pr-4 py-2 rounded-full bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0058bd]/40"
+          />
         </div>
 
-        {/* Search Bar & Color Filter Pills */}
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search gratitude..."
-              className="w-full pl-9 pr-4 py-1.5 rounded-full bg-slate-100/80 border border-slate-200/60 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-400/50"
-            />
-          </div>
+        {/* Filter Pills Container */}
+        <div className="flex items-center gap-1.5 bg-[#fff8f2] p-1.5 rounded-full border border-[#c2c6d5] overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('latest')}
+            className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'latest'
+                ? 'bg-[#f9ebe0] text-[#191c1d] shadow-2xs'
+                : 'text-[#424753] hover:bg-[#f5e8df]'
+            }`}
+          >
+            Latest
+          </button>
+          <button
+            onClick={() => setActiveTab('trending')}
+            className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'trending'
+                ? 'bg-[#f9ebe0] text-[#191c1d] shadow-2xs'
+                : 'text-[#424753] hover:bg-[#f5e8df]'
+            }`}
+          >
+            Trending
+          </button>
 
-          <div className="flex items-center gap-1 overflow-x-auto py-1 max-w-full">
-            {filterColors.map((c) => (
-              <button
-                key={c.key}
-                onClick={() => setActiveColor(c.key)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-                  activeColor === c.key
-                    ? 'ring-2 ring-blue-600 border-transparent shadow-xs scale-105'
-                    : 'border-slate-200 hover:opacity-80'
-                } ${c.bg}`}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
+          {/* Color Pills */}
+          <div className="h-4 w-px bg-slate-300 mx-1" />
+          {filterColors.map((c) => (
+            <button
+              key={c.key}
+              onClick={() => setActiveColor(c.key)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                activeColor === c.key
+                  ? 'ring-2 ring-[#0058bd] border-transparent scale-105 shadow-2xs'
+                  : 'border-slate-200/60 hover:opacity-80'
+              } ${c.bg}`}
+            >
+              {c.label}
+            </button>
+          ))}
         </div>
 
-        {/* User Navigation & Notifications */}
-        <div className="flex items-center gap-3">
+        {/* User Session & Notifications */}
+        <div className="flex items-center gap-3 ml-auto md:ml-0">
           {isAuthenticated ? (
             <>
-              {/* Notification Bell Dropdown */}
+              {/* Notification Bell */}
               <div className="relative">
                 <button
                   onClick={() => {
@@ -97,25 +116,25 @@ export const Header: React.FC = () => {
                       handleMarkNotifsRead();
                     }
                   }}
-                  className="relative p-2 rounded-full hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                  className="relative p-2.5 rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 transition-all cursor-pointer shadow-2xs"
                   title="Notifications"
                 >
-                  <Bell className="w-5 h-5" />
+                  <Bell className="w-4 h-4" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-xs">
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-xs">
                       {unreadCount}
                     </span>
                   )}
                 </button>
 
-                {/* Dropdown Menu */}
+                {/* Notifications Dropdown */}
                 {isNotifOpen && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
-                    <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 z-50 animate-fade-slide-up">
+                    <div className="px-4 pb-2 border-b border-slate-100 flex items-center justify-between">
                       <span className="font-bold text-sm text-slate-800">Notifications</span>
                       <button
                         onClick={handleMarkNotifsRead}
-                        className="text-xs text-blue-600 font-semibold hover:underline"
+                        className="text-xs text-[#0058bd] font-semibold hover:underline"
                       >
                         Mark all read
                       </button>
@@ -138,21 +157,21 @@ export const Header: React.FC = () => {
                 )}
               </div>
 
-              {/* Profile Badge */}
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200">
+              {/* Employee Session Badge */}
+              <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-2xs">
                 <div
-                  style={{ backgroundColor: user?.avatarColor || '#0066FF' }}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                  style={{ backgroundColor: user?.avatarColor || '#0058bd' }}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-xs"
                 >
                   {user?.fullName?.[0]?.toUpperCase() || 'E'}
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="text-xs font-bold text-slate-800 leading-none">{user?.fullName}</span>
+                  <span className="text-xs font-bold text-[#191c1d] leading-none">{user?.fullName}</span>
                   <span className="text-[10px] font-mono text-slate-500 font-semibold">{user?.employeeCode}</span>
                 </div>
                 <button
                   onClick={() => logout()}
-                  className="p-1 hover:text-red-600 transition-colors cursor-pointer ml-1"
+                  className="p-1 hover:text-rose-600 transition-colors cursor-pointer ml-1"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4 text-slate-400 hover:text-rose-500" />
@@ -162,7 +181,7 @@ export const Header: React.FC = () => {
           ) : (
             <button
               onClick={() => setAuthModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-all shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#0058bd] hover:bg-[#004494] text-white font-medium text-xs transition-all shadow-md cursor-pointer"
             >
               <User className="w-4 h-4" />
               Sign In / Register

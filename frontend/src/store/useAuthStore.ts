@@ -35,7 +35,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    await api.post('/auth/logout');
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Silence
+    }
     setAccessToken(null);
     updateSocketAuth(null);
     set({ user: null, isAuthenticated: false });
@@ -44,15 +48,23 @@ export const useAuthStore = create<AuthState>((set) => ({
   checkAuth: async () => {
     set({ isLoading: true });
     try {
-      const refreshRes = await api.post('/auth/refresh');
-      const token = refreshRes.data.data.accessToken;
-      setAccessToken(token);
-      updateSocketAuth(token);
-
+      // Try verifying existing access token or refreshing cookie session
       const userRes = await api.get('/auth/me');
       set({ user: userRes.data.data, isAuthenticated: true, isLoading: false });
     } catch {
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      try {
+        const refreshRes = await api.post('/auth/refresh');
+        const token = refreshRes.data.data.accessToken;
+        setAccessToken(token);
+        updateSocketAuth(token);
+
+        const userRes = await api.get('/auth/me');
+        set({ user: userRes.data.data, isAuthenticated: true, isLoading: false });
+      } catch {
+        setAccessToken(null);
+        updateSocketAuth(null);
+        set({ user: null, isAuthenticated: false, isLoading: false });
+      }
     }
   },
 }));
