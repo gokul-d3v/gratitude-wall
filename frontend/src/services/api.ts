@@ -62,7 +62,10 @@ api.interceptors.response.use(
     }
 
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login' && originalRequest.url !== '/auth/refresh') {
+    const authUrls = ['/auth/login', '/auth/admin-login', '/auth/refresh', '/auth/register'];
+    const isAuthUrl = authUrls.some((url) => originalRequest.url?.includes(url));
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthUrl) {
       originalRequest._retry = true;
       try {
         const res = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
