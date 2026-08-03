@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .dotted-canvas {
+    background-color: #FBFBFC;
+    background-image: radial-gradient(#CBD5E1 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+  }
+
+  .font-handwriting {
+    font-family: 'Caveat', cursive;
+  }
+
+  .font-sans-main {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+/* Tape strip effect at top of sticky note */
+.tape-strip {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(2px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+}
+
+/* Color theme mappings */
+.note-bg-yellow {
+  background-color: #FFF8B6;
+  border-color: #FDE047;
+}
+
+.note-bg-green {
+  background-color: #DCFCE7;
+  border-color: #86EFAC;
+}
+
+.note-bg-blue {
+  background-color: #E0F2FE;
+  border-color: #7DD3FC;
+}
+
+.note-bg-pink {
+  background-color: #FCE7F3;
+  border-color: #F472B6;
+}
+
+.note-bg-purple {
+  background-color: #F3E8FF;
+  border-color: #C084FC;
+}

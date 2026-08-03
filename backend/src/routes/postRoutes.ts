@@ -1,0 +1,21 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import { createPostHandler, getPostsHandler, toggleLikeHandler, reportPostHandler } from '../controllers/postController';
+import { optionalAuth, authenticateToken } from '../middleware/auth';
+import { validateRequest } from '../middleware/validate';
+import { postRateLimiter } from '../middleware/security';
+
+const router = Router();
+
+const createPostSchema = z.object({
+  content: z.string().min(1, 'Content is required').max(500, 'Content must not exceed 500 characters'),
+  taggedUserIds: z.array(z.string()).optional(),
+  color: z.enum(['yellow', 'green', 'blue', 'pink', 'purple']).optional(),
+});
+
+router.get('/', optionalAuth, getPostsHandler);
+router.post('/', authenticateToken, postRateLimiter, validateRequest(createPostSchema), createPostHandler);
+router.post('/:id/like', authenticateToken, toggleLikeHandler);
+router.post('/:id/report', reportPostHandler);
+
+export default router;
