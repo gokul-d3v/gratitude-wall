@@ -128,17 +128,23 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
           className="absolute pointer-events-none z-50"
           style={{ left: burstPos.x - 40, top: burstPos.y - 40 }}
         >
-          <span
+          <svg
+            viewBox="0 0 24 24"
+            width="80"
+            height="80"
             style={{
-              fontSize: '80px',
               display: 'block',
               animation: 'heartBurst 0.9s ease-out forwards',
-              filter: 'drop-shadow(0 0 12px rgba(244,63,94,0.7))',
-              lineHeight: 1,
+              filter: 'drop-shadow(0 0 12px rgba(220,38,38,0.7))',
             }}
           >
-            ❤️
-          </span>
+            <path
+              d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"
+              fill="#dc2626"
+              stroke="#dc2626"
+              strokeWidth="1"
+            />
+          </svg>
         </div>
       )}
 
@@ -186,7 +192,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         </div>
       )}
 
-      {/* Card Footer: Insta-style Like Button */}
+      {/* Card Footer: Like Button */}
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5">
         <button
           onClick={(e) => {
@@ -199,20 +205,26 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
           className="flex items-center gap-1.5 group/like cursor-pointer select-none"
           title={hasLiked ? 'Unlike' : 'Like'}
         >
-          <span
-            className={`text-xl transition-all duration-200 ${
-              hasLiked
-                ? 'scale-125 drop-shadow-[0_0_6px_rgba(244,63,94,0.6)]'
-                : 'opacity-60 group-hover/like:opacity-100 group-hover/like:scale-110'
-            }`}
+          <svg
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            className="transition-all duration-200"
             style={{
-              display: 'inline-block',
               animation: hasLiked ? 'heartPop 0.3s ease-out' : 'none',
+              filter: hasLiked ? 'drop-shadow(0 0 4px rgba(220,38,38,0.5))' : 'none',
+              transform: hasLiked ? 'scale(1.1)' : 'scale(1)',
             }}
           >
-            {hasLiked ? '❤️' : '🤍'}
-          </span>
-          <span className={`text-xs font-bold transition-colors ${hasLiked ? 'text-rose-600' : 'text-[#424753]'}`}>
+            <path
+              d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"
+              fill={hasLiked ? '#dc2626' : 'none'}
+              stroke={hasLiked ? '#dc2626' : '#9ca3af'}
+              strokeWidth="1.5"
+              className="transition-all duration-200 group-hover/like:stroke-rose-500"
+            />
+          </svg>
+          <span className={`text-xs font-bold transition-colors ${hasLiked ? 'text-rose-600' : 'text-[#9ca3af] group-hover/like:text-rose-500'}`}>
             {likesCount}
           </span>
         </button>
@@ -231,7 +243,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
           0%   { transform: scale(1); }
           40%  { transform: scale(1.4); }
           70%  { transform: scale(0.9); }
-          100% { transform: scale(1.25); }
+          100% { transform: scale(1.1); }
         }
       `}</style>
     </div>
