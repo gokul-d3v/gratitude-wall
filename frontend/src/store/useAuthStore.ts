@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { User } from '../types';
 import { api, setAccessToken } from '../services/api';
 import { updateSocketAuth } from '../services/socket';
+import { useWallStore } from './useWallStore';
 
 interface AuthState {
   user: User | null;
@@ -24,6 +25,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     setAccessToken(accessToken);
     updateSocketAuth(accessToken);
     set({ user, isAuthenticated: true });
+    // Instantly refetch posts for newly authenticated session
+    useWallStore.getState().fetchPosts();
   },
 
   register: async (userData) => {
@@ -32,6 +35,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     setAccessToken(accessToken);
     updateSocketAuth(accessToken);
     set({ user, isAuthenticated: true });
+    // Instantly refetch posts for newly registered session
+    useWallStore.getState().fetchPosts();
   },
 
   logout: async () => {
@@ -43,14 +48,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     setAccessToken(null);
     updateSocketAuth(null);
     set({ user: null, isAuthenticated: false });
+    // Reset wall posts for guest view
+    useWallStore.getState().fetchPosts();
   },
 
   checkAuth: async () => {
     set({ isLoading: true });
     try {
-      // Try verifying existing access token or refreshing cookie session
       const userRes = await api.get('/auth/me');
       set({ user: userRes.data.data, isAuthenticated: true, isLoading: false });
+      useWallStore.getState().fetchPosts();
     } catch {
       try {
         const refreshRes = await api.post('/auth/refresh');
@@ -60,6 +67,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
         const userRes = await api.get('/auth/me');
         set({ user: userRes.data.data, isAuthenticated: true, isLoading: false });
+        useWallStore.getState().fetchPosts();
       } catch {
         setAccessToken(null);
         updateSocketAuth(null);

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Post, StickyColor, NotificationItem } from '../types';
+import { api } from '../services/api';
 
 interface WallState {
   posts: Post[];
@@ -14,6 +15,7 @@ interface WallState {
   toastNotification: NotificationItem | null;
 
   setPosts: (posts: Post[]) => void;
+  fetchPosts: () => Promise<void>;
   addPost: (post: Post) => void;
   updateLikeCount: (postId: string, likesCount: number) => void;
   setActiveColor: (color: StickyColor | 'all') => void;
@@ -41,6 +43,15 @@ export const useWallStore = create<WallState>((set) => ({
   toastNotification: null,
 
   setPosts: (posts) => set({ posts }),
+
+  fetchPosts: async () => {
+    try {
+      const res = await api.get('/posts');
+      set({ posts: res.data.posts || [] });
+    } catch {
+      // Silence
+    }
+  },
 
   addPost: (newPost) =>
     set((state) => {

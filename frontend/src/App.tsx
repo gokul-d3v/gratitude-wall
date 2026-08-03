@@ -62,6 +62,10 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    fetchPosts();
+  }, [isAuthenticated]);
+
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
