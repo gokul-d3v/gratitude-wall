@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
+import { useWallStore } from '../store/useWallStore';
+import { initSocketClient } from '../services/socket';
 
 interface TopUserItem {
   user: {
@@ -13,10 +15,28 @@ interface TopUserItem {
 
 export const TopGratitudeSpotlight: React.FC = () => {
   const [topUsers, setTopUsers] = useState<TopUserItem[]>([]);
+  const { posts } = useWallStore();
 
   useEffect(() => {
     fetchTopUsers();
+
+    // Register real-time socket listener for instant spotlight updates
+    const socket = initSocketClient();
+    const handleNewPost = () => {
+      fetchTopUsers();
+    };
+
+    socket.on('new_post', handleNewPost);
+
+    return () => {
+      socket.off('new_post', handleNewPost);
+    };
   }, []);
+
+  // Re-fetch top tagged users whenever posts array changes
+  useEffect(() => {
+    fetchTopUsers();
+  }, [posts.length]);
 
   const fetchTopUsers = async () => {
     try {
@@ -32,7 +52,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
   const topRecipient = topUsers[0];
 
   return (
-    <div className="bg-[#fff8f2] border border-[#c2c6d5] p-4 sm:p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-xs animate-fade-slide-up">
+    <div className="bg-[#fff8f2] border border-[#c2c6d5] p-4 sm:p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-xs animate-fade-slide-up transition-all duration-500">
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-sm shadow-md shrink-0">
           <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
