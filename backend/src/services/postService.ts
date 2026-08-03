@@ -279,7 +279,7 @@ export const reportPost = async (postId: string) => {
 export const updatePost = async (
   postId: string,
   userId: string,
-  updateData: { content?: string; color?: StickyColor },
+  updateData: { content?: string; color?: StickyColor; taggedUserIds?: string[] },
   userRole?: string
 ) => {
   const post = await Post.findById(postId);
@@ -311,6 +311,15 @@ export const updatePost = async (
 
   if (updateData.color) {
     post.color = updateData.color;
+  }
+
+  if (updateData.taggedUserIds !== undefined) {
+    const validTaggedUserIds: string[] = [];
+    if (updateData.taggedUserIds.length > 0) {
+      const users = await User.find({ _id: { $in: updateData.taggedUserIds } }).select('_id');
+      users.forEach((u) => validTaggedUserIds.push(u._id.toString()));
+    }
+    post.taggedUsers = validTaggedUserIds as any;
   }
 
   await post.save();

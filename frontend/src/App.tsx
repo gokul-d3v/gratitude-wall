@@ -23,6 +23,7 @@ export const App: React.FC = () => {
     activeTab,
     searchQuery,
     isCreateModalOpen,
+    editingPost,
     setCreateModalOpen,
     setAuthModalOpen,
     isAdminViewOpen,
@@ -220,8 +221,8 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* User Auth & Create Post Modals */}
-      {isCreateModalOpen && <CreateNoteModal />}
+      {/* User Auth & Create / Edit Note Modals */}
+      {(isCreateModalOpen || Boolean(editingPost)) && <CreateNoteModal />}
       <AuthModal />
       <NotificationModal />
     </div>

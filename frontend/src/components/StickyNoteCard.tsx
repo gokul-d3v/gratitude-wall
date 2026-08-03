@@ -52,9 +52,6 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
 
   // Options menu state
   const [showOptions, setShowOptions] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState(post.content);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Check if user can edit/delete (within 10 minutes and is author, or admin)
@@ -138,33 +135,8 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
   };
 
   const handleStartEdit = () => {
-    setEditContent(post.content);
-    setIsEditing(true);
+    useWallStore.getState().setEditingPost(post);
     setShowOptions(false);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editContent.trim()) {
-      triggerToast('Post content cannot be empty', 'error');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const res = await updatePostApi(post._id, { content: editContent.trim() });
-      if (res.data) {
-        // Update post in store
-        useWallStore.getState().setPosts(
-          useWallStore.getState().posts.map((p) => (p._id === post._id ? { ...p, ...res.data } : p))
-        );
-        setIsEditing(false);
-        triggerToast('Post updated successfully', 'success');
-      }
-    } catch (err: any) {
-      triggerToast(err.response?.data?.message || 'Failed to update post', 'error');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleDeleteClick = () => {
@@ -289,7 +261,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       )}
 
       {/* Options Menu Button */}
-      {canModify && !isEditing && (
+      {canModify && (
         <div className="absolute top-2 right-2" ref={optionsRef}>
           <button
             onClick={() => setShowOptions(!showOptions)}
@@ -299,7 +271,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
             <MoreVertical className="w-4 h-4" />
           </button>
 
-            {/* Options Dropdown */}
+          {/* Options Dropdown */}
           {showOptions && (
             <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-slate-200 py-1 min-w-[120px] z-20">
               <button
@@ -319,49 +291,6 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
               </button>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Edit Mode */}
-      {isEditing && (
-        <div className="absolute inset-0 bg-white/95 backdrop-blur-sm p-4 flex flex-col gap-3 z-10 rounded-lg">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-800">Edit Post</h3>
-            <button
-              onClick={() => {
-                setIsEditing(false);
-                setEditContent(post.content);
-              }}
-              className="p-1 rounded-full hover:bg-slate-100 text-slate-500 cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <textarea
-            value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
-            className="flex-1 w-full p-3 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#0058bd] resize-none"
-            maxLength={500}
-            autoFocus
-          />
-          <div className="flex items-center justify-end gap-2">
-            <button
-              onClick={() => {
-                setIsEditing(false);
-                setEditContent(post.content);
-              }}
-              className="px-4 py-2 rounded-full text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveEdit}
-              disabled={isSubmitting || !editContent.trim()}
-              className="px-4 py-2 rounded-full bg-[#0058bd] hover:bg-[#004494] text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
-            >
-              {isSubmitting ? 'Saving...' : 'Save'}
-            </button>
-          </div>
         </div>
       )}
 
@@ -410,9 +339,9 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Post"
-        message="Are you sure you want to delete this post? This action cannot be undone."
-        confirmText="Delete"
+        title="Delete Gratitude Post?"
+        message="Are you sure you want to delete this gratitude post from the wall? This action cannot be undone."
+        confirmText="Delete Post"
         cancelText="Cancel"
         isDestructive={true}
         isLoading={isSubmitting}

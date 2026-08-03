@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Send, X } from 'lucide-react';
 import { StickyColor, User } from '../types';
-import { api } from '../services/api';
+import { api, updatePostApi } from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
 import confetti from 'canvas-confetti';
@@ -16,7 +16,7 @@ const colors: { key: StickyColor; hex: string; bgClass: string; name: string }[]
 
 export const CreateNoteModal: React.FC = () => {
   const { user } = useAuthStore();
-  const { setCreateModalOpen, addPost, triggerToast } = useWallStore();
+  const { setCreateModalOpen, editingPost, setEditingPost, addPost, triggerToast } = useWallStore();
 
   const [content, setContent] = useState('');
   const [selectedColor, setSelectedColor] = useState<StickyColor>('yellow');
@@ -26,6 +26,24 @@ export const CreateNoteModal: React.FC = () => {
   const [tagQuery, setTagQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+
+  // Pre-fill state when editing an existing post
+  useEffect(() => {
+    if (editingPost) {
+      setContent(editingPost.content || '');
+      setSelectedColor(editingPost.color || 'yellow');
+      setSelectedUsers(editingPost.taggedUsers || []);
+    } else {
+      setContent('');
+      setSelectedColor('yellow');
+      setSelectedUsers([]);
+    }
+  }, [editingPost]);
+
+  const handleClose = () => {
+    setCreateModalOpen(false);
+    setEditingPost(null);
+  };
 
   useEffect(() => {
     if (tagQuery.trim().length > 0) {
@@ -66,25 +84,40 @@ export const CreateNoteModal: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const res = await api.post('/posts', {
-        content: content.trim(),
-        taggedUserIds: selectedUsers.map((u) => u.id || (u as any)._id),
-        color: selectedColor,
-      });
+      if (editingPost) {
+        const res = await updatePostApi(editingPost._id, {
+          content: content.trim(),
+          taggedUserIds: selectedUsers.map((u) => u.id || (u as any)._id),
+          color: selectedColor,
+        });
 
-      addPost(res.data.data);
-      triggerToast('Your gratitude note has been shared on the wall!', 'success');
+        const updatedData = res.data || res;
+        useWallStore.getState().setPosts(
+          useWallStore.getState().posts.map((p) => (p._id === editingPost._id ? { ...p, ...updatedData } : p))
+        );
+        triggerToast('Your gratitude note has been updated!', 'success');
+        handleClose();
+      } else {
+        const res = await api.post('/posts', {
+          content: content.trim(),
+          taggedUserIds: selectedUsers.map((u) => u.id || (u as any)._id),
+          color: selectedColor,
+        });
 
-      // Trigger celebration confetti
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
+        addPost(res.data.data);
+        triggerToast('Your gratitude note has been shared on the wall!', 'success');
 
-      setCreateModalOpen(false);
+        // Trigger celebration confetti
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+
+        handleClose();
+      }
     } catch (err: any) {
-      triggerToast(err.response?.data?.message || 'Failed to post gratitude note', 'error');
+      triggerToast(err.response?.data?.message || 'Failed to save gratitude note', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -94,11 +127,11 @@ export const CreateNoteModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto min-h-screen">
-      <div className="w-full max-w-xl mx-auto my-auto flex flex-col gap-4">
+      <div className="w-full max-w-xl mx-auto my-auto flex flex-col gap-4 animate-fade-slide-up">
         {/* Top Controls Bar */}
         <div className="flex items-center justify-between w-full">
           <button
-            onClick={() => setCreateModalOpen(false)}
+            onClick={handleClose}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-slate-700 border border-slate-200 text-xs font-semibold hover:bg-slate-50 transition-all shadow-xs cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -106,7 +139,7 @@ export const CreateNoteModal: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setCreateModalOpen(false)}
+            onClick={handleClose}
             className="p-2 rounded-full bg-white text-slate-500 hover:text-slate-800 border border-slate-200 transition-all cursor-pointer shadow-xs"
             title="Close popup"
           >
@@ -119,7 +152,7 @@ export const CreateNoteModal: React.FC = () => {
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {/* Header Prompt */}
             <h2 className="text-2xl sm:text-3xl font-bold font-sans text-slate-900 tracking-tight">
-              What are you grateful for today?
+              {editingPost ? 'Edit your gratitude note' : 'What are you grateful for today?'}
             </h2>
 
             {/* Message Input */}
@@ -214,7 +247,7 @@ export const CreateNoteModal: React.FC = () => {
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#0058bd] hover:bg-[#004494] text-white font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer ml-auto"
               >
                 <Send className="w-4 h-4" />
-                {isSubmitting ? 'Posting...' : 'Post Gratitude'}
+                {isSubmitting ? (editingPost ? 'Saving...' : 'Posting...') : (editingPost ? 'Update Gratitude' : 'Post Gratitude')}
               </button>
             </div>
           </form>

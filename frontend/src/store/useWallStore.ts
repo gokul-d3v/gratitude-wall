@@ -8,6 +8,7 @@ interface WallState {
   activeTab: 'latest' | 'trending';
   searchQuery: string;
   isCreateModalOpen: boolean;
+  editingPost: Post | null;
   isAuthModalOpen: boolean;
   isAdminViewOpen: boolean;
   isNotifModalOpen: boolean;
@@ -24,6 +25,7 @@ interface WallState {
   setActiveTab: (tab: 'latest' | 'trending') => void;
   setSearchQuery: (query: string) => void;
   setCreateModalOpen: (open: boolean) => void;
+  setEditingPost: (post: Post | null) => void;
   setAuthModalOpen: (open: boolean) => void;
   setAdminViewOpen: (open: boolean) => void;
   setNotifModalOpen: (open: boolean) => void;
@@ -40,6 +42,7 @@ export const useWallStore = create<WallState>((set) => ({
   activeTab: 'latest',
   searchQuery: '',
   isCreateModalOpen: false,
+  editingPost: null,
   isAuthModalOpen: false,
   isAdminViewOpen: false,
   isNotifModalOpen: false,
@@ -79,6 +82,8 @@ export const useWallStore = create<WallState>((set) => ({
   setSearchQuery: (searchQuery) => set({ searchQuery }),
 
   setCreateModalOpen: (isCreateModalOpen) => set({ isCreateModalOpen }),
+
+  setEditingPost: (editingPost) => set({ editingPost }),
 
   setAuthModalOpen: (isAuthModalOpen) => set({ isAuthModalOpen }),
 

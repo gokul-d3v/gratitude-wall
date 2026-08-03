@@ -34,7 +34,7 @@ export const getAccessToken = () => accessToken;
 export const getRefreshToken = () => refreshToken;
 
 // Post API methods
-export const updatePostApi = async (postId: string, data: { content?: string; color?: string }) => {
+export const updatePostApi = async (postId: string, data: { content?: string; color?: string; taggedUserIds?: string[] }) => {
   const response = await api.put(`/posts/${postId}`, data);
   return response.data;
 };

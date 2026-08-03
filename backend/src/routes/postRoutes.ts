@@ -14,8 +14,9 @@ const createPostSchema = z.object({
 });
 
 const updatePostSchema = z.object({
-  content: z.string().min(1, 'Content is required').max(500, 'Content must not exceed 500 characters'),
+  content: z.string().min(1, 'Content is required').max(500, 'Content must not exceed 500 characters').optional(),
   color: z.enum(['yellow', 'green', 'blue', 'pink', 'purple']).optional(),
+  taggedUserIds: z.array(z.string()).optional(),
 });
 
 router.get('/', optionalAuth, getPostsHandler);
