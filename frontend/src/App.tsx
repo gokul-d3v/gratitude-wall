@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Header } from './components/Header';
 import { StickyNoteCard } from './components/StickyNoteCard';
-import { FloatingActionButton } from './components/FloatingActionButton';
 import { CreateNoteModal } from './components/CreateNoteModal';
 import { AuthModal } from './components/AuthModal';
 import { AdminLoginScreen } from './components/AdminLoginScreen';
@@ -199,9 +198,6 @@ export const App: React.FC = () => {
           </section>
         )}
       </main>
-
-      {/* Floating Action Button */}
-      <FloatingActionButton onClick={handleOpenAddPost} />
 
       {/* User Auth & Create Post Modals */}
       {isCreateModalOpen && <CreateNoteModal />}

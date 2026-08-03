@@ -1,7 +1,7 @@
 import { User } from '../models/User';
 import { Post } from '../models/Post';
 import { Like } from '../models/Like';
-import { broadcastNotificationToAll } from '../config/socket';
+import { broadcastNotificationToLoggedUsers } from '../config/socket';
 
 export const getAdminStats = async () => {
   const [totalUsers, totalPosts, totalLikes, quarantinedPosts, reportedPosts] = await Promise.all([
@@ -95,6 +95,6 @@ export const sendSystemNotification = async (message: string) => {
     createdAt: new Date().toISOString(),
   };
 
-  broadcastNotificationToAll(notifPayload);
+  broadcastNotificationToLoggedUsers(notifPayload);
   return notifPayload;
 };

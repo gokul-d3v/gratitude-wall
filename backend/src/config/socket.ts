@@ -63,11 +63,20 @@ export const broadcastNewPost = (post: any): void => {
   }
 };
 
-// Broadcast real-time notification alert to ALL connected clients
-export const broadcastNotificationToAll = (notification: any): void => {
+// Broadcast real-time notification alert ONLY to logged-in users (not guests)
+export const broadcastNotificationToLoggedUsers = (notification: any): void => {
   if (io) {
-    console.log('[Socket Gateway] Broadcasting global notification to ALL clients:', notification.message);
-    io.emit('notification', notification);
+    console.log('[Socket Gateway] Broadcasting notification to logged-in users only:', notification.message);
+    // All authenticated sockets join a room named user:<userId>
+    // We broadcast to all rooms matching user:* pattern via server-side fetch
+    io.fetchSockets().then((sockets) => {
+      sockets.forEach((socket) => {
+        const user = (socket as any).data?.user || (socket as any).user;
+        if (user?.userId) {
+          socket.emit('notification', notification);
+        }
+      });
+    });
   }
 };
 
