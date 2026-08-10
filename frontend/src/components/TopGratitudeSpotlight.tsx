@@ -53,29 +53,17 @@ export const TopGratitudeSpotlight: React.FC = () => {
   const topRecipient = topUsers[0];
 
   return (
-    <div className="inline-flex items-center gap-2.5 bg-[#fff8f2] border border-[#c2c6d5] px-4 py-1.5 rounded-full shadow-2xs animate-fade-slide-up w-fit max-w-full">
-      {/* Icon Badge */}
-      <div className="w-5 h-5 rounded-full bg-[#0058bd] text-white flex items-center justify-center shrink-0 shadow-xs">
-        <Trophy className="w-3 h-3 text-amber-300" />
+    <div className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 bg-[#fffcf9] border border-[#0058bd]/20 px-4 py-2.5 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 animate-fade-slide-up group cursor-pointer backdrop-blur-sm">
+      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 to-amber-200 text-amber-900 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+        <Trophy className="w-4 h-4" />
       </div>
-
-      {/* Spotlight Label & User Details */}
-      <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-        <span className="text-[10px] uppercase font-extrabold tracking-wider text-[#0058bd]">
-          Most Appreciated:
-        </span>
-        <span className="text-xs font-bold text-[#191c1d] truncate">
-          {topRecipient.user.fullName}
-        </span>
-        <span className="text-[10px] font-semibold text-slate-500 font-mono">
-          ({topRecipient.user.employeeCode})
-        </span>
+      <div className="flex flex-col">
+        <span className="text-[9px] uppercase font-bold tracking-widest text-[#424753] mb-0.5">Most Appreciated</span>
+        <span className="text-sm font-extrabold text-[#191c1d] truncate max-w-[140px] leading-none">{topRecipient.user.fullName}</span>
       </div>
-
-      {/* Count Badge */}
-      <div className="flex items-center gap-1 bg-amber-100/90 text-amber-900 border border-amber-300/60 px-2 py-0.5 rounded-full text-[11px] font-bold shrink-0 ml-1">
-        <Star className="w-3 h-3 text-amber-600 fill-amber-500 shrink-0" />
-        <span>{topRecipient.count}</span>
+      <div className="flex items-center gap-1 bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ml-1 border border-amber-200">
+        <Star className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+        {topRecipient.count}
       </div>
     </div>
   );

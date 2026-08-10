@@ -90,3 +90,52 @@ body {
 .bg-sticky-pink { background-color: #FCE4EC; }
 .bg-sticky-green { background-color: #E8F5E9; }
 .bg-sticky-purple { background-color: #F3E8FF; }
+
+/* Heart animation keyframes (moved from inline StickyNoteCard styles) */
+@keyframes heartBurst {
+  0%   { transform: scale(0.3); opacity: 1; }
+  40%  { transform: scale(1.2); opacity: 1; }
+  70%  { transform: scale(0.95); opacity: 0.9; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.4); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1.1); }
+}
+
+/* Tape header decoration for sticky notes */
+.tape-header {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1deg);
+  width: 60px;
+  height: 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.3) 100%);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  z-index: 5;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

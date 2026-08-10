@@ -16,8 +16,13 @@ const app = express();
 
 // Security Headers
 app.use(helmet({
-  contentSecurityPolicy: false, // Disabled for local dev flexibility
+  contentSecurityPolicy: process.env.NODE_ENV === 'production',
 }));
+
+// Trust proxy for deployment behind reverse proxies
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 
 // CORS Configuration
 const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:5173';

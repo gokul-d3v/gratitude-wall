@@ -26,9 +26,4 @@ router.post('/:id/report', reportPostHandler);
 router.put('/:id', authenticateToken, validateRequest(updatePostSchema), updatePostHandler);
 router.delete('/:id', authenticateToken, deletePostHandler);
 
-// Add a test route to verify routing
-router.get('/test', (req, res) => {
-  res.json({ message: 'Post routes are working!' });
-});
-
 export default router;

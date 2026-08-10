@@ -190,6 +190,9 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       } p-6 flex flex-col justify-between rounded-lg font-sans transition-all relative group select-none`}
       style={{ cursor: 'default' }}
     >
+      {/* Decorative tape header */}
+      <div className="tape-header" />
+
       {/* Instagram-style heart burst on double tap */}
       {showBurst && (
         <div
@@ -346,21 +349,6 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         isDestructive={true}
         isLoading={isSubmitting}
       />
-
-      <style>{`
-        @keyframes heartBurst {
-          0%   { transform: scale(0.3); opacity: 1; }
-          40%  { transform: scale(1.2); opacity: 1; }
-          70%  { transform: scale(0.95); opacity: 0.9; }
-          100% { transform: scale(1.4); opacity: 0; }
-        }
-        @keyframes heartPop {
-          0%   { transform: scale(1); }
-          40%  { transform: scale(1.4); }
-          70%  { transform: scale(0.9); }
-          100% { transform: scale(1.1); }
-        }
-      `}</style>
     </div>
   );
 };

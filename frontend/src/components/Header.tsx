@@ -5,6 +5,7 @@ import { useWallStore } from '../store/useWallStore';
 import { StickyColor } from '../types';
 import { api } from '../services/api';
 
+
 const getRelativeTime = (dateStr: string) => {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -89,7 +90,7 @@ export const Header: React.FC = () => {
   };
 
   const handleTaggedMeToggle = () => {
-    if (!isAuthenticated || !user?.id) {
+    if (!isAuthenticated || (!user?.id && !(user as any)?._id)) {
       setAuthModalOpen(true);
       return;
     }
@@ -98,7 +99,7 @@ export const Header: React.FC = () => {
     setIsTaggedMeFilter(nextState);
 
     if (nextState) {
-      api.get(`/posts?taggedUserId=${user.id}`).then((res) => {
+      api.get(`/posts?taggedUserId=${user?.id || (user as any)?._id}`).then((res) => {
         if (res.data?.posts) {
           useWallStore.getState().setPosts(res.data.posts);
         }
@@ -123,6 +124,7 @@ export const Header: React.FC = () => {
             Virtual Gratitude & Appreciation Wall
           </p>
         </div>
+
 
         {/* Mobile: Menu Button */}
         <button

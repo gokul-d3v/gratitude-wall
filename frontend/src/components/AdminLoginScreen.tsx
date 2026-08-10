@@ -75,7 +75,7 @@ export const AdminLoginScreen: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 leading-tight">Admin Portal Login</h1>
-            <p className="text-xs text-slate-500 font-mono mt-0.5">Route: http://localhost:5173/admin-login</p>
+            <p className="text-xs text-slate-500 mt-0.5">Restricted administrative access</p>
           </div>
         </div>
 

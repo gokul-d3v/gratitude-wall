@@ -12,7 +12,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -21,7 +21,6 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       data: {
         user: result.user,
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
       },
     });
   } catch (error) {
@@ -36,7 +35,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -45,7 +44,6 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       data: {
         user: result.user,
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
       },
     });
   } catch (error) {
@@ -65,7 +63,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -74,7 +72,6 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
       data: {
         user: result.user,
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
       },
     });
   } catch (error) {

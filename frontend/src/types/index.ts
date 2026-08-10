@@ -2,6 +2,7 @@ export type StickyColor = 'yellow' | 'green' | 'blue' | 'pink' | 'purple';
 
 export interface User {
   id: string;
+  _id?: string;
   fullName: string;
   employeeCode: string;
   avatarColor?: string;

@@ -7,6 +7,7 @@ import { AdminLoginScreen } from './components/AdminLoginScreen';
 import { AdminDashboard } from './components/AdminDashboard';
 import { NotificationToast } from './components/NotificationToast';
 import { NotificationModal } from './components/NotificationModal';
+import { TopGratitudeSpotlight } from './components/TopGratitudeSpotlight';
 import { useWallStore } from './store/useWallStore';
 import { useAuthStore } from './store/useAuthStore';
 import { api } from './services/api';
@@ -114,6 +115,8 @@ export const App: React.FC = () => {
       socket.off('like_update', handleLikeUpdate);
       socket.off('reaction_update', handleReactionUpdate);
       socket.off('notification', handleNotification);
+      socket.off('post_update', handlePostUpdate);
+      socket.off('post_delete', handlePostDelete);
     };
   }, []);
 
@@ -205,13 +208,20 @@ export const App: React.FC = () => {
             ))}
           </section>
         )}
+        {!isLoading && filteredPosts.length === 0 && (
+          <div className="flex flex-col items-center justify-center min-h-[30vh] gap-3 text-slate-400">
+            <Sparkles className="w-10 h-10 text-[#0058bd]/30" />
+            <p className="text-base font-semibold text-slate-500">No gratitude notes yet</p>
+            <p className="text-xs text-slate-400">Be the first to spread some positivity!</p>
+          </div>
+        )}
       </main>
 
       {/* User Auth, Announcement Toast & Modals */}
       {(isCreateModalOpen || Boolean(editingPost)) && <CreateNoteModal />}
       <AuthModal />
       <NotificationModal />
-      <NotificationToast />
+      <TopGratitudeSpotlight />
     </div>
   );
 };

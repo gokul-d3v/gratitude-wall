@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import { Post, StickyColor } from '../models/Post';
-import { Like } from '../models/Like';
 import { Reaction } from '../models/Reaction';
 import { User } from '../models/User';
 import { Notification } from '../models/Notification';
@@ -88,6 +87,34 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
       postId: newPost._id.toString(),
       createdAt: postAnnouncementNotif.createdAt.toISOString(),
     });
+
+    // 3. Send targeted @mention notifications to each tagged user
+    if (validTaggedUserIds.length > 0) {
+      for (const taggedUserId of validTaggedUserIds) {
+        if (taggedUserId === authorUserId) continue; // Don't notify self
+        try {
+          const tagNotif = await Notification.create({
+            recipientId: taggedUserId,
+            senderId: authorUser._id,
+            senderName: authorUser.fullName,
+            postId: newPost._id,
+            type: 'TAGGED',
+            message: `${authorUser.fullName} tagged you in a gratitude note!`,
+          });
+
+          sendNotificationToUser(taggedUserId, {
+            id: tagNotif._id.toString(),
+            type: 'TAGGED',
+            senderName: authorUser.fullName,
+            message: `${authorUser.fullName} tagged you in a gratitude note!`,
+            postId: newPost._id.toString(),
+            createdAt: tagNotif.createdAt.toISOString(),
+          });
+        } catch {
+          // Silence individual tag notification error
+        }
+      }
+    }
   } catch {
     // Silence notification error
   }
@@ -457,7 +484,6 @@ export const deletePost = async (postId: string, userId: string, userRole?: stri
   }
 
   await Post.findByIdAndDelete(postId);
-  await Like.deleteMany({ postId });
   await Reaction.deleteMany({ postId });
   await Notification.deleteMany({ postId });
 

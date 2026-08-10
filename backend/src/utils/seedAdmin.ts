@@ -3,13 +3,22 @@ import { User } from '../models/User';
 
 export const seedInitialAdminAndTeams = async () => {
   try {
-    // Seed Admin User only — teams are created by admin via the dashboard
     const adminCode = 'BROTOTYPE';
+    const adminPassword = process.env.ADMIN_SEED_PASSWORD;
+
+    if (!adminPassword) {
+      if (process.env.NODE_ENV === 'production') {
+        console.log('⚠️ [Admin Seed] Skipped: ADMIN_SEED_PASSWORD not set in production.');
+        return;
+      }
+      console.log('⚠️ [Admin Seed] ADMIN_SEED_PASSWORD not set. Using default for development.');
+    }
+
     const existingAdmin = await User.findOne({ employeeCode: adminCode });
 
     if (!existingAdmin) {
       const salt = await bcrypt.genSalt(12);
-      const passwordHash = await bcrypt.hash('Brototype@321', salt);
+      const passwordHash = await bcrypt.hash(adminPassword || 'Brototype@321', salt);
 
       await User.create({
         employeeCode: adminCode,

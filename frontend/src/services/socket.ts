@@ -7,7 +7,7 @@ export const initSocketClient = (): Socket => {
   if (socket) return socket;
 
   const token = getAccessToken();
-  const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
+  const socketUrl = import.meta.env.VITE_SOCKET_URL || '';
 
   socket = io(socketUrl, {
     auth: { token },
