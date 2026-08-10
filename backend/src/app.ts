@@ -30,7 +30,7 @@ if (allowedOrigin.endsWith('/')) {
   allowedOrigin = allowedOrigin.slice(0, -1);
 }
 app.use(cors({
-  origin: [allowedOrigin, 'http://localhost:5173'],
+  origin: [allowedOrigin, 'http://localhost:5173','https://gratitude-wall-pi.vercel.app/'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));
