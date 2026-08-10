@@ -63,41 +63,41 @@ export const App: React.FC = () => {
     const socket = initSocketClient();
 
     const handleConnect = () => {
-      console.log('⚡ Connected/Reconnected to Gateway - Auto Refetching Wall Posts');
+
       fetchPosts();
     };
 
     const handleNewPost = (post: any) => {
-      console.log('⚡ [Realtime Socket] new_post received:', post);
+
       useWallStore.getState().addPost(post);
     };
 
     const handleLikeUpdate = ({ postId, likesCount }: { postId: string; likesCount: number }) => {
-      console.log('⚡ [Realtime Socket] like_update received:', postId, likesCount);
+
       useWallStore.getState().updateLikeCount(postId, likesCount);
     };
 
     const handleReactionUpdate = ({ postId, reactions, likesCount }: any) => {
-      console.log('⚡ [Realtime Socket] reaction_update received:', postId, reactions, likesCount);
+
       useWallStore.setState((state) => ({
         posts: state.posts.map((p) => (p._id === postId ? { ...p, reactions, likesCount } : p)),
       }));
     };
 
     const handleNotification = (notif: any) => {
-      console.log('⚡ [Realtime Socket] notification received:', notif);
+
       useWallStore.getState().addNotification(notif);
     };
 
     const handlePostUpdate = (updatedPost: any) => {
-      console.log('⚡ [Realtime Socket] post_update received:', updatedPost._id);
+
       useWallStore.getState().setPosts(
         useWallStore.getState().posts.map((p) => (p._id === updatedPost._id ? { ...p, ...updatedPost } : p))
       );
     };
 
     const handlePostDelete = ({ postId }: { postId: string }) => {
-      console.log('⚡ [Realtime Socket] post_delete received:', postId);
+
       useWallStore.getState().setPosts(useWallStore.getState().posts.filter((p) => p._id !== postId));
     };
 

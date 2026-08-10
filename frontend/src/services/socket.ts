@@ -19,11 +19,11 @@ export const initSocketClient = (): Socket => {
   });
 
   socket.on('connect', () => {
-    console.log('⚡ Socket connected to Gratitude Wall Gateway:', socket?.id);
+
   });
 
   socket.on('disconnect', (reason) => {
-    console.log('⚡ Socket disconnected:', reason);
+
   });
 
   socket.on('connect_error', (error) => {

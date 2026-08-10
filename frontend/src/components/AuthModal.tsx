@@ -91,7 +91,7 @@ export const AuthModal: React.FC = () => {
       if (isRegisterMode) {
         // Read team directly from DOM select to bypass any React state sync lag
         const selectedTeam = teamSelectRef.current?.value || formData.team;
-        console.log('[Register] Submitting with team:', selectedTeam, '| formData.team:', formData.team);
+
         await register({
           fullName: formData.fullName.trim(),
           employeeCode: formData.employeeCode.trim().toUpperCase(),

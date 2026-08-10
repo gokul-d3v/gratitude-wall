@@ -35,9 +35,9 @@ export const initSocket = (httpServer: HttpServer): Server => {
     if (user?.userId) {
       // Join user specific room for targeted notifications
       socket.join(`user:${user.userId}`);
-      console.log(`[Socket] Connected user: ${user.employeeCode} (Room: user:${user.userId})`);
+
     } else {
-      console.log('[Socket] Guest client connected to global wall');
+
     }
 
     socket.on('disconnect', () => {
@@ -58,7 +58,7 @@ export const getIO = (): Server => {
 // Broadcast new post object to ALL connected clients
 export const broadcastNewPost = (post: any): void => {
   if (io) {
-    console.log('[Socket Gateway] Broadcasting new_post to ALL clients:', post._id);
+
     io.emit('new_post', post);
   }
 };
@@ -66,7 +66,7 @@ export const broadcastNewPost = (post: any): void => {
 // Broadcast real-time notification alert ONLY to logged-in users (not guests)
 export const broadcastNotificationToLoggedUsers = (notification: any): void => {
   if (io) {
-    console.log('[Socket Gateway] Broadcasting notification to logged-in users only:', notification.message);
+
     // All authenticated sockets join a room named user:<userId>
     // We broadcast to all rooms matching user:* pattern via server-side fetch
     io.fetchSockets().then((sockets) => {
@@ -83,7 +83,7 @@ export const broadcastNotificationToLoggedUsers = (notification: any): void => {
 // Direct notification to specific tagged user
 export const sendNotificationToUser = (userId: string, notification: any): void => {
   if (io) {
-    console.log(`[Socket Gateway] Sending targeted notification to user:${userId}`);
+
     io.to(`user:${userId}`).emit('notification', notification);
   }
 };
@@ -91,7 +91,7 @@ export const sendNotificationToUser = (userId: string, notification: any): void 
 // Broadcast post update in real-time to ALL clients
 export const broadcastPostUpdate = (post: any): void => {
   if (io) {
-    console.log(`[Socket Gateway] Broadcasting post_update for post:${post._id}`);
+
     io.emit('post_update', post);
   }
 };
@@ -99,7 +99,7 @@ export const broadcastPostUpdate = (post: any): void => {
 // Broadcast post deletion in real-time to ALL clients
 export const broadcastPostDelete = (postId: string): void => {
   if (io) {
-    console.log(`[Socket Gateway] Broadcasting post_delete for post:${postId}`);
+
     io.emit('post_delete', { postId });
   }
 };
