@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useWallStore } from '../store/useWallStore';
 
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

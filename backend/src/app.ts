@@ -25,9 +25,12 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // CORS Configuration
-const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
+let allowedOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
+if (allowedOrigin.endsWith('/')) {
+  allowedOrigin = allowedOrigin.slice(0, -1);
+}
 app.use(cors({
-  origin: allowedOrigin,
+  origin: [allowedOrigin, 'http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));
@@ -61,6 +64,11 @@ app.use('/api', apiRateLimiter);
 // Health Check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
+});
+
+// Cron Health Check Route (No Auth)
+app.get('/cron', (_req, res) => {
+  res.status(200).send('Cron job ping successful');
 });
 
 // API Routes
