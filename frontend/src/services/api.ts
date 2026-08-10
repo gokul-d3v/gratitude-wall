@@ -92,11 +92,10 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const storedRefresh = getRefreshToken();
-        const res = await axios.post(
-          '/api/auth/refresh',
+        const res = await api.post(
+          '/auth/refresh',
           { refreshToken: storedRefresh },
           {
-            withCredentials: true,
             headers: storedRefresh ? { 'X-Refresh-Token': storedRefresh } : {},
           }
         );
