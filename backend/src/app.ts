@@ -17,6 +17,7 @@ const app = express();
 // Security Headers
 app.use(helmet({
   contentSecurityPolicy: process.env.NODE_ENV === 'production',
+  crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
 // Trust proxy for deployment behind reverse proxies
