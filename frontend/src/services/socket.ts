@@ -2,11 +2,13 @@ import { io, Socket } from 'socket.io-client';
 import { getAccessToken } from './api';
 
 let socket: Socket | null = null;
+let currentToken: string | null = null;
 
 export const initSocketClient = (): Socket => {
   if (socket) return socket;
 
   const token = getAccessToken();
+  currentToken = token;
   const socketUrl = import.meta.env.VITE_SOCKET_URL || '';
 
   socket = io(socketUrl, {
@@ -35,8 +37,12 @@ export const initSocketClient = (): Socket => {
 
 export const updateSocketAuth = (token: string | null) => {
   if (socket) {
+    if (currentToken === token) return;
+    currentToken = token;
     socket.auth = { token };
-    socket.disconnect().connect();
+    if (socket.connected) {
+      socket.disconnect().connect();
+    }
   }
 };
 

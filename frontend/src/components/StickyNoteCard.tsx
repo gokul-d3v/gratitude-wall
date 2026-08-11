@@ -178,6 +178,13 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
     lastTap.current = now;
   };
 
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Prevent opening modal if double tapping
+    const now = Date.now();
+    if (now - lastTap.current < 350) return;
+    useWallStore.getState().setViewingPost(post);
+  };
+
   const firstTagged = post.taggedUsers && post.taggedUsers.length > 0 ? post.taggedUsers[0] : null;
   const avatarInitials = firstTagged ? getInitials(firstTagged.fullName) : 'GW';
 
@@ -185,14 +192,11 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
     <div
       ref={cardRef}
       onDoubleClick={handleCardDoubleTap}
+      onClick={handleCardClick}
       className={`sticky-note ${
         colorClassMap[post.color || 'yellow']
-      } p-6 flex flex-col justify-between rounded-lg font-sans transition-all relative group select-none`}
-      style={{ cursor: 'default' }}
+      } p-6 flex flex-col justify-between rounded-lg font-sans transition-all relative group select-none hover:shadow-xl cursor-pointer transform hover:-translate-y-1`}
     >
-      {/* Decorative tape header */}
-      <div className="tape-header" />
-
       {/* Instagram-style heart burst on double tap */}
       {showBurst && (
         <div
@@ -267,7 +271,10 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       {canModify && (
         <div className="absolute top-2 right-2" ref={optionsRef}>
           <button
-            onClick={() => setShowOptions(!showOptions)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowOptions(!showOptions);
+            }}
             className="p-1.5 rounded-full bg-white/80 hover:bg-white text-slate-600 hover:text-slate-800 transition-all cursor-pointer shadow-xs"
             title="Post options"
           >
@@ -278,14 +285,20 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
           {showOptions && (
             <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-slate-200 py-1 min-w-[120px] z-20">
               <button
-                onClick={handleStartEdit}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStartEdit();
+                }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 Edit
               </button>
               <button
-                onClick={handleDeleteClick}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick();
+                }}
                 disabled={isSubmitting}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50"
               >
@@ -301,6 +314,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5">
         <button
           onClick={(e) => {
+            e.stopPropagation();
             const rect = cardRef.current?.getBoundingClientRect();
             const x = rect ? e.clientX - rect.left : 24;
             const y = rect ? e.clientY - rect.top : 24;

@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { registerUser, loginUser, resetPassword } from '../services/authService';
+import { registerUser, loginUser, resetPassword, adminLoginUser } from '../services/authService';
 import { verifyRefreshToken, generateAccessToken } from '../utils/jwt';
 import { AuthRequest } from '../middleware/auth';
 import { User } from '../models/User';
+import { Admin } from '../models/Admin';
 
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -21,6 +22,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       data: {
         user: result.user,
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
       },
     });
   } catch (error) {
@@ -32,7 +34,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
   try {
     const result = await loginUser(req.body);
 
-    if (result.user.role === 'ADMIN') {
+    if ((result.user.role as string) === 'ADMIN') {
       res.status(403).json({ success: false, message: 'Admins must use the Admin Portal to sign in.' });
       return;
     }
@@ -49,6 +51,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       data: {
         user: result.user,
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
       },
     });
   } catch (error) {
@@ -58,12 +61,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 
 export const adminLogin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const result = await loginUser(req.body);
-
-    if (result.user.role !== 'ADMIN') {
-      res.status(403).json({ success: false, message: 'Access denied. Admin privileges required.' });
-      return;
-    }
+    const result = await adminLoginUser(req.body);
 
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
@@ -77,6 +75,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
       data: {
         user: result.user,
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
       },
     });
   } catch (error) {
@@ -121,7 +120,13 @@ export const me = async (req: AuthRequest, res: Response, next: NextFunction): P
       return;
     }
 
-    const user = await User.findById(req.user.userId).select('-passwordHash');
+    let user;
+    if (req.user.role === 'ADMIN') {
+      user = await Admin.findById(req.user.userId).select('-passwordHash');
+    } else {
+      user = await User.findById(req.user.userId).select('-passwordHash');
+    }
+
     if (!user) {
       res.status(404).json({ success: false, message: 'User not found' });
       return;

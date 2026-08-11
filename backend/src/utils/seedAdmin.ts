@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { User } from '../models/User';
+import { Admin } from '../models/Admin';
 
 export const seedInitialAdminAndTeams = async () => {
   try {
@@ -14,18 +14,17 @@ export const seedInitialAdminAndTeams = async () => {
       console.log('⚠️ [Admin Seed] ADMIN_SEED_PASSWORD not set. Using default for development.');
     }
 
-    const existingAdmin = await User.findOne({ email: adminCode });
+    const existingAdmin = await Admin.findOne({ email: adminCode });
 
     if (!existingAdmin) {
       const salt = await bcrypt.genSalt(12);
       const passwordHash = await bcrypt.hash(adminPassword || 'Brototype@321', salt);
 
-      await User.create({
+      await Admin.create({
         email: adminCode,
         fullName: 'Brototype Admin',
         passwordHash,
         avatarColor: '#0058bd',
-        team: '',
         role: 'ADMIN',
       });
       console.log('✅ [Admin Seed] Created default admin account: admin@brototype.com');

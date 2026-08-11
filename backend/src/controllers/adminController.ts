@@ -9,6 +9,8 @@ import {
   updateUserRole,
   sendSystemNotification,
   bulkUploadUsers,
+  deleteUser,
+  bulkDeleteUsers,
 } from '../services/adminService';
 
 export const getStatsHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -70,6 +72,28 @@ export const updateRoleHandler = async (req: AuthRequest, res: Response, next: N
   }
 };
 
+export const deleteUserHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const currentAdminId = req.user?.userId;
+    const result = await deleteUser(userId, currentAdminId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const bulkDeleteUsersHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { userIds } = req.body;
+    const currentAdminId = req.user?.userId;
+    const result = await bulkDeleteUsers(userIds, currentAdminId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const sendNotificationHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { message } = req.body;
@@ -82,8 +106,8 @@ export const sendNotificationHandler = async (req: AuthRequest, res: Response, n
 
 export const bulkUploadUsersHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { users, defaultPassword } = req.body;
-    const result = await bulkUploadUsers(users, defaultPassword);
+    const { users, defaultPassword, targetDepartment } = req.body;
+    const result = await bulkUploadUsers(users, defaultPassword, targetDepartment);
     res.json({ success: true, data: result });
   } catch (error) {
     next(error);

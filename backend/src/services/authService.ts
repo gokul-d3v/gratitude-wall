@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
+import { Admin } from '../models/Admin';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
 
 export interface RegisterDTO {
@@ -57,14 +58,24 @@ export const registerUser = async (data: RegisterDTO) => {
 export const loginUser = async (data: LoginDTO) => {
   const code = data.email.trim().toLowerCase();
 
+  // Block Admin accounts from signing in via regular User login
+  const adminAccount = await Admin.findOne({ email: code });
+  if (adminAccount) {
+    throw { statusCode: 403, message: 'Admin accounts cannot log in to the Gratitude Wall. Please use the Admin Portal.' };
+  }
+
   const user = await User.findOne({ email: code });
   if (!user) {
-    throw { statusCode: 401, message: 'Invalid employee code or password' };
+    throw { statusCode: 401, message: 'Invalid email or password' };
+  }
+
+  if (user.role === 'ADMIN') {
+    throw { statusCode: 403, message: 'Admin accounts cannot log in to the Gratitude Wall. Please use the Admin Portal.' };
   }
 
   const isMatch = await bcrypt.compare(data.password, user.passwordHash);
   if (!isMatch) {
-    throw { statusCode: 401, message: 'Invalid employee code or password' };
+    throw { statusCode: 401, message: 'Invalid email or password' };
   }
 
   const tokenPayload = { userId: user._id.toString(), email: user.email, role: user.role };
@@ -79,6 +90,36 @@ export const loginUser = async (data: LoginDTO) => {
       avatarColor: user.avatarColor,
       team: user.team,
       role: user.role,
+    },
+    accessToken,
+    refreshToken,
+  };
+};
+
+export const adminLoginUser = async (data: LoginDTO) => {
+  const code = data.email.trim().toLowerCase();
+
+  const admin = await Admin.findOne({ email: code });
+  if (!admin) {
+    throw { statusCode: 401, message: 'Invalid admin credentials' };
+  }
+
+  const isMatch = await bcrypt.compare(data.password, admin.passwordHash);
+  if (!isMatch) {
+    throw { statusCode: 401, message: 'Invalid admin credentials' };
+  }
+
+  const tokenPayload = { userId: admin._id.toString(), email: admin.email, role: admin.role };
+  const accessToken = generateAccessToken(tokenPayload);
+  const refreshToken = generateRefreshToken(tokenPayload);
+
+  return {
+    user: {
+      id: admin._id,
+      email: admin.email,
+      fullName: admin.fullName,
+      avatarColor: admin.avatarColor,
+      role: admin.role,
     },
     accessToken,
     refreshToken,

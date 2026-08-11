@@ -139,3 +139,24 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Card Hover effects */
+.admin-card-hover {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.admin-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -10px rgba(0,0,0,0.1), 0 4px 10px -4px rgba(0,0,0,0.05);
+}
+
+.admin-row-hover {
+  transition: all 0.2s ease;
+}
+
+.admin-row-hover:hover {
+  transform: scale(1.01) translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-color: rgba(139, 92, 246, 0.3) !important;
+  z-index: 10;
+}

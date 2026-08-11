@@ -15,6 +15,20 @@ export default defineConfig({
         target: 'http://localhost:5001',
         ws: true,
         changeOrigin: true,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err: any) => {
+            if (err?.code === 'EPIPE' || err?.code === 'ECONNRESET') {
+              return; // Ignore normal websocket disconnect errors
+            }
+          });
+          proxy.on('proxyReqWs', (_proxyReq, _req, socket: any) => {
+            socket.on('error', (err: any) => {
+              if (err?.code === 'EPIPE' || err?.code === 'ECONNRESET') {
+                return; // Ignore normal client socket reset errors
+              }
+            });
+          });
+        },
       },
     },
   },

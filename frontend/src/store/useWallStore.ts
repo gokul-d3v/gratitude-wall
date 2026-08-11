@@ -9,6 +9,7 @@ interface WallState {
   searchQuery: string;
   isCreateModalOpen: boolean;
   editingPost: Post | null;
+  viewingPost: Post | null;
   isAuthModalOpen: boolean;
   isAdminViewOpen: boolean;
   isNotifModalOpen: boolean;
@@ -26,6 +27,7 @@ interface WallState {
   setSearchQuery: (query: string) => void;
   setCreateModalOpen: (open: boolean) => void;
   setEditingPost: (post: Post | null) => void;
+  setViewingPost: (post: Post | null) => void;
   setAuthModalOpen: (open: boolean) => void;
   setAdminViewOpen: (open: boolean) => void;
   setNotifModalOpen: (open: boolean) => void;
@@ -43,6 +45,7 @@ export const useWallStore = create<WallState>((set) => ({
   searchQuery: '',
   isCreateModalOpen: false,
   editingPost: null,
+  viewingPost: null,
   isAuthModalOpen: false,
   isAdminViewOpen: false,
   isNotifModalOpen: false,
@@ -84,6 +87,8 @@ export const useWallStore = create<WallState>((set) => ({
   setCreateModalOpen: (isCreateModalOpen) => set({ isCreateModalOpen }),
 
   setEditingPost: (editingPost) => set({ editingPost }),
+
+  setViewingPost: (viewingPost) => set({ viewingPost }),
 
   setAuthModalOpen: (isAuthModalOpen) => set({ isAuthModalOpen }),
 

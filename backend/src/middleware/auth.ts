@@ -19,7 +19,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(403).json({ success: false, message: 'Invalid or expired access token' });
+    res.status(401).json({ success: false, message: 'Invalid or expired access token' });
   }
 };
 

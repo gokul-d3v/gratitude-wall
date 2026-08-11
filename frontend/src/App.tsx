@@ -3,6 +3,7 @@ import { Header } from './components/Header';
 import { StickyNoteCard } from './components/StickyNoteCard';
 import { CreateNoteModal } from './components/CreateNoteModal';
 import { AuthModal } from './components/AuthModal';
+import { ViewNoteModal } from './components/ViewNoteModal';
 import { AdminLoginScreen } from './components/AdminLoginScreen';
 import { AdminDashboard } from './components/AdminDashboard';
 import { NotificationToast } from './components/NotificationToast';
@@ -220,6 +221,7 @@ export const App: React.FC = () => {
       {/* User Auth, Announcement Toast & Modals */}
       {(isCreateModalOpen || Boolean(editingPost)) && <CreateNoteModal />}
       <AuthModal />
+      <ViewNoteModal />
       <NotificationModal />
       <TopGratitudeSpotlight />
     </div>
