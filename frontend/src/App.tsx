@@ -13,6 +13,7 @@ import { useWallStore } from './store/useWallStore';
 import { useAuthStore } from './store/useAuthStore';
 import { api } from './services/api';
 import { initSocketClient } from './services/socket';
+import { playNotificationSound } from './utils/audio';
 import { Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -85,9 +86,25 @@ export const App: React.FC = () => {
       }));
     };
 
-    const handleNotification = (notif: any) => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
 
+    const handleNotification = (notif: any) => {
       useWallStore.getState().addNotification(notif);
+      
+      // Play Sound
+      playNotificationSound();
+
+      // Native Browser Push Notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const title = notif.type === 'like' ? 'New Like on your Note!' : 'New Gratitude!';
+        const options = {
+          body: notif.message || 'Someone appreciated your work.',
+          icon: '/vite.svg'
+        };
+        new Notification(title, options);
+      }
     };
 
     const handlePostUpdate = (updatedPost: any) => {
