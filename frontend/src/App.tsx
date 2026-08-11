@@ -88,7 +88,7 @@ export const App: React.FC = () => {
               body: `A new gratitude post is posted.`,
               icon: '/vite.svg',
               vibrate: [200, 100, 200],
-            });
+            } as any);
           });
         } else {
           new Notification('New Gratitude Post!', {
@@ -130,7 +130,7 @@ export const App: React.FC = () => {
               body: notif.message,
               icon: '/vite.svg',
               vibrate: [200, 100, 200],
-            });
+            } as any);
           });
         } else {
           new Notification(title, {
