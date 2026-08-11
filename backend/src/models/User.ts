@@ -7,6 +7,13 @@ export interface IUser extends Document {
   avatarColor: string;
   team: string;
   role: 'USER' | 'ADMIN';
+  pushSubscriptions?: Array<{
+    endpoint: string;
+    keys: {
+      p256dh: string;
+      auth: string;
+    };
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +51,18 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: ['USER', 'ADMIN'],
       default: 'USER',
+    },
+    pushSubscriptions: {
+      type: [
+        {
+          endpoint: String,
+          keys: {
+            p256dh: String,
+            auth: String,
+          },
+        },
+      ],
+      default: [],
     },
   },
   {

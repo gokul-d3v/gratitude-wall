@@ -56,6 +56,17 @@ export const NotificationModal: React.FC = () => {
     setNotifications([]);
   };
 
+  const [pushPermission, setPushPermission] = React.useState(Notification.permission);
+  const handleEnablePush = async () => {
+    try {
+      const { registerAndSubscribePush } = await import('../services/pushService');
+      await registerAndSubscribePush();
+      setPushPermission(Notification.permission);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   if (!isNotifModalOpen) return null;
 
   return (
@@ -110,7 +121,22 @@ export const NotificationModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Notification Items */}
+        {pushPermission === 'default' && (
+          <div className="mx-6 mt-4 p-3 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-blue-900">Get Notified!</span>
+              <span className="text-xs text-blue-700">Enable desktop notifications to never miss out.</span>
+            </div>
+            <button
+              onClick={handleEnablePush}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+            >
+              Enable
+            </button>
+          </div>
+        )}
+
+        {/* Modal Body: Scrollable list */}
         <div className="flex-1 overflow-y-auto p-4">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3 text-slate-400">

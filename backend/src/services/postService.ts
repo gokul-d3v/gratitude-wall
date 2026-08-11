@@ -12,6 +12,7 @@ import {
   broadcastPostDelete,
   broadcastNotificationToLoggedUsers,
 } from '../config/socket';
+import { sendWebPushNotification, broadcastWebPushNotification } from './notificationService';
 
 export interface CreatePostDTO {
   content: string;
@@ -64,9 +65,7 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
       ? (populatedPost.taggedUsers as any[]).map((u: any) => `@${u.fullName}`).join(', ')
       : '';
 
-    const notifMessage = taggedList
-      ? `${authorUser.fullName} tagged ${taggedList} in a gratitude note!`
-      : `${authorUser.fullName} shared a new gratitude note!`;
+    const notifMessage = `A new gratitude post is posted.`;
 
     const notifType = taggedList ? 'TAGGED' : 'NEW_POST';
 
@@ -87,30 +86,43 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
       postId: newPost._id.toString(),
       createdAt: postAnnouncementNotif.createdAt.toISOString(),
     });
+    
+    // Web Push for offline users
+    broadcastWebPushNotification({
+      title: 'New Gratitude Post!',
+      body: notifMessage,
+      icon: '/vite.svg'
+    });
 
     // 3. Send targeted @mention notifications to each tagged user
     if (validTaggedUserIds.length > 0) {
       for (const taggedUserId of validTaggedUserIds) {
         if (taggedUserId === authorUserId) continue; // Don't notify self
         try {
-          const tagNotif = await Notification.create({
+          const mentionNotif = await Notification.create({
             recipientId: taggedUserId,
             senderId: authorUser._id,
             senderName: authorUser.fullName,
             postId: newPost._id,
             type: 'TAGGED',
-            message: `${authorUser.fullName} tagged you in a gratitude note!`,
+            message: `You were tagged in a new gratitude post!`,
           });
-
+          
           sendNotificationToUser(taggedUserId, {
-            id: tagNotif._id.toString(),
+            id: mentionNotif._id.toString(),
             type: 'TAGGED',
             senderName: authorUser.fullName,
-            message: `${authorUser.fullName} tagged you in a gratitude note!`,
+            message: `You were tagged in a new gratitude post!`,
             postId: newPost._id.toString(),
-            createdAt: tagNotif.createdAt.toISOString(),
+            createdAt: mentionNotif.createdAt.toISOString(),
           });
-        } catch {
+          
+          sendWebPushNotification(taggedUserId, {
+            title: 'New Tag!',
+            body: `You were tagged in a new gratitude post!`,
+            icon: '/vite.svg'
+          });
+        } catch (err) {
           // Silence individual tag notification error
         }
       }
@@ -350,6 +362,12 @@ export const toggleEmojiReaction = async (postId: string, userId: string, target
           message: `${likerName} liked your gratitude note!`,
           postId: postId,
           createdAt: likeNotif.createdAt.toISOString(),
+        });
+
+        sendWebPushNotification(post.author.toString(), {
+          title: 'New Like on your Note!',
+          body: `${likerName} liked your gratitude note!`,
+          icon: '/vite.svg'
         });
       }
     } catch {

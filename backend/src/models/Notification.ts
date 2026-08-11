@@ -54,6 +54,6 @@ const NotificationSchema = new Schema<INotification>(
 );
 
 NotificationSchema.index({ recipientId: 1, createdAt: -1 });
-NotificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }); // 30-day TTL
+NotificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 24 * 60 * 60 }); // 1-day TTL
 
 export const Notification = model<INotification>('Notification', NotificationSchema);

@@ -6,13 +6,14 @@ import { AuthModal } from './components/AuthModal';
 import { ViewNoteModal } from './components/ViewNoteModal';
 import { AdminLoginScreen } from './components/AdminLoginScreen';
 import { AdminDashboard } from './components/AdminDashboard';
-import { NotificationToast } from './components/NotificationToast';
+
 import { NotificationModal } from './components/NotificationModal';
 import { TopGratitudeSpotlight } from './components/TopGratitudeSpotlight';
 import { useWallStore } from './store/useWallStore';
 import { useAuthStore } from './store/useAuthStore';
 import { api } from './services/api';
 import { initSocketClient } from './services/socket';
+import { registerAndSubscribePush } from './services/pushService';
 import { playNotificationSound } from './utils/audio';
 import { Sparkles } from 'lucide-react';
 
@@ -57,6 +58,13 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Web Push Subscription
+  useEffect(() => {
+    if (isAuthenticated) {
+      registerAndSubscribePush();
+    }
+  }, [isAuthenticated]);
+
   // Cold Start & Realtime Connection Management
   useEffect(() => {
     fetchPosts();
@@ -70,8 +78,25 @@ export const App: React.FC = () => {
     };
 
     const handleNewPost = (post: any) => {
-
       useWallStore.getState().addPost(post);
+      
+      playNotificationSound();
+      if ('Notification' in window && Notification.permission === 'granted') {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then((registration) => {
+            registration.showNotification('New Gratitude Post!', {
+              body: `A new gratitude post is posted.`,
+              icon: '/vite.svg',
+              vibrate: [200, 100, 200],
+            });
+          });
+        } else {
+          new Notification('New Gratitude Post!', {
+            body: `A new gratitude post is posted.`,
+            icon: '/vite.svg'
+          });
+        }
+      }
     };
 
     const handleLikeUpdate = ({ postId, likesCount }: { postId: string; likesCount: number }) => {
@@ -99,11 +124,20 @@ export const App: React.FC = () => {
       // Native Browser Push Notification
       if ('Notification' in window && Notification.permission === 'granted') {
         const title = notif.type === 'like' ? 'New Like on your Note!' : 'New Gratitude!';
-        const options = {
-          body: notif.message || 'Someone appreciated your work.',
-          icon: '/vite.svg'
-        };
-        new Notification(title, options);
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then((registration) => {
+            registration.showNotification(title, {
+              body: notif.message,
+              icon: '/vite.svg',
+              vibrate: [200, 100, 200],
+            });
+          });
+        } else {
+          new Notification(title, {
+            body: notif.message,
+            icon: '/vite.svg',
+          });
+        }
       }
     };
 
@@ -176,7 +210,6 @@ export const App: React.FC = () => {
   if (currentPath === '/admin-login' || currentPath === '/admin/login') {
     return (
       <>
-        <NotificationToast />
         <AdminLoginScreen />
       </>
     );
@@ -186,7 +219,6 @@ export const App: React.FC = () => {
   if (currentPath === '/admin' || isAdminViewOpen) {
     return (
       <>
-        <NotificationToast />
         <AdminDashboard />
       </>
     );
@@ -195,10 +227,13 @@ export const App: React.FC = () => {
   // Default Route: http://localhost:5173/ -> BROTIFY Gratitude Wall (User Home Page)
   return (
     <div className="min-h-screen">
-      <NotificationToast />
 
       <main className="p-4 sm:p-8 md:p-12 flex flex-col gap-8 max-w-7xl mx-auto">
         <Header />
+        
+        <div className="flex justify-center md:justify-start">
+          <TopGratitudeSpotlight />
+        </div>
 
         {/* Wall Workspace */}
         {isLoading && posts.length === 0 ? (
@@ -240,7 +275,6 @@ export const App: React.FC = () => {
       <AuthModal />
       <ViewNoteModal />
       <NotificationModal />
-      <TopGratitudeSpotlight />
     </div>
   );
 };

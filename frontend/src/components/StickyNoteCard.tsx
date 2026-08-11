@@ -150,6 +150,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       await deletePostApi(post._id);
       // Remove post from store
       useWallStore.getState().setPosts(useWallStore.getState().posts.filter((p) => p._id !== post._id));
+      useWallStore.getState().setViewingPost(null); // Ensure modal closes if open or accidentally triggered
       setShowDeleteConfirm(false);
       triggerToast('Post deleted successfully', 'success');
     } catch (err: any) {
@@ -310,43 +311,52 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         </div>
       )}
 
-      {/* Card Footer: Like Button */}
+      {/* Card Footer: Like Button & Author */}
       <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            const rect = cardRef.current?.getBoundingClientRect();
-            const x = rect ? e.clientX - rect.left : 24;
-            const y = rect ? e.clientY - rect.top : 24;
-            handleToggleLike(x, y);
-          }}
-          disabled={isSubmitting}
-          className="flex items-center gap-1.5 group/like cursor-pointer select-none"
-          title={hasLiked ? 'Unlike' : 'Like'}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width="22"
-            height="22"
-            className="transition-all duration-200"
-            style={{
-              animation: hasLiked ? 'heartPop 0.3s ease-out' : 'none',
-              filter: hasLiked ? 'drop-shadow(0 0 4px rgba(220,38,38,0.5))' : 'none',
-              transform: hasLiked ? 'scale(1.1)' : 'scale(1)',
+        <div className="flex items-center gap-4">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const rect = cardRef.current?.getBoundingClientRect();
+              const x = rect ? e.clientX - rect.left : 24;
+              const y = rect ? e.clientY - rect.top : 24;
+              handleToggleLike(x, y);
             }}
+            disabled={isSubmitting}
+            className="flex items-center gap-1.5 group/like cursor-pointer select-none"
+            title={hasLiked ? 'Unlike' : 'Like'}
           >
-            <path
-              d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"
-              fill={hasLiked ? '#dc2626' : 'none'}
-              stroke={hasLiked ? '#dc2626' : '#9ca3af'}
-              strokeWidth="1.5"
-              className="transition-all duration-200 group-hover/like:stroke-rose-500"
-            />
-          </svg>
-          <span className={`text-xs font-bold transition-colors ${hasLiked ? 'text-rose-600' : 'text-[#9ca3af] group-hover/like:text-rose-500'}`}>
-            {likesCount}
-          </span>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              width="22"
+              height="22"
+              className="transition-all duration-200"
+              style={{
+                animation: hasLiked ? 'heartPop 0.3s ease-out' : 'none',
+                filter: hasLiked ? 'drop-shadow(0 0 4px rgba(220,38,38,0.5))' : 'none',
+                transform: hasLiked ? 'scale(1.1)' : 'scale(1)',
+              }}
+            >
+              <path
+                d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"
+                fill={hasLiked ? '#dc2626' : 'none'}
+                stroke={hasLiked ? '#dc2626' : '#9ca3af'}
+                strokeWidth="1.5"
+                className="transition-all duration-200 group-hover/like:stroke-rose-500"
+              />
+            </svg>
+            <span className={`text-xs font-bold transition-colors ${hasLiked ? 'text-rose-600' : 'text-[#9ca3af] group-hover/like:text-rose-500'}`}>
+              {likesCount}
+            </span>
+          </button>
+
+          <div className="flex items-center gap-1 text-[10px] sm:text-xs border-l border-black/10 pl-4">
+            <span className="font-medium text-slate-600">By:</span>
+            <span className="font-bold text-slate-800 truncate max-w-[80px]" title={post.authorName || 'Anonymous'}>
+              {post.authorName || 'Anonymous'}
+            </span>
+          </div>
+        </div>
 
         <span className="text-[10px] font-bold text-[#424753] opacity-60">#gratitude</span>
       </div>

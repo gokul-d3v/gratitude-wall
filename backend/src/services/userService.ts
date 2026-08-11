@@ -90,11 +90,15 @@ export const searchUsers = async (query: string, currentUserId?: string) => {
     return [];
   }
 
+  // For short queries, we only want to match the start of the name or email
+  // to avoid showing completely random users who happen to have that letter.
+  const regexPattern = cleanQ.length <= 2 ? `^${cleanQ}` : cleanQ;
+
   const filter: any = {
     role: { $ne: 'ADMIN' },
     $or: [
-      { email: { $regex: cleanQ, $options: 'i' } },
-      { fullName: { $regex: cleanQ, $options: 'i' } },
+      { email: { $regex: regexPattern, $options: 'i' } },
+      { fullName: { $regex: regexPattern, $options: 'i' } },
     ],
   };
 
@@ -103,7 +107,7 @@ export const searchUsers = async (query: string, currentUserId?: string) => {
   }
 
   return User.find(filter)
-    .select('_id email fullName avatarColor')
+    .select('_id email fullName avatarColor team')
     .limit(15)
     .lean();
 };
