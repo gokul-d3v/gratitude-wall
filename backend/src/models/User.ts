@@ -1,7 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 
 export interface IUser extends Document {
-  employeeCode: string;
+  email: string;
   fullName: string;
   passwordHash: string;
   avatarColor: string;
@@ -13,11 +13,11 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
-    employeeCode: {
+    email: {
       type: String,
       required: true,
       unique: true,
-      uppercase: true,
+      lowercase: true,
       trim: true,
       index: true,
     },

@@ -1,4 +1,5 @@
 import { User } from '../models/User';
+import bcrypt from 'bcryptjs';
 import { Post } from '../models/Post';
 import { Reaction } from '../models/Reaction';
 import { Notification } from '../models/Notification';
@@ -32,8 +33,8 @@ export const getAdminPosts = async (params: { filter?: 'all' | 'quarantined' | '
 
   return Post.find(query)
     .sort({ createdAt: -1 })
-    .populate('author', 'fullName employeeCode')
-    .populate('taggedUsers', 'fullName employeeCode')
+    .populate('author', 'fullName email')
+    .populate('taggedUsers', 'fullName email')
     .lean();
 };
 
@@ -102,3 +103,56 @@ export const sendSystemNotification = async (message: string) => {
   broadcastNotificationToLoggedUsers(notifPayload);
   return notifPayload;
 };
+
+export interface BulkUploadUser {
+  email: string;
+  fullName: string;
+  team: string;
+}
+
+export const bulkUploadUsers = async (users: BulkUploadUser[], defaultPassword: string) => {
+  if (!users || users.length === 0) {
+    throw { statusCode: 400, message: 'No users provided' };
+  }
+  if (!defaultPassword) {
+    throw { statusCode: 400, message: 'Default password is required' };
+  }
+
+  const salt = await bcrypt.genSalt(12);
+  const passwordHash = await bcrypt.hash(defaultPassword, salt);
+
+  const colors = ['#0058bd', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#6366F1'];
+
+  const results = {
+    success: 0,
+    failed: 0,
+    errors: [] as string[],
+  };
+
+  for (const u of users) {
+    try {
+      const email = u.email.trim().toLowerCase();
+      const existing = await User.findOne({ email });
+      if (existing) {
+        results.failed++;
+        results.errors.push(`Email ${email} already exists.`);
+        continue;
+      }
+      const randomAvatarColor = colors[Math.floor(Math.random() * colors.length)];
+      await User.create({
+        email,
+        fullName: u.fullName.trim(),
+        team: u.team?.trim() || 'General',
+        passwordHash,
+        avatarColor: randomAvatarColor,
+      });
+      results.success++;
+    } catch (err: any) {
+      results.failed++;
+      results.errors.push(`Failed to create ${u.email}: ${err.message}`);
+    }
+  }
+
+  return results;
+};
+

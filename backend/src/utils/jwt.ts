@@ -5,7 +5,7 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'gratitude_wall_ref
 
 export interface TokenPayload {
   userId: string;
-  employeeCode: string;
+  email: string;
   role: string;
 }
 

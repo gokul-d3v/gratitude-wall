@@ -141,7 +141,7 @@ export const App: React.FC = () => {
         post.content.toLowerCase().includes(searchLower) ||
         post.authorName?.toLowerCase().includes(searchLower) ||
         post.author?.team?.toLowerCase().includes(searchLower) ||
-        post.authorEmployeeCode?.toLowerCase().includes(searchLower);
+        post.authorEmail?.toLowerCase().includes(searchLower);
       return matchesColor && matchesSearch;
     });
 

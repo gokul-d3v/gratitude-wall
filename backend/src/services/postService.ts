@@ -29,7 +29,7 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
     throw { statusCode: 400, message: 'Post content cannot be empty' };
   }
 
-  const authorUser = await User.findById(authorUserId).select('fullName employeeCode team');
+  const authorUser = await User.findById(authorUserId).select('fullName email team');
   if (!authorUser) {
     throw { statusCode: 404, message: 'Author user account not found' };
   }
@@ -37,7 +37,7 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
   // Validate tagged user IDs (exclude Admins)
   const validTaggedUserIds: string[] = [];
   if (dto.taggedUserIds && dto.taggedUserIds.length > 0) {
-    const users = await User.find({ _id: { $in: dto.taggedUserIds }, role: { $ne: 'ADMIN' } }).select('_id employeeCode fullName');
+    const users = await User.find({ _id: { $in: dto.taggedUserIds }, role: { $ne: 'ADMIN' } }).select('_id email fullName');
     users.forEach((u) => validTaggedUserIds.push(u._id.toString()));
   }
 
@@ -45,14 +45,14 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
     content: sanitizedContent,
     author: authorUser._id,
     authorName: authorUser.fullName,
-    authorEmployeeCode: authorUser.employeeCode,
+    authorEmail: authorUser.email,
     taggedUsers: validTaggedUserIds,
     team: authorUser.team || 'General',
     color: dto.color || 'yellow',
   });
 
   const populatedPost = await Post.findById(newPost._id)
-    .populate('taggedUsers', 'employeeCode fullName avatarColor team')
+    .populate('taggedUsers', 'email fullName avatarColor team')
     .lean();
 
   // 1. Real-time post broadcast to all clients on global wall
@@ -154,7 +154,7 @@ export const getWallPosts = async (params: {
     query.$or = [
       { content: { $regex: cleanSearch, $options: 'i' } },
       { authorName: { $regex: cleanSearch, $options: 'i' } },
-      { authorEmployeeCode: { $regex: cleanSearch, $options: 'i' } },
+      { authorEmail: { $regex: cleanSearch, $options: 'i' } },
     ];
   }
 
@@ -163,7 +163,7 @@ export const getWallPosts = async (params: {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('taggedUsers', 'employeeCode fullName avatarColor team')
+      .populate('taggedUsers', 'email fullName avatarColor team')
       .lean(),
     Post.countDocuments(query),
   ]);
@@ -430,7 +430,7 @@ export const updatePost = async (
   await post.save();
 
   const updatedPost = await Post.findById(postId)
-    .populate('taggedUsers', 'employeeCode fullName avatarColor team')
+    .populate('taggedUsers', 'email fullName avatarColor team')
     .lean();
 
   // Broadcast post update to all clients

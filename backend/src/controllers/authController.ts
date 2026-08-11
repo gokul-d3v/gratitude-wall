@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { registerUser, loginUser } from '../services/authService';
+import { registerUser, loginUser, resetPassword } from '../services/authService';
 import { verifyRefreshToken, generateAccessToken } from '../utils/jwt';
 import { AuthRequest } from '../middleware/auth';
 import { User } from '../models/User';
@@ -31,6 +31,11 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const result = await loginUser(req.body);
+
+    if (result.user.role === 'ADMIN') {
+      res.status(403).json({ success: false, message: 'Admins must use the Admin Portal to sign in.' });
+      return;
+    }
 
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
@@ -94,7 +99,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
     const payload = verifyRefreshToken(refreshToken);
     const accessToken = generateAccessToken({
       userId: payload.userId,
-      employeeCode: payload.employeeCode,
+      email: payload.email,
       role: payload.role,
     });
 
@@ -123,6 +128,15 @@ export const me = async (req: AuthRequest, res: Response, next: NextFunction): P
     }
 
     res.json({ success: true, data: user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const result = await resetPassword(req.body);
+    res.json({ success: true, message: result.message });
   } catch (error) {
     next(error);
   }

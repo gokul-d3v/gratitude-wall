@@ -8,6 +8,7 @@ import {
   getAdminUsers,
   updateUserRole,
   sendSystemNotification,
+  bulkUploadUsers,
 } from '../services/adminService';
 
 export const getStatsHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -73,6 +74,16 @@ export const sendNotificationHandler = async (req: AuthRequest, res: Response, n
   try {
     const { message } = req.body;
     const result = await sendSystemNotification(message);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const bulkUploadUsersHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { users, defaultPassword } = req.body;
+    const result = await bulkUploadUsers(users, defaultPassword);
     res.json({ success: true, data: result });
   } catch (error) {
     next(error);

@@ -4,22 +4,22 @@ import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
 
 export interface RegisterDTO {
   fullName: string;
-  employeeCode: string;
+  email: string;
   password: string;
   team?: string;
 }
 
 export interface LoginDTO {
-  employeeCode: string;
+  email: string;
   password: string;
 }
 
 export const registerUser = async (data: RegisterDTO) => {
-  const code = data.employeeCode.trim().toUpperCase();
+  const code = data.email.trim().toLowerCase();
 
-  const existingUser = await User.findOne({ employeeCode: code });
+  const existingUser = await User.findOne({ email: code });
   if (existingUser) {
-    throw { statusCode: 400, message: `Employee Code '${code}' is already registered` };
+    throw { statusCode: 400, message: `Email '${code}' is already registered` };
   }
 
   const salt = await bcrypt.genSalt(12);
@@ -29,21 +29,21 @@ export const registerUser = async (data: RegisterDTO) => {
   const randomAvatarColor = colors[Math.floor(Math.random() * colors.length)];
 
   const newUser = await User.create({
-    employeeCode: code,
+    email: code,
     fullName: data.fullName.trim(),
     passwordHash,
     avatarColor: randomAvatarColor,
     team: data.team?.trim() || '',
   });
 
-  const tokenPayload = { userId: newUser._id.toString(), employeeCode: newUser.employeeCode, role: newUser.role };
+  const tokenPayload = { userId: newUser._id.toString(), email: newUser.email, role: newUser.role };
   const accessToken = generateAccessToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload);
 
   return {
     user: {
       id: newUser._id,
-      employeeCode: newUser.employeeCode,
+      email: newUser.email,
       fullName: newUser.fullName,
       avatarColor: newUser.avatarColor,
       team: newUser.team,
@@ -55,9 +55,9 @@ export const registerUser = async (data: RegisterDTO) => {
 };
 
 export const loginUser = async (data: LoginDTO) => {
-  const code = data.employeeCode.trim().toUpperCase();
+  const code = data.email.trim().toLowerCase();
 
-  const user = await User.findOne({ employeeCode: code });
+  const user = await User.findOne({ email: code });
   if (!user) {
     throw { statusCode: 401, message: 'Invalid employee code or password' };
   }
@@ -67,14 +67,14 @@ export const loginUser = async (data: LoginDTO) => {
     throw { statusCode: 401, message: 'Invalid employee code or password' };
   }
 
-  const tokenPayload = { userId: user._id.toString(), employeeCode: user.employeeCode, role: user.role };
+  const tokenPayload = { userId: user._id.toString(), email: user.email, role: user.role };
   const accessToken = generateAccessToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload);
 
   return {
     user: {
       id: user._id,
-      employeeCode: user.employeeCode,
+      email: user.email,
       fullName: user.fullName,
       avatarColor: user.avatarColor,
       team: user.team,
@@ -83,4 +83,26 @@ export const loginUser = async (data: LoginDTO) => {
     accessToken,
     refreshToken,
   };
+};
+
+export interface ResetPasswordDTO {
+  email: string;
+  newPassword: string;
+}
+
+export const resetPassword = async (data: ResetPasswordDTO) => {
+  const code = data.email.trim().toLowerCase();
+
+  const user = await User.findOne({ email: code });
+  if (!user) {
+    throw { statusCode: 404, message: 'User not found' };
+  }
+
+  const salt = await bcrypt.genSalt(12);
+  const passwordHash = await bcrypt.hash(data.newPassword, salt);
+
+  user.passwordHash = passwordHash;
+  await user.save();
+
+  return { message: 'Password reset successful' };
 };

@@ -10,6 +10,7 @@ interface AuthState {
   isLoading: boolean;
   login: (data: any) => Promise<void>;
   register: (data: any) => Promise<void>;
+  forgotPassword: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -55,6 +56,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user, isAuthenticated: true });
     useWallStore.getState().fetchPosts();
     fetchAndSetNotifications();
+  },
+
+  forgotPassword: async (data) => {
+    await api.post('/auth/forgot-password', data);
   },
 
   logout: async () => {

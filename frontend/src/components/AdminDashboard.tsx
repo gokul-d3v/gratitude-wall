@@ -49,6 +49,12 @@ export const AdminDashboard: React.FC = () => {
   const [newTeamDesc, setNewTeamDesc] = useState('');
   const [isSubmittingTeam, setIsSubmittingTeam] = useState(false);
 
+  // Bulk Upload
+  const [bulkFileContent, setBulkFileContent] = useState('');
+  const [bulkDefaultPassword, setBulkDefaultPassword] = useState('');
+  const [isUploadingBulk, setIsUploadingBulk] = useState(false);
+  const [bulkResult, setBulkResult] = useState<any>(null);
+
   useEffect(() => {
     fetchAdminData();
   }, [activeNav]);
@@ -164,19 +170,57 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setBulkFileContent(ev.target?.result as string);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleBulkUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bulkFileContent || !bulkDefaultPassword) return;
+    setIsUploadingBulk(true);
+    setBulkResult(null);
+
+    try {
+      const parsed = JSON.parse(bulkFileContent);
+      if (!Array.isArray(parsed)) throw new Error('JSON must be an array of objects');
+      
+      const res = await api.post('/admin/bulk-users', {
+        users: parsed,
+        defaultPassword: bulkDefaultPassword
+      });
+      setBulkResult(res.data.data);
+      triggerToast('Bulk upload processed', 'info');
+      
+      const usersRes = await api.get('/admin/users');
+      setUsers(usersRes.data.data || []);
+      setBulkFileContent('');
+      setBulkDefaultPassword('');
+    } catch (err: any) {
+      triggerToast(err.message || 'Invalid JSON format or server error', 'error');
+    } finally {
+      setIsUploadingBulk(false);
+    }
+  };
+
   const filteredPosts = posts.filter(
     (p) =>
       !filterQuery.trim() ||
       p.content?.toLowerCase().includes(filterQuery.toLowerCase()) ||
       p.authorName?.toLowerCase().includes(filterQuery.toLowerCase()) ||
-      p.authorEmployeeCode?.toLowerCase().includes(filterQuery.toLowerCase())
+      p.authorEmail?.toLowerCase().includes(filterQuery.toLowerCase())
   );
 
   const filteredUsers = users.filter(
     (u) =>
       !filterQuery.trim() ||
       u.fullName?.toLowerCase().includes(filterQuery.toLowerCase()) ||
-      u.employeeCode?.toLowerCase().includes(filterQuery.toLowerCase()) ||
+      u.email?.toLowerCase().includes(filterQuery.toLowerCase()) ||
       u.team?.toLowerCase().includes(filterQuery.toLowerCase())
   );
 
@@ -475,6 +519,58 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
+              {/* Bulk Upload Section */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#191c1d]">Bulk Import Users</h3>
+                    <p className="text-xs text-[#424753] mt-0.5">Upload a JSON file containing user data (email, fullName, team)</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleBulkUpload} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#191c1d] mb-1">Select JSON File</label>
+                      <input 
+                        type="file" 
+                        accept=".json"
+                        onChange={handleFileUpload}
+                        className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#0058bd] file:text-white hover:file:bg-[#004494] cursor-pointer"
+                      />
+                      {bulkFileContent && <span className="text-[10px] text-emerald-600 font-bold block mt-1">File loaded successfully</span>}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#191c1d] mb-1">Default Password for Users</label>
+                      <input
+                        type="text"
+                        required
+                        value={bulkDefaultPassword}
+                        onChange={(e) => setBulkDefaultPassword(e.target.value)}
+                        placeholder="e.g. Welcome123!"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 outline-none focus:ring-2 focus:ring-[#0058bd] text-xs"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="submit"
+                      disabled={isUploadingBulk || !bulkFileContent || !bulkDefaultPassword}
+                      className="px-5 py-2 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {isUploadingBulk ? 'Uploading...' : 'Process Bulk Import'}
+                    </button>
+                    
+                    {bulkResult && (
+                      <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200">
+                        <span className="text-emerald-600">{bulkResult.success} Created</span> • <span className="text-rose-600">{bulkResult.failed} Failed</span>
+                      </div>
+                    )}
+                  </div>
+                </form>
+              </div>
+
               {/* User Directory Table */}
               <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
@@ -496,7 +592,7 @@ export const AdminDashboard: React.FC = () => {
                     <thead>
                       <tr className="bg-slate-50 text-[#424753] text-xs font-bold border-b border-slate-100">
                         <th className="px-6 py-3.5">Member Name</th>
-                        <th className="px-6 py-3.5">Employee Code</th>
+                        <th className="px-6 py-3.5">Email</th>
                         <th className="px-6 py-3.5">Department</th>
                         <th className="px-6 py-3.5">Role</th>
                         <th className="px-6 py-3.5 text-right">Actions</th>
@@ -506,7 +602,7 @@ export const AdminDashboard: React.FC = () => {
                       {filteredUsers.map((u) => (
                         <tr key={u._id} className="hover:bg-slate-50 transition-colors">
                           <td className="px-6 py-4 font-bold text-[#191c1d]">{u.fullName}</td>
-                          <td className="px-6 py-4 font-mono font-bold text-purple-700">{u.employeeCode}</td>
+                          <td className="px-6 py-4 font-mono font-bold text-purple-700">{u.email}</td>
                           <td className="px-6 py-4 font-semibold text-slate-600">{u.team || 'General'}</td>
                           <td className="px-6 py-4">
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-700'}`}>
@@ -550,7 +646,7 @@ export const AdminDashboard: React.FC = () => {
                   <div key={post._id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
                     <div>
                       <div className="flex justify-between items-center text-xs mb-2">
-                        <span className="font-bold text-[#191c1d]">{post.authorName} ({post.authorEmployeeCode})</span>
+                        <span className="font-bold text-[#191c1d]">{post.authorName} ({post.authorEmail})</span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${post.isQuarantined ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}`}>
                           {post.isQuarantined ? 'Quarantined' : 'Active'}
                         </span>

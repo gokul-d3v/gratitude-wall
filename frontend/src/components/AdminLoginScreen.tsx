@@ -8,7 +8,7 @@ export const AdminLoginScreen: React.FC = () => {
   const { checkAuth } = useAuthStore();
   const { triggerToast, setAdminViewOpen } = useWallStore();
 
-  const [employeeCode, setEmployeeCode] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -18,8 +18,8 @@ export const AdminLoginScreen: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    if (!employeeCode.trim() || !password) {
-      setError('Employee Code and Password are required');
+    if (!email.trim() || !password) {
+      setError('Email and Password are required');
       return;
     }
 
@@ -27,7 +27,7 @@ export const AdminLoginScreen: React.FC = () => {
 
     try {
       const res = await api.post('/auth/admin-login', {
-        employeeCode: employeeCode.trim().toUpperCase(),
+        email: email.trim().toLowerCase(),
         password,
       });
 
@@ -37,6 +37,7 @@ export const AdminLoginScreen: React.FC = () => {
 
       triggerToast('Admin authenticated successfully! Opening console...', 'success');
       window.history.pushState({}, '', '/admin');
+      window.dispatchEvent(new PopStateEvent('popstate'));
       setAdminViewOpen(true);
     } catch (err: any) {
       const errMsg = err.response?.data?.message || 'Admin authentication failed. Please check credentials.';
@@ -87,16 +88,16 @@ export const AdminLoginScreen: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-sm">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Admin Employee Code</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Admin Email</label>
             <div className="relative">
               <IdCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 required
-                value={employeeCode}
-                onChange={(e) => setEmployeeCode(e.target.value)}
-                placeholder="Enter admin employee code"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 uppercase focus:outline-none focus:ring-2 focus:ring-purple-600 text-xs font-mono bg-white"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter admin email"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 lowercase focus:outline-none focus:ring-2 focus:ring-purple-600 text-xs font-mono bg-white"
               />
             </div>
           </div>

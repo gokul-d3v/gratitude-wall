@@ -8,7 +8,7 @@ interface TopUserItem {
   user: {
     _id?: string;
     fullName: string;
-    employeeCode: string;
+    email: string;
     avatarColor?: string;
   };
   count: number;

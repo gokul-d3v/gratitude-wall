@@ -66,9 +66,9 @@ const bloomFilter = new BloomFilter();
 // Populate Bloom Filter on initial module load
 export const buildEmployeeIndex = async () => {
   try {
-    const users = await User.find().select('employeeCode fullName').lean();
+    const users = await User.find().select('email fullName').lean();
     users.forEach((u) => {
-      bloomFilter.add(u.employeeCode);
+      bloomFilter.add(u.email);
       u.fullName.split(' ').forEach((token) => bloomFilter.add(token));
     });
   } catch {
@@ -93,7 +93,7 @@ export const searchUsers = async (query: string, currentUserId?: string) => {
   const filter: any = {
     role: { $ne: 'ADMIN' },
     $or: [
-      { employeeCode: { $regex: cleanQ, $options: 'i' } },
+      { email: { $regex: cleanQ, $options: 'i' } },
       { fullName: { $regex: cleanQ, $options: 'i' } },
     ],
   };
@@ -103,7 +103,7 @@ export const searchUsers = async (query: string, currentUserId?: string) => {
   }
 
   return User.find(filter)
-    .select('_id employeeCode fullName avatarColor')
+    .select('_id email fullName avatarColor')
     .limit(15)
     .lean();
 };
@@ -136,7 +136,7 @@ export const getTopGratitudeUsers = async () => {
 
   const userIds = topTagged.map((t) => t._id);
   const users = await User.find({ _id: { $in: userIds } })
-    .select('_id fullName employeeCode avatarColor')
+    .select('_id fullName email avatarColor')
     .lean();
 
   const userMap = new Map(users.map((u) => [u._id.toString(), u]));
@@ -144,7 +144,7 @@ export const getTopGratitudeUsers = async () => {
   return topTagged.map((t) => {
     const user = userMap.get(t._id.toString());
     return {
-      user: user || { fullName: 'Employee', employeeCode: 'EMP' },
+      user: user || { fullName: 'Employee', email: 'EMP' },
       count: t.gratitudeCount,
     };
   });

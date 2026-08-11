@@ -62,7 +62,7 @@ export const CreateNoteModal: React.FC = () => {
   }, [tagQuery]);
 
   const handleAddUserTag = (taggedUser: User) => {
-    if (!selectedUsers.some((u) => u.id === taggedUser.id || u.employeeCode === taggedUser.employeeCode)) {
+    if (!selectedUsers.some((u) => u.id === taggedUser.id || u.email === taggedUser.email)) {
       setSelectedUsers([...selectedUsers, taggedUser]);
     }
     setTagQuery('');
@@ -70,7 +70,7 @@ export const CreateNoteModal: React.FC = () => {
   };
 
   const handleRemoveUserTag = (userId: string) => {
-    setSelectedUsers(selectedUsers.filter((u) => u.id !== userId && u.employeeCode !== userId));
+    setSelectedUsers(selectedUsers.filter((u) => u.id !== userId && u.email !== userId));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -177,13 +177,13 @@ export const CreateNoteModal: React.FC = () => {
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {selectedUsers.map((u) => (
                     <span
-                      key={u.id || u.employeeCode}
+                      key={u.id || u.email}
                       className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/90 text-slate-800 border border-slate-300 shadow-2xs"
                     >
-                      @{u.fullName} ({u.employeeCode})
+                      @{u.fullName} ({u.email})
                       <button
                         type="button"
-                        onClick={() => handleRemoveUserTag(u.id || u.employeeCode)}
+                        onClick={() => handleRemoveUserTag(u.id || u.email)}
                         className="hover:text-red-500 cursor-pointer ml-0.5"
                       >
                         <X className="w-3 h-3" />
@@ -212,7 +212,7 @@ export const CreateNoteModal: React.FC = () => {
                       className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center justify-between text-xs sm:text-sm text-slate-700 cursor-pointer border-b border-slate-100 last:border-0"
                     >
                       <span className="font-medium">{u.fullName}</span>
-                      <span className="text-[10px] font-mono text-slate-400">Code: {u.employeeCode}</span>
+                      <span className="text-[10px] font-mono text-slate-400">Code: {u.email}</span>
                     </button>
                   ))}
                 </div>

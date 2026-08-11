@@ -6,14 +6,15 @@ import { api } from '../services/api';
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, setAuthModalOpen } = useWallStore();
-  const { login, register } = useAuthStore();
+  const { login, register, forgotPassword } = useAuthStore();
   const { triggerToast } = useWallStore();
 
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
   const [teams, setTeams] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     fullName: '',
-    employeeCode: '',
+    email: '',
     password: '',
     confirmPassword: '',
     team: '',
@@ -57,13 +58,22 @@ export const AuthModal: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    if (isRegisterMode) {
+    if (isForgotPasswordMode) {
+      if (!formData.email.trim() || formData.password.length < 6) {
+        setError('Email and a valid New Password (min 6 characters) are required');
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setError('Password and Confirm Password do not match');
+        return;
+      }
+    } else if (isRegisterMode) {
       if (!formData.fullName.trim()) {
         setError('Full Name is required');
         return;
       }
-      if (!formData.employeeCode.trim()) {
-        setError('Employee Code is required');
+      if (!formData.email.trim()) {
+        setError('Email is required');
         return;
       }
       if (formData.password.length < 6) {
@@ -79,8 +89,8 @@ export const AuthModal: React.FC = () => {
         return;
       }
     } else {
-      if (!formData.employeeCode.trim() || !formData.password) {
-        setError('Employee Code and Password are required');
+      if (!formData.email.trim() || !formData.password) {
+        setError('Email and Password are required');
         return;
       }
     }
@@ -88,20 +98,28 @@ export const AuthModal: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      if (isRegisterMode) {
+      if (isForgotPasswordMode) {
+        await forgotPassword({
+          email: formData.email.trim().toLowerCase(),
+          newPassword: formData.password,
+        });
+        triggerToast('Password reset successful. Please sign in.', 'success');
+        setIsForgotPasswordMode(false);
+        setFormData(prev => ({ ...prev, password: '' }));
+      } else if (isRegisterMode) {
         // Read team directly from DOM select to bypass any React state sync lag
         const selectedTeam = teamSelectRef.current?.value || formData.team;
 
         await register({
           fullName: formData.fullName.trim(),
-          employeeCode: formData.employeeCode.trim().toUpperCase(),
+          email: formData.email.trim().toLowerCase(),
           password: formData.password,
           team: selectedTeam,
         });
         triggerToast('Registration successful! Welcome to BROTIFY.', 'success');
       } else {
         await login({
-          employeeCode: formData.employeeCode.trim().toUpperCase(),
+          email: formData.email.trim().toLowerCase(),
           password: formData.password,
         });
         triggerToast('Successfully signed in!', 'success');
@@ -132,7 +150,7 @@ export const AuthModal: React.FC = () => {
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900">
-              {isRegisterMode ? 'User Registration' : 'Employee Login'}
+              {isForgotPasswordMode ? 'Reset Password' : isRegisterMode ? 'User Registration' : 'Employee Login'}
             </h2>
             <p className="text-xs text-slate-500">Access BROTIFY Gratitude Wall</p>
           </div>
@@ -187,25 +205,27 @@ export const AuthModal: React.FC = () => {
             </div>
           )}
 
-          {/* Employee Code */}
+          {/* Email */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Employee Code / Username</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Email / Username</label>
             <div className="relative">
               <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 required
-                value={formData.employeeCode}
-                onChange={(e) => setFormData(prev => ({ ...prev, employeeCode: e.target.value }))}
-                placeholder="e.g. BROTOTYPE or EMP1004"
-                className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 uppercase focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="e.g. user@example.com"
+                className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-300 lowercase focus:outline-none focus:ring-2 focus:ring-[#0058bd]"
               />
             </div>
           </div>
 
           {/* Password with Eye Toggle */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              {isForgotPasswordMode ? 'New Password' : 'Password'}
+            </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -225,10 +245,24 @@ export const AuthModal: React.FC = () => {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            {!isRegisterMode && !isForgotPasswordMode && (
+              <div className="flex justify-end mt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsForgotPasswordMode(true);
+                    setError('');
+                  }}
+                  className="text-xs font-medium text-[#0058bd] hover:underline cursor-pointer"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Confirm Password with Eye Toggle (Register Only) */}
-          {isRegisterMode && (
+          {/* Confirm Password with Eye Toggle (Register & Forgot Password) */}
+          {(isRegisterMode || isForgotPasswordMode) && (
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Confirm Password</label>
               <div className="relative">
@@ -258,21 +292,51 @@ export const AuthModal: React.FC = () => {
             disabled={isSubmitting}
             className="mt-2 w-full py-3 rounded-lg bg-[#0058bd] hover:bg-[#004494] text-white font-semibold text-sm shadow-md transition-all cursor-pointer disabled:opacity-50"
           >
-            {isSubmitting ? 'Processing...' : isRegisterMode ? 'Register Account' : 'Sign In'}
+            {isSubmitting ? 'Processing...' : isForgotPasswordMode ? 'Reset Password' : isRegisterMode ? 'Register Account' : 'Sign In'}
           </button>
         </form>
 
         <div className="mt-6 text-center text-xs text-slate-500">
-          {isRegisterMode ? 'Already registered?' : "Need an account?"}{' '}
-          <button
-            onClick={() => {
-              setIsRegisterMode(!isRegisterMode);
-              setError('');
-            }}
-            className="font-bold text-[#0058bd] hover:underline cursor-pointer"
-          >
-            {isRegisterMode ? 'Sign In with Employee Code' : 'Register Here'}
-          </button>
+          {isForgotPasswordMode ? (
+            <>
+              Remembered your password?{' '}
+              <button
+                onClick={() => {
+                  setIsForgotPasswordMode(false);
+                  setError('');
+                }}
+                className="font-bold text-[#0058bd] hover:underline cursor-pointer"
+              >
+                Sign In
+              </button>
+            </>
+          ) : isRegisterMode ? (
+            <>
+              Already registered?{' '}
+              <button
+                onClick={() => {
+                  setIsRegisterMode(!isRegisterMode);
+                  setError('');
+                }}
+                className="font-bold text-[#0058bd] hover:underline cursor-pointer"
+              >
+                Sign In with Email
+              </button>
+            </>
+          ) : (
+            <>
+              Need an account?{' '}
+              <button
+                onClick={() => {
+                  setIsRegisterMode(!isRegisterMode);
+                  setError('');
+                }}
+                className="font-bold text-[#0058bd] hover:underline cursor-pointer"
+              >
+                Register Here
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

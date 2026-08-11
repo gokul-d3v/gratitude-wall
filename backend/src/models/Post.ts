@@ -6,7 +6,7 @@ export interface IPost extends Document {
   content: string;
   author: Types.ObjectId;
   authorName: string;
-  authorEmployeeCode: string;
+  authorEmail: string;
   taggedUsers: Types.ObjectId[];
   team?: string;
   color: StickyColor;
@@ -35,7 +35,7 @@ const PostSchema = new Schema<IPost>(
       type: String,
       required: true,
     },
-    authorEmployeeCode: {
+    authorEmail: {
       type: String,
       required: true,
     },

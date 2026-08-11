@@ -7,6 +7,7 @@ import {
   getUsersHandler,
   updateRoleHandler,
   sendNotificationHandler,
+  bulkUploadUsersHandler,
 } from '../controllers/adminController';
 import { createTeamHandler, deleteTeamHandler } from '../controllers/teamController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -22,6 +23,7 @@ router.put('/posts/:id/quarantine', quarantinePostHandler);
 router.delete('/posts/:id', deletePostHandler);
 router.get('/users', getUsersHandler);
 router.put('/users/:id/role', updateRoleHandler);
+router.post('/bulk-users', bulkUploadUsersHandler);
 
 // Admin Broadcast System Notifications
 router.post('/notifications', sendNotificationHandler);

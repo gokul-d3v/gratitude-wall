@@ -4,7 +4,7 @@ export interface User {
   id: string;
   _id?: string;
   fullName: string;
-  employeeCode: string;
+  email: string;
   avatarColor?: string;
   team?: string;
   role?: string;
@@ -15,7 +15,7 @@ export interface Post {
   content: string;
   author: User;
   authorName: string;
-  authorEmployeeCode: string;
+  authorEmail: string;
   taggedUsers?: User[];
   team?: string;
   color: StickyColor;

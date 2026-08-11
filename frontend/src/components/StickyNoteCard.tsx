@@ -254,7 +254,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         <div className="mt-3 flex flex-wrap items-center gap-1">
           {post.taggedUsers.slice(1).map((u) => (
             <span
-              key={u.id || u.employeeCode}
+              key={u.id || u.email}
               className="text-[10px] font-semibold bg-white/70 text-slate-700 px-2 py-0.5 rounded-full border border-black/5"
             >
               @{u.fullName}
