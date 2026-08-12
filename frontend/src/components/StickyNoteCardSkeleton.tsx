@@ -2,7 +2,7 @@ import React from 'react';
 
 export const StickyNoteCardSkeleton: React.FC = () => {
   return (
-    <div className="sticky-note skeleton-card bg-white p-6 flex flex-col justify-between rounded-lg relative overflow-hidden min-h-[220px]">
+    <div className="sticky-note skeleton-card p-4 flex flex-col rounded-lg relative overflow-hidden">
       {/* Shimmer overlay */}
       <div className="skeleton-shimmer" />
 

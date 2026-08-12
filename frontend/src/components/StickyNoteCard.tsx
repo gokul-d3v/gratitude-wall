@@ -196,7 +196,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       onClick={handleCardClick}
       className={`sticky-note ${
         colorClassMap[post.color || 'yellow']
-      } p-6 flex flex-col justify-between rounded-lg font-sans transition-all relative group select-none hover:shadow-xl cursor-pointer transform hover:-translate-y-1`}
+      } p-4 flex flex-col rounded-lg font-sans transition-all relative group select-none hover:shadow-xl cursor-pointer transform hover:-translate-y-1 overflow-hidden`}
     >
       {/* Instagram-style heart burst on double tap */}
       {showBurst && (
@@ -250,12 +250,12 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       </div>
 
       {/* Message Body */}
-      <div className="flex-grow flex flex-col min-w-0">
-        <p className="text-base text-[#191c1d] italic leading-relaxed break-words break-all line-clamp-5 overflow-hidden">
+      <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
+        <p className="text-sm text-[#191c1d] italic leading-relaxed break-words break-all line-clamp-4 overflow-hidden">
           "{post.content}"
         </p>
         {post.content && post.content.length > 160 && (
-          <span className="text-xs text-[#0058bd] font-bold mt-2 cursor-pointer inline-flex items-center gap-1 hover:underline">
+          <span className="text-xs text-[#0058bd] font-bold mt-1.5 cursor-pointer inline-flex items-center gap-1 hover:underline shrink-0">
             Read more <span className="text-[10px]">▶</span>
           </span>
         )}
@@ -318,7 +318,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       )}
 
       {/* Card Footer: Like Button & Author */}
-      <div className="flex items-center justify-between pt-4 mt-4 border-t border-black/5">
+      <div className="flex items-center justify-between pt-3 mt-auto border-t border-black/5 shrink-0">
         <div className="flex items-center gap-4">
           <button
             onClick={(e) => {
