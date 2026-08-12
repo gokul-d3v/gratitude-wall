@@ -338,10 +338,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              const rect = cardRef.current?.getBoundingClientRect();
-              const x = rect ? e.clientX - rect.left : 24;
-              const y = rect ? e.clientY - rect.top : 24;
-              handleToggleLike(x, y);
+              handleToggleLike();
             }}
             disabled={isSubmitting}
             className="flex items-center gap-1.5 group/like cursor-pointer select-none"
