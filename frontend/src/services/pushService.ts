@@ -45,6 +45,11 @@ export const registerAndSubscribePush = async () => {
       await subscription.unsubscribe();
     }
     
+    if (!VAPID_PUBLIC_KEY) {
+      console.warn('VAPID_PUBLIC_KEY is not configured in the environment. Push subscription skipped.');
+      return;
+    }
+
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),

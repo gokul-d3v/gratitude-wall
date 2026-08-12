@@ -27,8 +27,7 @@ body {
 }
 
 .animate-fade-slide-up {
-  animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  opacity: 0;
+  animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .stagger-1 { animation-delay: 100ms; }
@@ -50,8 +49,7 @@ body {
 }
 
 .animate-dropdown-in {
-  animation: dropdownIn 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  opacity: 0;
+  animation: dropdownIn 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Sticky note card styling */
