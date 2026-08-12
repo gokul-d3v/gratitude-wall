@@ -56,7 +56,17 @@ export const NotificationModal: React.FC = () => {
     setNotifications([]);
   };
 
-  const [pushPermission, setPushPermission] = React.useState(Notification.permission);
+  const getPermission = () => {
+    try {
+      return (typeof Notification !== 'undefined' && 'permission' in Notification)
+        ? Notification.permission
+        : 'denied';
+    } catch {
+      return 'denied';
+    }
+  };
+
+  const [pushPermission, setPushPermission] = React.useState(getPermission);
   const handleEnablePush = async () => {
     try {
       const { registerAndSubscribePush } = await import('../services/pushService');
