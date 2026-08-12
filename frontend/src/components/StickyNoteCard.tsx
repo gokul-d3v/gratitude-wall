@@ -43,6 +43,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [hasLiked, setHasLiked] = useState(!!(post.hasLiked || post.userEmoji));
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAnimatingLike, setIsAnimatingLike] = useState(false);
 
   // Heart burst animation state
   const [showBurst, setShowBurst] = useState(false);
@@ -113,6 +114,11 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
     const nextLiked = !hasLiked;
     setHasLiked(nextLiked);
     setLikesCount((prev) => (nextLiked ? prev + 1 : Math.max(0, prev - 1)));
+
+    if (nextLiked) {
+      setIsAnimatingLike(true);
+      setTimeout(() => setIsAnimatingLike(false), 300);
+    }
 
     // Trigger burst animation when liking
     if (nextLiked && x !== undefined && y !== undefined) {
@@ -347,7 +353,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
               height="22"
               className="transition-all duration-200"
               style={{
-                animation: hasLiked ? 'heartPop 0.3s ease-out' : 'none',
+                animation: isAnimatingLike ? 'heartPop 0.3s ease-out forwards' : 'none',
                 filter: hasLiked ? 'drop-shadow(0 0 4px rgba(220,38,38,0.5))' : 'none',
                 transform: hasLiked ? 'scale(1.1)' : 'scale(1)',
               }}
