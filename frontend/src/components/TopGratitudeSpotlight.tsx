@@ -53,7 +53,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
   const topRecipient = topUsers[0];
 
   return (
-    <div className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-50 to-amber-100/50 border border-amber-200/50 px-5 py-3 rounded-2xl shadow-sm mb-6 animate-fade-slide-up cursor-pointer backdrop-blur-sm w-full md:w-fit">
+    <div className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-50 to-amber-100/50 border border-amber-200/50 px-5 py-3 rounded-2xl shadow-sm mb-6 animate-fade-slide-up cursor-pointer backdrop-blur-sm w-full md:min-w-[320px]">
       <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-amber-300 text-amber-900 flex items-center justify-center shrink-0 shadow-inner">
         <Trophy className="w-5 h-5" />
       </div>
