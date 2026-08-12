@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
 import { StickyColor } from '../types';
 import { api } from '../services/api';
+import UserSettingsModal from './UserSettingsModal';
 
 
 const getRelativeTime = (dateStr: string) => {
@@ -37,6 +38,7 @@ export const Header: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState('all');
   const [isTaggedMeFilter, setIsTaggedMeFilter] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     fetchTeams();
@@ -398,12 +400,14 @@ export const Header: React.FC = () => {
 
               {/* Employee Badge */}
               <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 shadow-2xs">
-                <div
+                <button
+                  onClick={() => setSettingsOpen(true)}
                   style={{ backgroundColor: user?.avatarColor || '#0058bd' }}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold hover:scale-105 transition-transform cursor-pointer shadow-sm"
+                  title="User Settings"
                 >
                   {user?.fullName?.[0]?.toUpperCase() || 'E'}
-                </div>
+                </button>
                 <button
                   onClick={() => logout()}
                   className="flex items-center gap-1.5 hover:text-rose-600 transition-colors cursor-pointer"
@@ -426,6 +430,11 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
+
+      <UserSettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setSettingsOpen(false)} 
+      />
     </header>
   );
 };
