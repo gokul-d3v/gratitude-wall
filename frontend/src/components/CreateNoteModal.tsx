@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Send, X, User as UserIcon, Users } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Send, X, User as UserIcon, Users, Plus } from 'lucide-react';
 import { StickyColor, User } from '../types';
 import { api, updatePostApi } from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
@@ -30,10 +30,11 @@ export const CreateNoteModal: React.FC = () => {
   // Unified tag mode
   const [tagMode, setTagMode] = useState<TagMode>('person');
 
-  // Person tagging
+  // Tagging users state
   const [tagQuery, setTagQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  const personInputRef = useRef<HTMLInputElement>(null);
 
   // Team tagging
   const [teams, setTeams] = useState<string[]>([]);
@@ -91,10 +92,12 @@ export const CreateNoteModal: React.FC = () => {
 
   const handleAddUserTag = (taggedUser: User) => {
     if (!selectedUsers.some((u) => u.id === taggedUser.id || u.email === taggedUser.email)) {
-      setSelectedUsers([...selectedUsers, taggedUser]);
+      setSelectedUsers((prev) => [...prev, taggedUser]);
     }
     setTagQuery('');
     setSearchResults([]);
+    // Keep focus on input so user can immediately tag another person
+    setTimeout(() => personInputRef.current?.focus(), 50);
   };
 
   const handleRemoveUserTag = (userId: string) => {
@@ -264,18 +267,19 @@ export const CreateNoteModal: React.FC = () => {
               {/* Person tag UI */}
               {tagMode === 'person' && (
                 <div className="relative">
+                  {/* Selected chips */}
                   {selectedUsers.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-2">
                       {selectedUsers.map((u) => (
                         <span
                           key={u.id || u.email}
-                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/90 text-slate-800 border border-slate-300 shadow-2xs"
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0058bd]/10 text-[#0058bd] border border-[#0058bd]/20"
                         >
                           @{u.fullName}
                           <button
                             type="button"
                             onClick={() => handleRemoveUserTag(u.id || u.email)}
-                            className="hover:text-red-500 cursor-pointer ml-0.5"
+                            className="hover:text-red-600 cursor-pointer ml-0.5"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -283,26 +287,46 @@ export const CreateNoteModal: React.FC = () => {
                       ))}
                     </div>
                   )}
-                  <input
-                    type="text"
-                    value={tagQuery}
-                    onChange={(e) => setTagQuery(e.target.value)}
-                    placeholder="Search by name…"
-                    className="w-full px-3 py-2 rounded-lg bg-white/70 border border-slate-300/60 text-xs sm:text-sm focus:outline-none focus:bg-white"
-                  />
-                  {searchResults.length > 0 && (
+
+                  {/* Search input */}
+                  <div className="relative flex items-center">
+                    <input
+                      ref={personInputRef}
+                      type="text"
+                      value={tagQuery}
+                      onChange={(e) => setTagQuery(e.target.value)}
+                      placeholder={
+                        selectedUsers.length === 0
+                          ? 'Search by name…'
+                          : 'Add another person…'
+                      }
+                      className="w-full px-3 py-2 rounded-lg bg-white/70 border border-slate-300/60 text-xs sm:text-sm focus:outline-none focus:bg-white pr-8"
+                    />
+                    {selectedUsers.length > 0 && (
+                      <span className="absolute right-2.5 flex items-center gap-0.5 text-[10px] font-bold text-[#0058bd]">
+                        <Plus className="w-3 h-3" />{selectedUsers.length}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Search results — filtered to exclude already-selected */}
+                  {searchResults.filter(
+                    (r) => !selectedUsers.some((s) => s.id === r.id || s.email === r.email)
+                  ).length > 0 && (
                     <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-200 max-h-40 overflow-y-auto z-50">
-                      {searchResults.map((u) => (
-                        <button
-                          key={u.id || (u as any)._id}
-                          type="button"
-                          onClick={() => handleAddUserTag(u)}
-                          className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center justify-between text-xs sm:text-sm text-slate-700 cursor-pointer border-b border-slate-100 last:border-0"
-                        >
-                          <span className="font-medium">{u.fullName}</span>
-                          <span className="text-[10px] font-mono text-slate-400">{u.team || 'N/A'}</span>
-                        </button>
-                      ))}
+                      {searchResults
+                        .filter((r) => !selectedUsers.some((s) => s.id === r.id || s.email === r.email))
+                        .map((u) => (
+                          <button
+                            key={u.id || (u as any)._id}
+                            type="button"
+                            onClick={() => handleAddUserTag(u)}
+                            className="w-full text-left px-4 py-2 hover:bg-blue-50 flex items-center justify-between text-xs sm:text-sm text-slate-700 cursor-pointer border-b border-slate-100 last:border-0"
+                          >
+                            <span className="font-medium">{u.fullName}</span>
+                            <span className="text-[10px] text-slate-400">{u.team || ''}</span>
+                          </button>
+                        ))}
                     </div>
                   )}
                 </div>
