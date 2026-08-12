@@ -234,13 +234,13 @@ export const App: React.FC = () => {
 
         {/* Wall Workspace */}
         {isLoading && posts.length === 0 ? (
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 items-start">
             {Array.from({ length: 8 }).map((_, i) => (
               <StickyNoteCardSkeleton key={i} />
             ))}
           </section>
         ) : (
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 grid-notes animate-fade-slide-up stagger-2">
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 grid-notes animate-fade-slide-up stagger-2 items-start">
             {/* Add New Note Card */}
             <div
               onClick={handleOpenAddPost}
