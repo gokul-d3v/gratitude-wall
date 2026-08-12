@@ -31,6 +31,7 @@ export const App: React.FC = () => {
     setAuthModalOpen,
     isAdminViewOpen,
     setAdminViewOpen,
+    isTaggedMeFilter,
   } = useWallStore();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -240,16 +241,18 @@ export const App: React.FC = () => {
         ) : (
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 grid-notes animate-fade-slide-up stagger-2 items-start">
             {/* Add New Note Card */}
-            <div
-              onClick={handleOpenAddPost}
-              className="sticky-note bg-blue-50/50 border-2 border-dashed border-[#0058bd]/30 p-8 rounded-lg flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-blue-100/50 transition-all min-h-[220px]"
-            >
-              <div className="w-14 h-14 rounded-full bg-[#0058bd] text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                <span className="material-symbols-outlined text-3xl">add</span>
+            {!isTaggedMeFilter && (
+              <div
+                onClick={handleOpenAddPost}
+                className="sticky-note bg-blue-50/50 border-2 border-dashed border-[#0058bd]/30 p-8 rounded-lg flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-blue-100/50 transition-all min-h-[220px]"
+              >
+                <div className="w-14 h-14 rounded-full bg-[#0058bd] text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <span className="material-symbols-outlined text-3xl">add</span>
+                </div>
+                <p className="font-display font-bold text-lg text-[#0058bd]">Post your gratitude</p>
+                <p className="text-xs text-[#424753] mt-0.5">Spread some positivity</p>
               </div>
-              <p className="font-display font-bold text-lg text-[#0058bd]">Post your gratitude</p>
-              <p className="text-xs text-[#424753] mt-0.5">Spread some positivity</p>
-            </div>
+            )}
 
             {/* Gratitude Sticky Notes Grid */}
             {filteredPosts.map((post) => (

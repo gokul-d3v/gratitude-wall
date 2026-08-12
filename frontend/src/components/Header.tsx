@@ -32,11 +32,12 @@ export const Header: React.FC = () => {
     unreadCount,
     setNotifications,
     fetchPosts,
+    isTaggedMeFilter,
+    setIsTaggedMeFilter,
   } = useWallStore();
 
   const [teams, setTeams] = useState<any[]>([]);
   const [selectedTeam, setSelectedTeam] = useState('all');
-  const [isTaggedMeFilter, setIsTaggedMeFilter] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
 

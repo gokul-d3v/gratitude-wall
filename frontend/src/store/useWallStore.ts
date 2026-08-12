@@ -17,6 +17,7 @@ interface WallState {
   unreadCount: number;
   toastNotification: NotificationItem | null;
   rateLimitInfo: { remaining: number; limit: number } | null;
+  isTaggedMeFilter: boolean;
 
   setPosts: (posts: Post[]) => void;
   fetchPosts: () => Promise<void>;
@@ -36,6 +37,7 @@ interface WallState {
   triggerToast: (message: string, variant?: 'success' | 'error' | 'info') => void;
   clearToast: () => void;
   setRateLimitInfo: (info: { remaining: number; limit: number }) => void;
+  setIsTaggedMeFilter: (val: boolean) => void;
 }
 
 export const useWallStore = create<WallState>((set) => ({
@@ -53,6 +55,7 @@ export const useWallStore = create<WallState>((set) => ({
   unreadCount: 0,
   toastNotification: null,
   rateLimitInfo: null,
+  isTaggedMeFilter: false,
 
   setPosts: (posts) => set({ posts }),
 
@@ -137,4 +140,6 @@ export const useWallStore = create<WallState>((set) => ({
   clearToast: () => set({ toastNotification: null }),
 
   setRateLimitInfo: (rateLimitInfo) => set({ rateLimitInfo }),
+
+  setIsTaggedMeFilter: (isTaggedMeFilter) => set({ isTaggedMeFilter }),
 }));
