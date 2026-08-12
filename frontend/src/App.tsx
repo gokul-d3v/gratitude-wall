@@ -86,9 +86,8 @@ export const App: React.FC = () => {
           navigator.serviceWorker.ready.then((registration) => {
             registration.showNotification('New Gratitude Post!', {
               body: `A new gratitude post is posted.`,
-              icon: '/vite.svg',
-              vibrate: [200, 100, 200],
-            } as any);
+              icon: '/vite.svg'
+            });
           });
         } else {
           new Notification('New Gratitude Post!', {
@@ -125,9 +124,8 @@ export const App: React.FC = () => {
           navigator.serviceWorker.ready.then((registration) => {
             registration.showNotification(title, {
               body: notif.message,
-              icon: '/vite.svg',
-              vibrate: [200, 100, 200],
-            } as any);
+              icon: '/vite.svg'
+            });
           });
         } else {
           new Notification(title, {
