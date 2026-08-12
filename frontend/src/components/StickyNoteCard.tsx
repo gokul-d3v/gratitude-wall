@@ -186,8 +186,10 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
     useWallStore.getState().setViewingPost(post);
   };
 
-  const firstTagged = post.taggedUsers && post.taggedUsers.length > 0 ? post.taggedUsers[0] : null;
-  const avatarInitials = firstTagged ? getInitials(firstTagged.fullName) : 'GW';
+  const taggedUsers = post.taggedUsers || [];
+  const hasTagged = taggedUsers.length > 0;
+  // Initials from first tagged person, or GW for general
+  const avatarInitials = hasTagged ? getInitials(taggedUsers[0].fullName) : 'GW';
 
   return (
     <div
@@ -225,23 +227,38 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       )}
 
       {/* Top Header */}
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+      <div className="flex items-start gap-2.5 mb-2.5">
+        <div className="w-9 h-9 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0 mt-0.5">
           {avatarInitials}
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <span className="text-[9px] uppercase font-bold tracking-wider text-[#0058bd] bg-white/80 px-1.5 py-0.5 rounded-md border border-black/5">
-            Gratified Person
+            {hasTagged ? 'Gratified Person' : 'General'}
           </span>
-          <h4 className="text-sm font-bold text-[#191c1d] mt-0.5">
-            {firstTagged ? `@${firstTagged.fullName}` : 'General Appreciation'}
-          </h4>
-          <div className="flex items-center gap-2">
+
+          {/* All tagged users as chips */}
+          {hasTagged ? (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {taggedUsers.map((u) => (
+                <span
+                  key={u.id || u.email || u.fullName}
+                  className="text-[11px] font-bold text-[#191c1d] truncate max-w-[120px]"
+                  title={u.fullName}
+                >
+                  @{u.fullName}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <h4 className="text-sm font-bold text-[#191c1d] mt-0.5">General Appreciation</h4>
+          )}
+
+          <div className="flex items-center gap-2 mt-0.5">
             <span className="text-[10px] uppercase tracking-tighter text-[#424753]">
               {formatTimeAgo(post.createdAt)}
             </span>
             {post.team && (
-              <span className="text-[9px] font-semibold text-slate-600 bg-white/60 px-1.5 py-0.2 rounded-full border border-black/5">
+              <span className="text-[9px] font-semibold text-slate-600 bg-white/60 px-1.5 py-0.5 rounded-full border border-black/5">
                 {post.team}
               </span>
             )}
@@ -260,19 +277,6 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
           </span>
         )}
       </div>
-      {/* Tagged user chips */}
-      {post.taggedUsers && post.taggedUsers.length > 1 && (
-        <div className="mt-3 flex flex-wrap items-center gap-1">
-          {post.taggedUsers.slice(1).map((u) => (
-            <span
-              key={u.id || u.email}
-              className="text-[10px] font-semibold bg-white/70 text-slate-700 px-2 py-0.5 rounded-full border border-black/5"
-            >
-              @{u.fullName}
-            </span>
-          ))}
-        </div>
-      )}
 
       {/* Options Menu Button */}
       {canModify && (

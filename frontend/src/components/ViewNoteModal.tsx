@@ -52,8 +52,9 @@ export const ViewNoteModal: React.FC = () => {
   if (!viewingPost) return null;
   const post = viewingPost;
 
-  const firstTagged = post.taggedUsers && post.taggedUsers.length > 0 ? post.taggedUsers[0] : null;
-  const avatarInitials = firstTagged ? getInitials(firstTagged.fullName) : 'GW';
+  const taggedUsers = post.taggedUsers || [];
+  const hasTagged = taggedUsers.length > 0;
+  const avatarInitials = hasTagged ? getInitials(taggedUsers[0].fullName) : 'GW';
 
   return (
     <div
@@ -74,17 +75,31 @@ export const ViewNoteModal: React.FC = () => {
         </button>
 
         {/* Top Header */}
-        <div className="flex items-center gap-4 mb-8 pt-4">
+        <div className="flex items-start gap-4 mb-6 pt-4">
           <div className="w-14 h-14 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-lg shadow-md shrink-0">
             {avatarInitials}
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <span className="text-xs uppercase font-bold tracking-wider text-[#0058bd] bg-white/80 px-2 py-1 rounded-md border border-black/5">
-              Gratified Person
+              {hasTagged ? 'Gratified Person' : 'General'}
             </span>
-            <h4 className="text-xl font-bold text-[#191c1d] mt-1">
-              {firstTagged ? `@${firstTagged.fullName}` : 'General Appreciation'}
-            </h4>
+
+            {/* All tagged users */}
+            {hasTagged ? (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {taggedUsers.map((u) => (
+                  <span
+                    key={u.id || u.email || u.fullName}
+                    className="text-base font-bold text-[#191c1d]"
+                  >
+                    @{u.fullName}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <h4 className="text-xl font-bold text-[#191c1d] mt-1">General Appreciation</h4>
+            )}
+
             <div className="flex items-center gap-3 mt-1">
               <span className="text-sm uppercase tracking-tighter text-[#424753]">
                 {formatTimeAgo(post.createdAt)}
@@ -104,20 +119,6 @@ export const ViewNoteModal: React.FC = () => {
             "{post.content}"
           </p>
         </div>
-
-        {/* Tagged user chips */}
-        {post.taggedUsers && post.taggedUsers.length > 1 && (
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            {post.taggedUsers.slice(1).map((u) => (
-              <span
-                key={u.id || u.email}
-                className="text-sm font-semibold bg-white/70 text-slate-700 px-3 py-1 rounded-full border border-black/5"
-              >
-                @{u.fullName}
-              </span>
-            ))}
-          </div>
-        )}
 
         {/* Card Footer: Written by */}
         <div className="flex items-center justify-between pt-6 mt-8 border-t border-black/10">
