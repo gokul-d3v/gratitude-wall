@@ -287,7 +287,7 @@ export const CreateNoteModal: React.FC = () => {
                     type="text"
                     value={tagQuery}
                     onChange={(e) => setTagQuery(e.target.value)}
-                    placeholder="Search by name or employee code…"
+                    placeholder="Search by name…"
                     className="w-full px-3 py-2 rounded-lg bg-white/70 border border-slate-300/60 text-xs sm:text-sm focus:outline-none focus:bg-white"
                   />
                   {searchResults.length > 0 && (
