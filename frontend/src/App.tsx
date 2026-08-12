@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { Inbox } from 'lucide-react';
 import { Header } from './components/Header';
 import { StickyNoteCard } from './components/StickyNoteCard';
 import { StickyNoteCardSkeleton } from './components/StickyNoteCardSkeleton';
@@ -261,10 +262,18 @@ export const App: React.FC = () => {
           </section>
         )}
         {!isLoading && filteredPosts.length === 0 && (
-          <div className="flex flex-col items-center justify-center min-h-[30vh] gap-3 text-slate-400">
-            <span className="text-5xl">🙏</span>
-            <p className="text-base font-semibold text-slate-500">No gratitude notes yet</p>
-            <p className="text-xs text-slate-400">Be the first to spread some positivity!</p>
+          <div className="flex flex-col items-center justify-center min-h-[40vh] w-full text-center col-span-full">
+            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-5">
+              <Inbox className="w-10 h-10 text-slate-400" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">No gratitude notes found</h3>
+            <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+              {searchQuery 
+                ? "We couldn't find any notes matching your search criteria. Try adjusting your filters or search terms."
+                : isTaggedMeFilter 
+                ? "You haven't been tagged in any gratitude notes yet. Spread some positivity and it will come back to you!"
+                : "The wall is currently empty. Be the first to share your appreciation and brighten someone's day!"}
+            </p>
           </div>
         )}
       </main>
