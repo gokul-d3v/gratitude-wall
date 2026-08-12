@@ -90,8 +90,11 @@ export const CreateNoteModal: React.FC = () => {
     }
   }, [tagQuery]);
 
+  // Normalise user id — API may return _id instead of id
+  const getUserId = (u: any): string => u.id || u._id || u.email || '';
+
   const handleAddUserTag = (taggedUser: User) => {
-    if (!selectedUsers.some((u) => u.id === taggedUser.id || u.email === taggedUser.email)) {
+    if (!selectedUsers.some((u) => getUserId(u) === getUserId(taggedUser))) {
       setSelectedUsers((prev) => [...prev, taggedUser]);
     }
     setTagQuery('');
@@ -101,7 +104,7 @@ export const CreateNoteModal: React.FC = () => {
   };
 
   const handleRemoveUserTag = (userId: string) => {
-    setSelectedUsers(selectedUsers.filter((u) => u.id !== userId && u.email !== userId));
+    setSelectedUsers(selectedUsers.filter((u) => getUserId(u) !== userId));
   };
 
   const filteredTeams = teams.filter((t) =>
@@ -272,13 +275,13 @@ export const CreateNoteModal: React.FC = () => {
                     <div className="flex flex-wrap gap-1.5 mb-2">
                       {selectedUsers.map((u) => (
                         <span
-                          key={u.id || u.email}
+                          key={getUserId(u)}
                           className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0058bd]/10 text-[#0058bd] border border-[#0058bd]/20"
                         >
                           @{u.fullName}
                           <button
                             type="button"
-                            onClick={() => handleRemoveUserTag(u.id || u.email)}
+                            onClick={() => handleRemoveUserTag(getUserId(u))}
                             className="hover:text-red-600 cursor-pointer ml-0.5"
                           >
                             <X className="w-3 h-3" />
@@ -311,11 +314,11 @@ export const CreateNoteModal: React.FC = () => {
 
                   {/* Search results — filtered to exclude already-selected */}
                   {searchResults.filter(
-                    (r) => !selectedUsers.some((s) => s.id === r.id || s.email === r.email)
+                    (r) => !selectedUsers.some((s) => getUserId(s) === getUserId(r))
                   ).length > 0 && (
                     <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-200 max-h-40 overflow-y-auto z-50">
                       {searchResults
-                        .filter((r) => !selectedUsers.some((s) => s.id === r.id || s.email === r.email))
+                        .filter((r) => !selectedUsers.some((s) => getUserId(s) === getUserId(r)))
                         .map((u) => (
                           <button
                             key={u.id || (u as any)._id}
