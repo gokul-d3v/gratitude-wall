@@ -246,19 +246,28 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         </div>
       </div>
 
-      {/* Gratified Persons — all tagged users as chips */}
-      {hasTagged && (
+      {/* Gratified Persons or Team */}
+      {(hasTagged || post.team) && (
         <div className="flex flex-wrap gap-1 mb-2">
           <span className="text-[9px] uppercase font-bold tracking-wider text-[#0058bd] self-center mr-0.5">For:</span>
-          {taggedUsers.map((u) => (
+          {hasTagged ? (
+            taggedUsers.map((u) => (
+              <span
+                key={u.id || u.email || u.fullName}
+                className="text-[10px] font-bold bg-[#0058bd]/10 text-[#0058bd] px-2 py-0.5 rounded-full border border-[#0058bd]/20 truncate max-w-[110px]"
+                title={u.fullName}
+              >
+                @{u.fullName}
+              </span>
+            ))
+          ) : (
             <span
-              key={u.id || u.email || u.fullName}
               className="text-[10px] font-bold bg-[#0058bd]/10 text-[#0058bd] px-2 py-0.5 rounded-full border border-[#0058bd]/20 truncate max-w-[110px]"
-              title={u.fullName}
+              title={post.team}
             >
-              @{u.fullName}
+              {post.team}
             </span>
-          ))}
+          )}
         </div>
       )}
 

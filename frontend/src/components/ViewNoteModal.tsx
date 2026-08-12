@@ -94,18 +94,24 @@ export const ViewNoteModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Gratified Persons — all tagged users as chips */}
-        {hasTagged && (
+        {/* Gratified Persons or Team */}
+        {(hasTagged || post.team) && (
           <div className="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b border-black/8">
             <span className="text-xs font-bold uppercase tracking-wider text-[#0058bd]">For:</span>
-            {taggedUsers.map((u) => (
-              <span
-                key={u.id || u.email || u.fullName}
-                className="text-sm font-bold bg-[#0058bd]/10 text-[#0058bd] px-3 py-1 rounded-full border border-[#0058bd]/20"
-              >
-                @{u.fullName}
+            {hasTagged ? (
+              taggedUsers.map((u) => (
+                <span
+                  key={u.id || u.email || u.fullName}
+                  className="text-sm font-bold bg-[#0058bd]/10 text-[#0058bd] px-3 py-1 rounded-full border border-[#0058bd]/20"
+                >
+                  @{u.fullName}
+                </span>
+              ))
+            ) : (
+              <span className="text-sm font-bold bg-[#0058bd]/10 text-[#0058bd] px-3 py-1 rounded-full border border-[#0058bd]/20">
+                {post.team}
               </span>
-            ))}
+            )}
           </div>
         )}
 
