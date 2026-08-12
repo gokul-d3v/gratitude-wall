@@ -250,12 +250,12 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       </div>
 
       {/* Message Body */}
-      <div className="flex-grow flex flex-col">
-        <p className="text-base text-[#191c1d] italic leading-relaxed break-words whitespace-pre-wrap line-clamp-5 overflow-hidden text-ellipsis">
+      <div className="flex-grow flex flex-col min-w-0">
+        <p className="text-base text-[#191c1d] italic leading-relaxed break-words break-all line-clamp-5 overflow-hidden">
           "{post.content}"
         </p>
         {post.content && post.content.length > 160 && (
-          <span className="text-xs text-[#0058bd] font-bold mt-2 group-hover:underline cursor-pointer inline-flex items-center gap-1">
+          <span className="text-xs text-[#0058bd] font-bold mt-2 cursor-pointer inline-flex items-center gap-1 hover:underline">
             Read more <span className="text-[10px]">▶</span>
           </span>
         )}
