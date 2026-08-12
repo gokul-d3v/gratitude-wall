@@ -111,9 +111,6 @@ export const App: React.FC = () => {
       }));
     };
 
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
 
     const handleNotification = (notif: any) => {
       useWallStore.getState().addNotification(notif);
@@ -190,7 +187,7 @@ export const App: React.FC = () => {
       const searchLower = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !searchLower ||
-        post.content.toLowerCase().includes(searchLower) ||
+        post.content?.toLowerCase().includes(searchLower) ||
         post.authorName?.toLowerCase().includes(searchLower) ||
         post.author?.team?.toLowerCase().includes(searchLower) ||
         post.authorEmail?.toLowerCase().includes(searchLower);
