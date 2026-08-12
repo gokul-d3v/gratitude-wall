@@ -188,8 +188,8 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
 
   const taggedUsers = post.taggedUsers || [];
   const hasTagged = taggedUsers.length > 0;
-  // Initials from first tagged person, or GW for general
-  const avatarInitials = hasTagged ? getInitials(taggedUsers[0].fullName) : 'GW';
+  // Avatar initials from author
+  const authorInitials = getInitials(post.authorName);
 
   return (
     <div
@@ -226,45 +226,41 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         </div>
       )}
 
-      {/* Top Header */}
-      <div className="flex items-start gap-2.5 mb-2.5">
-        <div className="w-9 h-9 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0 mt-0.5">
-          {avatarInitials}
+      {/* Top Header — shows the author */}
+      <div className="flex items-center gap-2.5 mb-2">
+        <div className="w-9 h-9 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+          {authorInitials}
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-[9px] uppercase font-bold tracking-wider text-[#0058bd] bg-white/80 px-1.5 py-0.5 rounded-md border border-black/5">
-            {hasTagged ? 'Gratified Person' : 'General'}
-          </span>
-
-          {/* All tagged users as chips */}
-          {hasTagged ? (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {taggedUsers.map((u) => (
-                <span
-                  key={u.id || u.email || u.fullName}
-                  className="text-[11px] font-bold text-[#191c1d] truncate max-w-[120px]"
-                  title={u.fullName}
-                >
-                  @{u.fullName}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <h4 className="text-sm font-bold text-[#191c1d] mt-0.5">General Appreciation</h4>
-          )}
-
-          <div className="flex items-center gap-2 mt-0.5">
+          <h4 className="text-sm font-bold text-[#191c1d] truncate">{post.authorName || 'Anonymous'}</h4>
+          <div className="flex items-center gap-1.5">
             <span className="text-[10px] uppercase tracking-tighter text-[#424753]">
               {formatTimeAgo(post.createdAt)}
             </span>
             {post.team && (
-              <span className="text-[9px] font-semibold text-slate-600 bg-white/60 px-1.5 py-0.5 rounded-full border border-black/5">
+              <span className="text-[9px] font-semibold text-slate-500 bg-white/60 px-1.5 py-0.5 rounded-full border border-black/5">
                 {post.team}
               </span>
             )}
           </div>
         </div>
       </div>
+
+      {/* Gratified Persons — all tagged users as chips */}
+      {hasTagged && (
+        <div className="flex flex-wrap gap-1 mb-2">
+          <span className="text-[9px] uppercase font-bold tracking-wider text-[#0058bd] self-center mr-0.5">For:</span>
+          {taggedUsers.map((u) => (
+            <span
+              key={u.id || u.email || u.fullName}
+              className="text-[10px] font-bold bg-[#0058bd]/10 text-[#0058bd] px-2 py-0.5 rounded-full border border-[#0058bd]/20 truncate max-w-[110px]"
+              title={u.fullName}
+            >
+              @{u.fullName}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Message Body */}
       <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
@@ -360,12 +356,6 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
             </span>
           </button>
 
-          <div className="flex items-center gap-1 text-[10px] sm:text-xs border-l border-black/10 pl-4">
-            <span className="font-medium text-slate-600">By:</span>
-            <span className="font-bold text-slate-800 truncate max-w-[80px]" title={post.authorName || 'Anonymous'}>
-              {post.authorName || 'Anonymous'}
-            </span>
-          </div>
         </div>
 
         <span className="text-[10px] font-bold text-[#424753] opacity-60">#gratitude</span>

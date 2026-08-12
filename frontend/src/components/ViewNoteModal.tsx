@@ -54,7 +54,7 @@ export const ViewNoteModal: React.FC = () => {
 
   const taggedUsers = post.taggedUsers || [];
   const hasTagged = taggedUsers.length > 0;
-  const avatarInitials = hasTagged ? getInitials(taggedUsers[0].fullName) : 'GW';
+  const authorInitials = getInitials(post.authorName);
 
   return (
     <div
@@ -74,32 +74,13 @@ export const ViewNoteModal: React.FC = () => {
           <X className="w-6 h-6" />
         </button>
 
-        {/* Top Header */}
-        <div className="flex items-start gap-4 mb-6 pt-4">
+        {/* Top Header — shows the author */}
+        <div className="flex items-center gap-4 mb-4 pt-4">
           <div className="w-14 h-14 rounded-full bg-[#0058bd] text-white flex items-center justify-center font-bold text-lg shadow-md shrink-0">
-            {avatarInitials}
+            {authorInitials}
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-xs uppercase font-bold tracking-wider text-[#0058bd] bg-white/80 px-2 py-1 rounded-md border border-black/5">
-              {hasTagged ? 'Gratified Person' : 'General'}
-            </span>
-
-            {/* All tagged users */}
-            {hasTagged ? (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {taggedUsers.map((u) => (
-                  <span
-                    key={u.id || u.email || u.fullName}
-                    className="text-base font-bold text-[#191c1d]"
-                  >
-                    @{u.fullName}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <h4 className="text-xl font-bold text-[#191c1d] mt-1">General Appreciation</h4>
-            )}
-
+            <h4 className="text-xl font-bold text-[#191c1d]">{post.authorName || 'Anonymous'}</h4>
             <div className="flex items-center gap-3 mt-1">
               <span className="text-sm uppercase tracking-tighter text-[#424753]">
                 {formatTimeAgo(post.createdAt)}
@@ -113,6 +94,21 @@ export const ViewNoteModal: React.FC = () => {
           </div>
         </div>
 
+        {/* Gratified Persons — all tagged users as chips */}
+        {hasTagged && (
+          <div className="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b border-black/8">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#0058bd]">For:</span>
+            {taggedUsers.map((u) => (
+              <span
+                key={u.id || u.email || u.fullName}
+                className="text-sm font-bold bg-[#0058bd]/10 text-[#0058bd] px-3 py-1 rounded-full border border-[#0058bd]/20"
+              >
+                @{u.fullName}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Message Body */}
         <div className="flex-grow my-4">
           <p className="text-xl sm:text-2xl text-[#191c1d] italic leading-relaxed break-words break-all whitespace-pre-wrap font-medium">
@@ -120,12 +116,8 @@ export const ViewNoteModal: React.FC = () => {
           </p>
         </div>
 
-        {/* Card Footer: Written by */}
-        <div className="flex items-center justify-between pt-6 mt-8 border-t border-black/10">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-600">Written by:</span>
-            <span className="text-sm font-bold text-slate-800">{post.authorName || 'Anonymous'}</span>
-          </div>
+        {/* Card Footer */}
+        <div className="flex items-center justify-end pt-6 mt-8 border-t border-black/10">
           <span className="text-sm font-bold text-[#424753] opacity-60">#gratitude</span>
         </div>
       </div>
