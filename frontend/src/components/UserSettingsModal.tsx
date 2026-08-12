@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { X, Lock, Save, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -52,7 +53,7 @@ const UserSettingsModal: React.FC<UserSettingsModalProps> = ({ isOpen, onClose }
     }
   };
 
-  return (
+  return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div 
         className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
@@ -149,7 +150,8 @@ const UserSettingsModal: React.FC<UserSettingsModalProps> = ({ isOpen, onClose }
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
