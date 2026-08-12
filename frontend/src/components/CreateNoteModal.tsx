@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Send, X } from 'lucide-react';
+import { ArrowLeft, Send, X, Users, Tag } from 'lucide-react';
 import { StickyColor, User } from '../types';
 import { api, updatePostApi } from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
@@ -14,6 +14,8 @@ const colors: { key: StickyColor; hex: string; bgClass: string; name: string }[]
   { key: 'purple', hex: '#F3E8FF', bgClass: 'bg-sticky-purple', name: 'Pastel Purple' },
 ];
 
+const MIN_CONTENT_LENGTH = 4;
+
 export const CreateNoteModal: React.FC = () => {
   const { user } = useAuthStore();
   const { setCreateModalOpen, editingPost, setEditingPost, addPost, triggerToast } = useWallStore();
@@ -21,11 +23,26 @@ export const CreateNoteModal: React.FC = () => {
   const [content, setContent] = useState('');
   const [selectedColor, setSelectedColor] = useState<StickyColor>('yellow');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contentError, setContentError] = useState('');
 
   // Tagging users state
   const [tagQuery, setTagQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+
+  // Tagging team state
+  const [teams, setTeams] = useState<string[]>([]);
+  const [selectedTeam, setSelectedTeam] = useState<string>('');
+  const [teamSearchQuery, setTeamSearchQuery] = useState('');
+  const [showTeamDropdown, setShowTeamDropdown] = useState(false);
+
+  // Fetch teams on mount
+  useEffect(() => {
+    api.get('/teams').then((res) => {
+      const names: string[] = (res.data.data || []).map((t: any) => t.name);
+      setTeams(names);
+    }).catch(() => {});
+  }, []);
 
   // Pre-fill state when editing an existing post
   useEffect(() => {
@@ -33,10 +50,12 @@ export const CreateNoteModal: React.FC = () => {
       setContent(editingPost.content || '');
       setSelectedColor(editingPost.color || 'yellow');
       setSelectedUsers(editingPost.taggedUsers || []);
+      setSelectedTeam(editingPost.team || '');
     } else {
       setContent('');
       setSelectedColor('yellow');
       setSelectedUsers([]);
+      setSelectedTeam('');
     }
   }, [editingPost]);
 
@@ -45,6 +64,7 @@ export const CreateNoteModal: React.FC = () => {
     setEditingPost(null);
   };
 
+  // Debounced user search
   useEffect(() => {
     if (tagQuery.trim().length > 0) {
       const timer = setTimeout(async () => {
@@ -73,9 +93,28 @@ export const CreateNoteModal: React.FC = () => {
     setSelectedUsers(selectedUsers.filter((u) => u.id !== userId && u.email !== userId));
   };
 
+  const filteredTeams = teams.filter((t) =>
+    t.toLowerCase().includes(teamSearchQuery.toLowerCase())
+  );
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setContent(val);
+    if (val.trim().length > 0 && val.trim().length < MIN_CONTENT_LENGTH) {
+      setContentError(`Gratitude message must be at least ${MIN_CONTENT_LENGTH} characters`);
+    } else {
+      setContentError('');
+    }
+  };
+
+  const isContentValid = content.trim().length >= MIN_CONTENT_LENGTH;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!isContentValid) {
+      setContentError(`Gratitude message must be at least ${MIN_CONTENT_LENGTH} characters`);
+      return;
+    }
 
     if (!user) {
       triggerToast('You must be logged in to post a gratitude note.', 'error');
@@ -84,13 +123,15 @@ export const CreateNoteModal: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      if (editingPost) {
-        const res = await updatePostApi(editingPost._id, {
-          content: content.trim(),
-          taggedUserIds: selectedUsers.map((u) => u.id || (u as any)._id),
-          color: selectedColor,
-        });
+      const payload = {
+        content: content.trim(),
+        taggedUserIds: selectedUsers.map((u) => u.id || (u as any)._id),
+        taggedTeam: selectedTeam || undefined,
+        color: selectedColor,
+      };
 
+      if (editingPost) {
+        const res = await updatePostApi(editingPost._id, payload);
         const updatedData = res.data || res;
         useWallStore.getState().setPosts(
           useWallStore.getState().posts.map((p) => (p._id === editingPost._id ? { ...p, ...updatedData } : p))
@@ -98,22 +139,10 @@ export const CreateNoteModal: React.FC = () => {
         triggerToast('Your gratitude note has been updated!', 'success');
         handleClose();
       } else {
-        const res = await api.post('/posts', {
-          content: content.trim(),
-          taggedUserIds: selectedUsers.map((u) => u.id || (u as any)._id),
-          color: selectedColor,
-        });
-
+        const res = await api.post('/posts', payload);
         addPost(res.data.data);
         triggerToast('Your gratitude note has been shared on the wall!', 'success');
-
-        // Trigger celebration confetti
-        confetti({
-          particleCount: 80,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
         handleClose();
       }
     } catch (err: any) {
@@ -137,7 +166,6 @@ export const CreateNoteModal: React.FC = () => {
             <ArrowLeft className="w-4 h-4" />
             Back to Wall
           </button>
-
           <button
             onClick={handleClose}
             className="p-2 rounded-full bg-white text-slate-500 hover:text-slate-800 border border-slate-200 transition-all cursor-pointer shadow-xs"
@@ -156,23 +184,35 @@ export const CreateNoteModal: React.FC = () => {
             </h2>
 
             {/* Message Input */}
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Write your note of appreciation here..."
-              maxLength={500}
-              rows={4}
-              required
-              className="w-full bg-transparent resize-none outline-none text-lg sm:text-xl font-sans italic text-slate-800 placeholder-slate-400 focus:ring-0 border-0 p-0 leading-relaxed"
-            />
+            <div className="flex flex-col gap-1">
+              <textarea
+                value={content}
+                onChange={handleContentChange}
+                placeholder="Write your note of appreciation here..."
+                maxLength={500}
+                rows={4}
+                required
+                className="w-full bg-transparent resize-none outline-none text-lg sm:text-xl font-sans italic text-slate-800 placeholder-slate-400 focus:ring-0 border-0 p-0 leading-relaxed"
+              />
+              <div className="flex items-center justify-between">
+                {contentError ? (
+                  <p className="text-xs text-red-600 font-semibold">{contentError}</p>
+                ) : (
+                  <span />
+                )}
+                <span className={`text-[10px] font-mono ml-auto ${content.trim().length < MIN_CONTENT_LENGTH ? 'text-red-400' : 'text-slate-400'}`}>
+                  {content.trim().length}/500
+                </span>
+              </div>
+            </div>
 
-            {/* Tagged Recipients Selector */}
+            {/* ── TAG PEOPLE ─────────────────────────────── */}
             <div className="relative border-t border-black/10 pt-3">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">
-                TAG A PERSON
+              <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                <Tag className="w-3 h-3" /> Tag People <span className="normal-case font-normal text-slate-400">(multiple)</span>
               </label>
 
-              {/* Tag Chips */}
+              {/* Selected user chips */}
               {selectedUsers.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {selectedUsers.map((u) => (
@@ -180,7 +220,7 @@ export const CreateNoteModal: React.FC = () => {
                       key={u.id || u.email}
                       className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/90 text-slate-800 border border-slate-300 shadow-2xs"
                     >
-                      @{u.fullName} ({u.email})
+                      @{u.fullName}
                       <button
                         type="button"
                         onClick={() => handleRemoveUserTag(u.id || u.email)}
@@ -197,11 +237,11 @@ export const CreateNoteModal: React.FC = () => {
                 type="text"
                 value={tagQuery}
                 onChange={(e) => setTagQuery(e.target.value)}
-                placeholder="Search user by name or employee code..."
+                placeholder="Search by name or employee code..."
                 className="w-full px-3 py-2 rounded-lg bg-white/70 border border-slate-300/60 text-xs sm:text-sm focus:outline-none focus:bg-white"
               />
 
-              {/* Search Dropdown */}
+              {/* User search dropdown */}
               {searchResults.length > 0 && (
                 <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-200 max-h-40 overflow-y-auto z-50">
                   {searchResults.map((u) => (
@@ -212,9 +252,57 @@ export const CreateNoteModal: React.FC = () => {
                       className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center justify-between text-xs sm:text-sm text-slate-700 cursor-pointer border-b border-slate-100 last:border-0"
                     >
                       <span className="font-medium">{u.fullName}</span>
-                      <span className="text-[10px] font-mono text-slate-400">Dept: {u.team || 'N/A'}</span>
+                      <span className="text-[10px] font-mono text-slate-400">{u.team || 'N/A'}</span>
                     </button>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* ── TAG A TEAM ─────────────────────────────── */}
+            <div className="relative border-t border-black/10 pt-3">
+              <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                <Users className="w-3 h-3" /> Tag a Team <span className="normal-case font-normal text-slate-400">(optional)</span>
+              </label>
+
+              {selectedTeam ? (
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-[#0058bd]/10 text-[#0058bd] border border-[#0058bd]/20">
+                    {selectedTeam}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTeam('')}
+                      className="hover:text-red-500 cursor-pointer ml-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                </div>
+              ) : (
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={teamSearchQuery}
+                    onChange={(e) => { setTeamSearchQuery(e.target.value); setShowTeamDropdown(true); }}
+                    onFocus={() => setShowTeamDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowTeamDropdown(false), 150)}
+                    placeholder="Search or select a team..."
+                    className="w-full px-3 py-2 rounded-lg bg-white/70 border border-slate-300/60 text-xs sm:text-sm focus:outline-none focus:bg-white"
+                  />
+                  {showTeamDropdown && filteredTeams.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-200 max-h-36 overflow-y-auto z-50">
+                      {filteredTeams.map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onMouseDown={() => { setSelectedTeam(t); setTeamSearchQuery(''); setShowTeamDropdown(false); }}
+                          className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs sm:text-sm text-slate-700 cursor-pointer border-b border-slate-100 last:border-0 font-medium"
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -243,7 +331,7 @@ export const CreateNoteModal: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !content.trim()}
+                disabled={isSubmitting || !isContentValid}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#0058bd] hover:bg-[#004494] text-white font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer ml-auto"
               >
                 <Send className="w-4 h-4" />

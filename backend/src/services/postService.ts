@@ -17,6 +17,7 @@ import { sendWebPushNotification, broadcastWebPushNotification } from './notific
 export interface CreatePostDTO {
   content: string;
   taggedUserIds?: string[];
+  taggedTeam?: string;   // newly supported: tag a whole team
   color?: StickyColor;
 }
 
@@ -26,8 +27,8 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
   }
 
   const sanitizedContent = cleanInput(dto.content);
-  if (!sanitizedContent) {
-    throw { statusCode: 400, message: 'Post content cannot be empty' };
+  if (!sanitizedContent || sanitizedContent.trim().length < 4) {
+    throw { statusCode: 400, message: 'Gratitude message must be at least 4 characters' };
   }
 
   const authorUser = await User.findById(authorUserId).select('fullName email team');
@@ -48,7 +49,7 @@ export const createPost = async (dto: CreatePostDTO, authorUserId: string) => {
     authorName: authorUser.fullName,
     authorEmail: authorUser.email,
     taggedUsers: validTaggedUserIds,
-    team: authorUser.team || 'General',
+    team: dto.taggedTeam?.trim() || authorUser.team || 'General',
     color: dto.color || 'yellow',
   });
 
@@ -426,8 +427,8 @@ export const updatePost = async (
 
   if (updateData.content) {
     const sanitizedContent = cleanInput(updateData.content);
-    if (!sanitizedContent) {
-      throw { statusCode: 400, message: 'Post content cannot be empty' };
+    if (!sanitizedContent || sanitizedContent.trim().length < 4) {
+      throw { statusCode: 400, message: 'Gratitude message must be at least 4 characters' };
     }
     post.content = sanitizedContent;
   }
