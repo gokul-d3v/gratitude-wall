@@ -1,5 +1,52 @@
 @import "tailwindcss";
 
+/* ── Skeleton Loading ─────────────────────────────────────── */
+@keyframes skeletonShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.skeleton-card {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  box-shadow: 1px 2px 6px rgba(0,0,0,0.04);
+}
+
+.skeleton-block {
+  background-color: #e2e8f0;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-block::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.7) 50%,
+    transparent 100%
+  );
+  animation: skeletonShimmer 1.4s infinite ease-in-out;
+}
+
+.skeleton-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255,255,255,0.35) 50%,
+    transparent 60%
+  );
+  animation: skeletonShimmer 1.6s infinite ease-in-out;
+  pointer-events: none;
+  z-index: 1;
+}
+/* ─────────────────────────────────────────────────────────── */
+
 body {
   background-color: #fffcf9;
   color: #191c1d;

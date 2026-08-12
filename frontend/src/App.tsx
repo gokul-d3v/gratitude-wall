@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Header } from './components/Header';
 import { StickyNoteCard } from './components/StickyNoteCard';
+import { StickyNoteCardSkeleton } from './components/StickyNoteCardSkeleton';
 import { CreateNoteModal } from './components/CreateNoteModal';
 import { AuthModal } from './components/AuthModal';
 import { ViewNoteModal } from './components/ViewNoteModal';
@@ -15,7 +16,6 @@ import { api } from './services/api';
 import { initSocketClient } from './services/socket';
 import { registerAndSubscribePush } from './services/pushService';
 import { playNotificationSound } from './utils/audio';
-import { Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { checkAuth, isAuthenticated, user } = useAuthStore();
@@ -234,10 +234,11 @@ export const App: React.FC = () => {
 
         {/* Wall Workspace */}
         {isLoading && posts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3 text-slate-400">
-            <Sparkles className="w-8 h-8 animate-spin text-[#0058bd]" />
-            <p className="text-sm font-medium">Loading gratitude wall...</p>
-          </div>
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <StickyNoteCardSkeleton key={i} />
+            ))}
+          </section>
         ) : (
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 grid-notes animate-fade-slide-up stagger-2">
             {/* Add New Note Card */}
@@ -260,7 +261,7 @@ export const App: React.FC = () => {
         )}
         {!isLoading && filteredPosts.length === 0 && (
           <div className="flex flex-col items-center justify-center min-h-[30vh] gap-3 text-slate-400">
-            <Sparkles className="w-10 h-10 text-[#0058bd]/30" />
+            <span className="text-5xl">🙏</span>
             <p className="text-base font-semibold text-slate-500">No gratitude notes yet</p>
             <p className="text-xs text-slate-400">Be the first to spread some positivity!</p>
           </div>
