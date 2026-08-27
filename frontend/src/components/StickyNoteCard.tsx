@@ -3,7 +3,7 @@ import { Post, StickyColor } from '../types';
 import { api, updatePostApi, deletePostApi } from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
-import { MoreVertical, Edit2, Trash2, X } from 'lucide-react';
+import { MoreVertical, Edit2, Trash2, X, Share2, Check } from 'lucide-react';
 import { ConfirmModal } from './ConfirmModal';
 
 interface StickyNoteCardProps {
@@ -54,6 +54,20 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
   // Options menu state
   const [showOptions, setShowOptions] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}?post=${post._id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setIsCopied(true);
+      triggerToast('Link copied to clipboard!', 'success');
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      triggerToast('Failed to copy link', 'error');
+    }
+  };
 
   // Check if user can edit/delete (within 10 minutes and is author, or admin)
   const getAuthorId = (author: any): string => {
@@ -368,6 +382,25 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
             </span>
           </button>
 
+          <div className="relative">
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-1.5 group/share cursor-pointer select-none transition-colors"
+              title="Share Link"
+            >
+              {isCopied ? (
+                <Check className="w-5 h-5 text-emerald-500" />
+              ) : (
+                <Share2 className="w-5 h-5 text-[#9ca3af] group-hover/share:text-[#0058bd] transition-colors" />
+              )}
+            </button>
+            {isCopied && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded shadow-lg whitespace-nowrap animate-in fade-in zoom-in duration-200 pointer-events-none z-10">
+                Link copied!
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+              </div>
+            )}
+          </div>
         </div>
 
         <span className="text-[10px] font-bold text-[#424753] opacity-60">#gratitude</span>

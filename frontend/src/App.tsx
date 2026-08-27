@@ -173,6 +173,22 @@ export const App: React.FC = () => {
     fetchPosts();
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    if (posts.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const postId = params.get('post');
+      if (postId) {
+        const postToView = posts.find((p) => p._id === postId);
+        if (postToView && !useWallStore.getState().viewingPost) {
+          useWallStore.getState().setViewingPost(postToView);
+          
+          // Optionally clean up URL so it doesn't stay in the address bar
+          // window.history.replaceState({}, '', window.location.pathname);
+        }
+      }
+    }
+  }, [posts.length]);
+
   const handleOpenAddPost = () => {
     if (!isAuthenticated) {
       setAuthModalOpen(true);

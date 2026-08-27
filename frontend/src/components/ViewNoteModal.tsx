@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Share2, Check } from 'lucide-react';
 import { useWallStore } from '../store/useWallStore';
 import { StickyColor, Post } from '../types';
 
@@ -30,8 +30,23 @@ const formatTimeAgo = (dateStr: string): string => {
 };
 
 export const ViewNoteModal: React.FC = () => {
-  const { viewingPost, setViewingPost } = useWallStore();
+  const { viewingPost, setViewingPost, triggerToast } = useWallStore();
   const modalRef = useRef<HTMLDivElement>(null);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!viewingPost) return;
+    const url = `${window.location.origin}?post=${viewingPost._id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setIsCopied(true);
+      if (triggerToast) triggerToast('Link copied to clipboard!', 'success');
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      if (triggerToast) triggerToast('Failed to copy link', 'error');
+    }
+  };
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -123,7 +138,33 @@ export const ViewNoteModal: React.FC = () => {
         </div>
 
         {/* Card Footer */}
-        <div className="flex items-center justify-end pt-6 mt-8 border-t border-black/10">
+        <div className="flex items-center justify-between pt-6 mt-8 border-t border-black/10">
+          <div className="relative">
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-2 group/share cursor-pointer select-none transition-colors"
+              title="Share Link"
+            >
+              {isCopied ? (
+                <>
+                  <Check className="w-5 h-5 text-emerald-500" />
+                  <span className="text-sm font-semibold text-emerald-600">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-5 h-5 text-slate-500 group-hover/share:text-[#0058bd] transition-colors" />
+                  <span className="text-sm font-semibold text-slate-600 group-hover/share:text-[#0058bd] transition-colors">Share</span>
+                </>
+              )}
+            </button>
+            {isCopied && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap animate-in fade-in zoom-in duration-200 pointer-events-none z-10">
+                Link copied to clipboard!
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+              </div>
+            )}
+          </div>
+
           <span className="text-sm font-bold text-[#424753] opacity-60">#gratitude</span>
         </div>
       </div>
