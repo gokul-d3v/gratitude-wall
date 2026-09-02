@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useThemeStore } from '../store/useThemeStore';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface Star {
   x: number;
@@ -43,8 +44,16 @@ interface AlienMission {
 
 export const ShootingStars: React.FC = () => {
   const { theme } = useThemeStore();
+  const { user, isAuthenticated } = useAuthStore();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [mission, setMission] = useState<AlienMission | null>(null);
+
+  const userName =
+    isAuthenticated && user?.fullName
+      ? user.fullName.split(' ')[0]
+      : user?.email
+      ? user.email.split('@')[0]
+      : null;
 
   // Cinematic Friendly Alien Visit Mission
   useEffect(() => {
@@ -460,9 +469,9 @@ export const ShootingStars: React.FC = () => {
             <div className="relative flex flex-col items-center alien-body-bounce">
               {/* Friendly Floating Greeting Bubble */}
               {mission.phase === 'alien-waving' && (
-                <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-slate-900/90 border border-cyan-400/60 shadow-lg text-[10px] font-black text-cyan-300 flex items-center gap-1 animate-in zoom-in-75 duration-300">
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-slate-900/95 border border-cyan-400/80 shadow-[0_0_12px_rgba(56,189,248,0.4)] text-[11px] font-black text-cyan-300 flex items-center gap-1.5 whitespace-nowrap animate-in zoom-in-75 duration-300 z-50">
                   <span>👋</span>
-                  <span>Hi!</span>
+                  <span>Hi {userName ? userName : 'there'}!</span>
                   <span className="text-amber-300">✨</span>
                 </div>
               )}
