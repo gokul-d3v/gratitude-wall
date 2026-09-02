@@ -20,11 +20,37 @@ export interface Post {
   team?: string;
   color: StickyColor;
   likesCount: number;
+  readsCount?: number;
   hasLiked?: boolean;
   userEmoji?: string | null;
   reactions?: Record<string, number>;
   reportsCount?: number;
   createdAt: string;
+}
+
+export interface PostReactionUser {
+  _id: string;
+  emoji: string;
+  createdAt: string;
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    avatarColor?: string;
+    team?: string;
+  };
+}
+
+export interface PostReader {
+  _id: string;
+  readAt: string;
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    avatarColor?: string;
+    team?: string;
+  };
 }
 
 export interface NotificationItem {

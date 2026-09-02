@@ -5,9 +5,27 @@ import { verifyAccessToken } from '../utils/jwt';
 let io: Server | null = null;
 
 export const initSocket = (httpServer: HttpServer): Server => {
+  const rawOrigins = process.env.CLIENT_URL || 'http://localhost:5173';
+  const parsedOrigins = rawOrigins
+    .split(',')
+    .map((url) => url.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+
+  const allowedOrigins = Array.from(new Set([
+    ...parsedOrigins,
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'https://gratitude-wall-pi.vercel.app'
+  ]));
+
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:5173', // Allow all origins for dev real-time WebSockets
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error(`Socket CORS blocked for origin: ${origin}`));
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },

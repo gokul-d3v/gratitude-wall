@@ -26,12 +26,26 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // CORS Configuration
-let allowedOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
-if (allowedOrigin.endsWith('/')) {
-  allowedOrigin = allowedOrigin.slice(0, -1);
-}
+const rawOrigins = process.env.CLIENT_URL || 'http://localhost:5173';
+const parsedOrigins = rawOrigins
+  .split(',')
+  .map((url) => url.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(new Set([
+  ...parsedOrigins,
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://gratitude-wall-pi.vercel.app'
+]));
+
 app.use(cors({
-  origin: [allowedOrigin, 'http://localhost:5173','https://gratitude-wall-pi.vercel.app'],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));

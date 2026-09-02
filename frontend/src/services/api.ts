@@ -88,7 +88,7 @@ api.interceptors.response.use(
     const authUrls = ['/auth/login', '/auth/admin-login', '/auth/refresh', '/auth/register'];
     const isAuthUrl = authUrls.some((url) => originalRequest.url?.includes(url));
 
-    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry && !isAuthUrl) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthUrl) {
       originalRequest._retry = true;
       try {
         const storedRefresh = getRefreshToken();

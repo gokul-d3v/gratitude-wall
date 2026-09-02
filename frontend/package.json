@@ -5,9 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:test": "vite --mode test",
+    "dev:prod": "vite --mode production",
     "build": "tsc -b && vite build",
+    "build:test": "tsc -b && vite build --mode test",
+    "build:prod": "tsc -b && vite build --mode production",
     "lint": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:test": "vite preview --mode test",
+    "preview:prod": "vite preview --mode production"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.66.0",

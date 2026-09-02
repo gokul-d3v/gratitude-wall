@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { Post, StickyColor } from '../models/Post';
 import { Reaction } from '../models/Reaction';
+import { PostRead } from '../models/PostRead';
 import { User } from '../models/User';
 import { Notification } from '../models/Notification';
 import { cleanInput } from '../utils/sanitizer';
@@ -218,6 +219,21 @@ export const getWallPosts = async (params: {
     reactionMap.get(pId)![emoji] = r.count;
   });
 
+  // Fetch reads count summary per post
+  const allReads = await PostRead.aggregate([
+    { $match: { postId: { $in: postObjectIds } } },
+    {
+      $group: {
+        _id: '$postId',
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+  const readsMap = new Map<string, number>();
+  allReads.forEach((r) => {
+    readsMap.set(r._id.toString(), r.count);
+  });
+
   const posts = rawPosts.map((p) => {
     const pId = p._id.toString();
     const reactions = reactionMap.get(pId) || {};
@@ -228,6 +244,7 @@ export const getWallPosts = async (params: {
     return {
       ...p,
       likesCount: totalLikes || p.likesCount || 0,
+      readsCount: readsMap.get(pId) || 0,
       reactions,
       userEmoji,
       hasLiked: !!userEmoji,
@@ -300,10 +317,25 @@ export const toggleEmojiReaction = async (postId: string, userId: string, target
   // Broadcast real-time reaction update via Socket.io
   try {
     const io = getIO();
+    const userWhoReacted = await User.findById(userId).select('fullName email avatarColor team');
     io.emit('reaction_update', {
       postId,
       reactions: reactionSummary,
       likesCount: totalCount,
+      userReaction: userWhoReacted
+        ? {
+            userId: userId,
+            emoji: newActiveEmoji,
+            user: {
+              id: userWhoReacted._id.toString(),
+              fullName: userWhoReacted.fullName,
+              email: userWhoReacted.email,
+              avatarColor: userWhoReacted.avatarColor,
+              team: userWhoReacted.team,
+            },
+            createdAt: new Date().toISOString(),
+          }
+        : null,
     });
   } catch {
     // Silence socket error
@@ -504,10 +536,199 @@ export const deletePost = async (postId: string, userId: string, userRole?: stri
 
   await Post.findByIdAndDelete(postId);
   await Reaction.deleteMany({ postId });
+  await PostRead.deleteMany({ postId });
   await Notification.deleteMany({ postId });
 
   // Broadcast post deletion to all clients
   broadcastPostDelete(postId);
 
   return { message: 'Post deleted successfully' };
+};
+
+export const getPostReactions = async (postId: string) => {
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw { statusCode: 400, message: 'Invalid post ID' };
+  }
+  const reactions = await Reaction.find({ postId: new mongoose.Types.ObjectId(postId) })
+    .populate('userId', 'fullName email avatarColor team')
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return reactions
+    .map((r: any) => ({
+      _id: r._id,
+      emoji: r.emoji,
+      createdAt: r.createdAt,
+      user: r.userId
+        ? {
+            id: r.userId._id,
+            fullName: r.userId.fullName,
+            email: r.userId.email,
+            avatarColor: r.userId.avatarColor,
+            team: r.userId.team,
+          }
+        : null,
+    }))
+    .filter((r: any) => r.user !== null);
+};
+
+export const markPostAsRead = async (postId: string, userId: string) => {
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw { statusCode: 400, message: 'Invalid post ID' };
+  }
+  const pObjId = new mongoose.Types.ObjectId(postId);
+  const uObjId = new mongoose.Types.ObjectId(userId);
+
+  const post = await Post.findById(pObjId).select('_id');
+  if (!post) {
+    throw { statusCode: 404, message: 'Post not found' };
+  }
+
+  const now = new Date();
+  const result = await PostRead.findOneAndUpdate(
+    { postId: pObjId, userId: uObjId },
+    { $setOnInsert: { readAt: now } },
+    { upsert: true, new: true }
+  );
+
+  const readsCount = await PostRead.countDocuments({ postId: pObjId });
+
+  // Broadcast real-time read count & reader details update
+  try {
+    const io = getIO();
+    if (io) {
+      const readerUser = await User.findById(userId).select('fullName email avatarColor team');
+      io.emit('reads_update', { postId, readsCount });
+      if (readerUser) {
+        io.emit('new_read', {
+          postId,
+          readsCount,
+          reader: {
+            _id: result._id.toString(),
+            readAt: now.toISOString(),
+            user: {
+              id: readerUser._id.toString(),
+              fullName: readerUser.fullName,
+              email: readerUser.email,
+              avatarColor: readerUser.avatarColor,
+              team: readerUser.team,
+            },
+          },
+        });
+      }
+    }
+  } catch {
+    // Silence socket error
+  }
+
+  return { success: true, readsCount, readAt: result.readAt };
+};
+
+export const markPostsAsBatchRead = async (postIds: string[], userId: string) => {
+  if (!Array.isArray(postIds) || postIds.length === 0 || !userId) {
+    return { success: true, count: 0 };
+  }
+
+  const validPostIds = postIds
+    .filter((id) => mongoose.Types.ObjectId.isValid(id))
+    .map((id) => new mongoose.Types.ObjectId(id));
+
+  if (validPostIds.length === 0) {
+    return { success: true, count: 0 };
+  }
+
+  const uObjId = new mongoose.Types.ObjectId(userId);
+  const now = new Date();
+
+  // Find which ones are already marked read for this user
+  const existingReads = await PostRead.find({
+    postId: { $in: validPostIds },
+    userId: uObjId,
+  }).select('postId');
+
+  const existingPostIdSet = new Set(existingReads.map((r) => r.postId.toString()));
+  const newPostIdsToRead = validPostIds.filter((pId) => !existingPostIdSet.has(pId.toString()));
+
+  if (newPostIdsToRead.length > 0) {
+    const bulkOps = newPostIdsToRead.map((pId) => ({
+      updateOne: {
+        filter: { postId: pId, userId: uObjId },
+        update: { $setOnInsert: { readAt: now } },
+        upsert: true,
+      },
+    }));
+
+    await PostRead.bulkWrite(bulkOps);
+
+    // Compute updated counts and broadcast real-time updates for newly read posts
+    const updatedCounts = await PostRead.aggregate([
+      { $match: { postId: { $in: newPostIdsToRead } } },
+      { $group: { _id: '$postId', count: { $sum: 1 } } },
+    ]);
+
+    const io = getIO();
+    if (io) {
+      const readerUser = await User.findById(userId).select('fullName email avatarColor team');
+      const readerObj = readerUser
+        ? {
+            id: readerUser._id.toString(),
+            fullName: readerUser.fullName,
+            email: readerUser.email,
+            avatarColor: readerUser.avatarColor,
+            team: readerUser.team,
+          }
+        : null;
+
+      updatedCounts.forEach((c) => {
+        const pIdStr = c._id.toString();
+        io.emit('reads_update', { postId: pIdStr, readsCount: c.count });
+        if (readerObj) {
+          io.emit('new_read', {
+            postId: pIdStr,
+            readsCount: c.count,
+            reader: {
+              _id: `${pIdStr}-${userId}`,
+              readAt: now.toISOString(),
+              user: readerObj,
+            },
+          });
+        }
+      });
+    }
+  }
+
+  return { success: true, count: newPostIdsToRead.length };
+};
+
+export const getPostReads = async (postId: string) => {
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw { statusCode: 400, message: 'Invalid post ID' };
+  }
+  const pObjId = new mongoose.Types.ObjectId(postId);
+
+  const reads = await PostRead.find({ postId: pObjId })
+    .populate('userId', 'fullName email avatarColor team')
+    .sort({ readAt: -1 })
+    .lean();
+
+  const formattedReaders = reads
+    .map((r: any) => ({
+      _id: r._id,
+      readAt: r.readAt || r.createdAt,
+      user: r.userId
+        ? {
+            id: r.userId._id,
+            fullName: r.userId.fullName,
+            email: r.userId.email,
+            avatarColor: r.userId.avatarColor,
+            team: r.userId.team,
+          }
+        : null,
+    }))
+    .filter((r: any) => r.user !== null);
+
+  return {
+    readsCount: formattedReaders.length,
+    readers: formattedReaders,
+  };
 };

@@ -1,0 +1,15 @@
+{
+  "name": "gratitude-wall-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Run backend: (cd backend && npm run dev) & frontend: (cd frontend && npm run dev)'",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "test:backend": "cd backend && npm run dev:test",
+    "test:frontend": "cd frontend && npm run dev:test",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build:prod",
+    "build": "npm run build:backend && npm run build:frontend"
+  }
+}

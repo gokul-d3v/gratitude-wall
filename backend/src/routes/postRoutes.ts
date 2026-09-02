@@ -1,6 +1,17 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { createPostHandler, getPostsHandler, toggleLikeHandler, reportPostHandler, updatePostHandler, deletePostHandler } from '../controllers/postController';
+import {
+  createPostHandler,
+  getPostsHandler,
+  toggleLikeHandler,
+  reportPostHandler,
+  updatePostHandler,
+  deletePostHandler,
+  getPostReactionsHandler,
+  markPostReadHandler,
+  markPostReadsHandler,
+  getPostReadsHandler,
+} from '../controllers/postController';
 import { optionalAuth, authenticateToken } from '../middleware/auth';
 import { validateRequest } from '../middleware/validate';
 import { postRateLimiter } from '../middleware/security';
@@ -21,7 +32,11 @@ const updatePostSchema = z.object({
 
 router.get('/', optionalAuth, getPostsHandler);
 router.post('/', authenticateToken, postRateLimiter, validateRequest(createPostSchema), createPostHandler);
+router.post('/batch-read', authenticateToken, markPostReadsHandler);
+router.get('/:id/reactions', optionalAuth, getPostReactionsHandler);
 router.post('/:id/like', authenticateToken, toggleLikeHandler);
+router.post('/:id/read', authenticateToken, markPostReadHandler);
+router.get('/:id/reads', optionalAuth, getPostReadsHandler);
 router.post('/:id/report', reportPostHandler);
 router.put('/:id', authenticateToken, validateRequest(updatePostSchema), updatePostHandler);
 router.delete('/:id', authenticateToken, deletePostHandler);

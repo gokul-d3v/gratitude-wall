@@ -76,7 +76,8 @@ export const AdminDashboard: React.FC = () => {
       setUsers(usersRes.data.data || []);
       setPosts(postsRes.data.data || []);
     } catch (err: any) {
-      if (err.response?.status === 401) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        triggerToast('Admin authorization required. Please sign in via the Admin Portal.', 'error');
         window.history.pushState({}, '', '/admin-login');
         window.dispatchEvent(new PopStateEvent('popstate'));
       } else {

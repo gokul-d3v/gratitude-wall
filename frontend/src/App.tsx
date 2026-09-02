@@ -101,12 +101,14 @@ export const App: React.FC = () => {
     };
 
     const handleLikeUpdate = ({ postId, likesCount }: { postId: string; likesCount: number }) => {
-
       useWallStore.getState().updateLikeCount(postId, likesCount);
     };
 
-    const handleReactionUpdate = ({ postId, reactions, likesCount }: any) => {
+    const handleReadsUpdate = ({ postId, readsCount }: { postId: string; readsCount: number }) => {
+      useWallStore.getState().updateReadsCount(postId, readsCount);
+    };
 
+    const handleReactionUpdate = ({ postId, reactions, likesCount }: any) => {
       useWallStore.setState((state) => ({
         posts: state.posts.map((p) => (p._id === postId ? { ...p, reactions, likesCount } : p)),
       }));
@@ -139,20 +141,19 @@ export const App: React.FC = () => {
     };
 
     const handlePostUpdate = (updatedPost: any) => {
-
       useWallStore.getState().setPosts(
         useWallStore.getState().posts.map((p) => (p._id === updatedPost._id ? { ...p, ...updatedPost } : p))
       );
     };
 
     const handlePostDelete = ({ postId }: { postId: string }) => {
-
       useWallStore.getState().setPosts(useWallStore.getState().posts.filter((p) => p._id !== postId));
     };
 
     socket.on('connect', handleConnect);
     socket.on('new_post', handleNewPost);
     socket.on('like_update', handleLikeUpdate);
+    socket.on('reads_update', handleReadsUpdate);
     socket.on('reaction_update', handleReactionUpdate);
     socket.on('notification', handleNotification);
     socket.on('post_update', handlePostUpdate);
@@ -162,6 +163,7 @@ export const App: React.FC = () => {
       socket.off('connect', handleConnect);
       socket.off('new_post', handleNewPost);
       socket.off('like_update', handleLikeUpdate);
+      socket.off('reads_update', handleReadsUpdate);
       socket.off('reaction_update', handleReactionUpdate);
       socket.off('notification', handleNotification);
       socket.off('post_update', handlePostUpdate);

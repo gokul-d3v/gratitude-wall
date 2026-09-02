@@ -1,6 +1,15 @@
 import http from 'http';
+import fs from 'fs';
+import path from 'path';
 import dotenv from 'dotenv';
-dotenv.config();
+
+// Load environment-specific file (e.g., .env.test, .env.production) if present
+const nodeEnv = process.env.NODE_ENV || 'development';
+const envFilePath = path.resolve(process.cwd(), `.env.${nodeEnv}`);
+if (fs.existsSync(envFilePath)) {
+  dotenv.config({ path: envFilePath, override: true });
+}
+dotenv.config(); // fallback to standard .env
 
 import app from './app';
 import { connectDB } from './config/db';

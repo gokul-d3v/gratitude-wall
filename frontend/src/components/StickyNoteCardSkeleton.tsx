@@ -35,8 +35,8 @@ export const StickyNoteCardSkeleton: React.FC = () => {
           {/* Author */}
           <div className="skeleton-block h-3.5 w-20 rounded-md" />
         </div>
-        {/* #gratitude */}
-        <div className="skeleton-block h-3 w-14 rounded-md" />
+        {/* Gratitude Icon */}
+        <div className="skeleton-block h-6 w-6 rounded-full" />
       </div>
     </div>
   );

@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Share2, Check } from 'lucide-react';
+import { X, Share2, Check, Heart, Eye, Sparkles } from 'lucide-react';
 import { useWallStore } from '../store/useWallStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { StickyColor, Post } from '../types';
+import { api } from '../services/api';
+import { PostEngagementsModal } from './PostEngagementsModal';
 
 const colorClassMap: Record<StickyColor, string> = {
   yellow: 'bg-sticky-yellow',
@@ -31,8 +34,20 @@ const formatTimeAgo = (dateStr: string): string => {
 
 export const ViewNoteModal: React.FC = () => {
   const { viewingPost, setViewingPost, triggerToast } = useWallStore();
+  const { isAuthenticated } = useAuthStore();
   const modalRef = useRef<HTMLDivElement>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [isEngagementOpen, setIsEngagementOpen] = useState(false);
+  const [engagementTab, setEngagementTab] = useState<'likes' | 'reads'>('likes');
+
+  // Track post read when opened by logged-in user
+  useEffect(() => {
+    if (viewingPost?._id && isAuthenticated) {
+      api.post(`/posts/${viewingPost._id}/read`).catch(() => {
+        // Silence read tracking failure
+      });
+    }
+  }, [viewingPost?._id, isAuthenticated]);
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -137,36 +152,80 @@ export const ViewNoteModal: React.FC = () => {
           </p>
         </div>
 
-        {/* Card Footer */}
-        <div className="flex items-center justify-between pt-6 mt-8 border-t border-black/10">
-          <div className="relative">
+        {/* Card Footer: Likes, Reads, Share & Icon */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-6 mt-8 border-t border-black/10">
+          <div className="flex items-center gap-4">
+            {/* Likes count & modal trigger */}
             <button
-              onClick={handleShare}
-              className="flex items-center gap-2 group/share cursor-pointer select-none transition-colors"
-              title="Share Link"
+              onClick={() => {
+                setEngagementTab('likes');
+                setIsEngagementOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 hover:bg-white text-rose-600 font-bold text-xs shadow-xs border border-black/5 transition-all cursor-pointer"
+              title="View who liked this post"
             >
-              {isCopied ? (
-                <>
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className="text-sm font-semibold text-emerald-600">Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-5 h-5 text-slate-500 group-hover/share:text-[#0058bd] transition-colors" />
-                  <span className="text-sm font-semibold text-slate-600 group-hover/share:text-[#0058bd] transition-colors">Share</span>
-                </>
-              )}
+              <Heart className="w-4 h-4 fill-current" />
+              <span>{post.likesCount || 0} Likes</span>
             </button>
-            {isCopied && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap animate-in fade-in zoom-in duration-200 pointer-events-none z-10">
-                Link copied to clipboard!
-                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
-              </div>
-            )}
+
+            {/* Reads count & modal trigger */}
+            <button
+              onClick={() => {
+                setEngagementTab('reads');
+                setIsEngagementOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 hover:bg-white text-[#0058bd] font-bold text-xs shadow-xs border border-black/5 transition-all cursor-pointer"
+              title="View who read this post"
+            >
+              <Eye className="w-4 h-4" />
+              <span>{post.readsCount || 0} Reads</span>
+            </button>
+
+            {/* Share Link */}
+            <div className="relative">
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 hover:bg-white text-slate-700 font-semibold text-xs shadow-xs border border-black/5 transition-all cursor-pointer"
+                title="Share Link"
+              >
+                {isCopied ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-500" />
+                    <span className="text-emerald-600 font-bold">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-4 h-4 text-slate-500" />
+                    <span>Share</span>
+                  </>
+                )}
+              </button>
+              {isCopied && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded shadow-lg whitespace-nowrap animate-in fade-in zoom-in duration-200 pointer-events-none z-10">
+                  Link copied to clipboard!
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                </div>
+              )}
+            </div>
           </div>
 
-          <span className="text-sm font-bold text-[#424753] opacity-60">#gratitude</span>
+          {/* Gratitude Icon Badge */}
+          <div
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/5 text-[#424753] font-bold text-xs opacity-75"
+            title="Virtual Gratitude Note"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+            <span>Gratitude Note</span>
+          </div>
         </div>
+
+        {/* Post Engagements Modal */}
+        <PostEngagementsModal
+          postId={post._id}
+          isOpen={isEngagementOpen}
+          initialTab={engagementTab}
+          onClose={() => setIsEngagementOpen(false)}
+        />
       </div>
     </div>
   );

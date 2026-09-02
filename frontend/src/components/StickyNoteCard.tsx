@@ -3,8 +3,10 @@ import { Post, StickyColor } from '../types';
 import { api, updatePostApi, deletePostApi } from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useWallStore } from '../store/useWallStore';
-import { MoreVertical, Edit2, Trash2, X, Share2, Check } from 'lucide-react';
+import { MoreVertical, Edit2, Trash2, X, Share2, Check, Sparkles, Eye } from 'lucide-react';
 import { ConfirmModal } from './ConfirmModal';
+import { PostEngagementsModal } from './PostEngagementsModal';
+import { trackPostView } from '../services/readTracker';
 
 interface StickyNoteCardProps {
   post: Post;
@@ -41,9 +43,45 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
   const { setAuthModalOpen, triggerToast } = useWallStore();
 
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  const [readsCount, setReadsCount] = useState(post.readsCount || 0);
   const [hasLiked, setHasLiked] = useState(!!(post.hasLiked || post.userEmoji));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnimatingLike, setIsAnimatingLike] = useState(false);
+
+  // Activity engagement modal state
+  const [isEngagementOpen, setIsEngagementOpen] = useState(false);
+  const [engagementTab, setEngagementTab] = useState<'likes' | 'reads'>('likes');
+
+  useEffect(() => {
+    setLikesCount(post.likesCount || 0);
+    setHasLiked(!!(post.hasLiked || post.userEmoji));
+    setReadsCount(post.readsCount || 0);
+  }, [post.likesCount, post.hasLiked, post.userEmoji, post.readsCount]);
+
+  // Automatically track post view / read as soon as visible on screen
+  useEffect(() => {
+    if (!cardRef.current || !post._id || !isAuthenticated) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          trackPostView(post._id);
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: 0.05,
+        rootMargin: '50px',
+      }
+    );
+
+    observer.observe(cardRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [post._id, isAuthenticated]);
 
   // Heart burst animation state
   const [showBurst, setShowBurst] = useState(false);
@@ -346,42 +384,70 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
         </div>
       )}
 
-      {/* Card Footer: Like Button & Author */}
+      {/* Card Footer: Like, Read Counts, Share & Icon */}
       <div className="flex items-center justify-between pt-3 mt-auto border-t border-black/5 shrink-0">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3.5">
+          {/* Like Button & Likers trigger */}
+          <div className="flex items-center gap-1 group/like">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleLike();
+              }}
+              disabled={isSubmitting}
+              className="flex items-center cursor-pointer select-none"
+              title={hasLiked ? 'Unlike' : 'Like'}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                className="transition-all duration-200"
+                style={{
+                  animation: isAnimatingLike ? 'heartPop 0.3s ease-out forwards' : 'none',
+                  filter: hasLiked ? 'drop-shadow(0 0 4px rgba(220,38,38,0.5))' : 'none',
+                  transform: hasLiked ? 'scale(1.1)' : 'scale(1)',
+                }}
+              >
+                <path
+                  d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"
+                  fill={hasLiked ? '#dc2626' : 'none'}
+                  stroke={hasLiked ? '#dc2626' : '#9ca3af'}
+                  strokeWidth="1.5"
+                  className="transition-all duration-200 group-hover/like:stroke-rose-500"
+                />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setEngagementTab('likes');
+                setIsEngagementOpen(true);
+              }}
+              className={`text-xs font-bold transition-colors hover:underline cursor-pointer ${
+                hasLiked ? 'text-rose-600' : 'text-[#9ca3af] group-hover/like:text-rose-500'
+              }`}
+              title="View who liked this post"
+            >
+              {likesCount}
+            </button>
+          </div>
+
+          {/* Reads Counter & Readers trigger */}
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleToggleLike();
+              setEngagementTab('reads');
+              setIsEngagementOpen(true);
             }}
-            disabled={isSubmitting}
-            className="flex items-center gap-1.5 group/like cursor-pointer select-none"
-            title={hasLiked ? 'Unlike' : 'Like'}
+            className="flex items-center gap-1 group/reads cursor-pointer select-none text-xs font-bold text-[#9ca3af] hover:text-[#0058bd] transition-colors"
+            title="View who read this post"
           >
-            <svg
-              viewBox="0 0 24 24"
-              width="22"
-              height="22"
-              className="transition-all duration-200"
-              style={{
-                animation: isAnimatingLike ? 'heartPop 0.3s ease-out forwards' : 'none',
-                filter: hasLiked ? 'drop-shadow(0 0 4px rgba(220,38,38,0.5))' : 'none',
-                transform: hasLiked ? 'scale(1.1)' : 'scale(1)',
-              }}
-            >
-              <path
-                d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"
-                fill={hasLiked ? '#dc2626' : 'none'}
-                stroke={hasLiked ? '#dc2626' : '#9ca3af'}
-                strokeWidth="1.5"
-                className="transition-all duration-200 group-hover/like:stroke-rose-500"
-              />
-            </svg>
-            <span className={`text-xs font-bold transition-colors ${hasLiked ? 'text-rose-600' : 'text-[#9ca3af] group-hover/like:text-rose-500'}`}>
-              {likesCount}
-            </span>
+            <Eye className="w-4 h-4 text-[#9ca3af] group-hover/reads:text-[#0058bd] transition-colors" />
+            <span>{readsCount}</span>
           </button>
 
+          {/* Share Button */}
           <div className="relative">
             <button
               onClick={handleShare}
@@ -389,9 +455,9 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
               title="Share Link"
             >
               {isCopied ? (
-                <Check className="w-5 h-5 text-emerald-500" />
+                <Check className="w-4 h-4 text-emerald-500" />
               ) : (
-                <Share2 className="w-5 h-5 text-[#9ca3af] group-hover/share:text-[#0058bd] transition-colors" />
+                <Share2 className="w-4 h-4 text-[#9ca3af] group-hover/share:text-[#0058bd] transition-colors" />
               )}
             </button>
             {isCopied && (
@@ -403,8 +469,22 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
           </div>
         </div>
 
-        <span className="text-[10px] font-bold text-[#424753] opacity-60">#gratitude</span>
+        {/* Gratitude Icon Badge (replaces #gratitude text) */}
+        <div
+          className="flex items-center justify-center w-6 h-6 rounded-full bg-black/5 text-[#424753] hover:bg-black/10 transition-colors"
+          title="Gratitude Post"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+        </div>
       </div>
+
+      {/* Post Engagements (Liked By / Read By) Modal */}
+      <PostEngagementsModal
+        postId={post._id}
+        isOpen={isEngagementOpen}
+        initialTab={engagementTab}
+        onClose={() => setIsEngagementOpen(false)}
+      />
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal

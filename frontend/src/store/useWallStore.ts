@@ -23,6 +23,7 @@ interface WallState {
   fetchPosts: () => Promise<void>;
   addPost: (post: Post) => void;
   updateLikeCount: (postId: string, likesCount: number) => void;
+  updateReadsCount: (postId: string, readsCount: number) => void;
   setActiveColor: (color: StickyColor | 'all') => void;
   setActiveTab: (tab: 'latest' | 'trending') => void;
   setSearchQuery: (query: string) => void;
@@ -79,6 +80,11 @@ export const useWallStore = create<WallState>((set) => ({
   updateLikeCount: (postId, likesCount) =>
     set((state) => ({
       posts: state.posts.map((p) => (p._id === postId ? { ...p, likesCount } : p)),
+    })),
+
+  updateReadsCount: (postId, readsCount) =>
+    set((state) => ({
+      posts: state.posts.map((p) => (p._id === postId ? { ...p, readsCount } : p)),
     })),
 
   setActiveColor: (activeColor) => set({ activeColor }),

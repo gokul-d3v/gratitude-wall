@@ -1,6 +1,17 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import { createPost, getWallPosts, toggleEmojiReaction, reportPost, updatePost, deletePost } from '../services/postService';
+import {
+  createPost,
+  getWallPosts,
+  toggleEmojiReaction,
+  reportPost,
+  updatePost,
+  deletePost,
+  getPostReactions,
+  markPostAsRead,
+  markPostsAsBatchRead,
+  getPostReads,
+} from '../services/postService';
 
 export const createPostHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -95,6 +106,56 @@ export const reportPostHandler = async (req: AuthRequest, res: Response, next: N
     const postId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const result = await reportPost(postId);
     res.json({ success: true, ...result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPostReactionsHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const postId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const reactions = await getPostReactions(postId);
+    res.json({ success: true, data: reactions });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markPostReadHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ success: false, message: 'Must be logged in to record read' });
+      return;
+    }
+    const postId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const result = await markPostAsRead(postId, userId);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markPostReadsHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ success: false, message: 'Must be logged in to record reads' });
+      return;
+    }
+    const { postIds } = req.body;
+    const result = await markPostsAsBatchRead(postIds || [], userId);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPostReadsHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const postId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const result = await getPostReads(postId);
+    res.json({ success: true, data: result });
   } catch (error) {
     next(error);
   }
