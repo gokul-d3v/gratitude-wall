@@ -165,11 +165,30 @@ export const getWallPosts = async (params: {
 
   if (params.search) {
     const cleanSearch = cleanInput(params.search);
-    query.$or = [
+
+    // Look up any users matching the search term to match against taggedUsers
+    const matchedUsers = await User.find({
+      $or: [
+        { fullName: { $regex: cleanSearch, $options: 'i' } },
+        { email: { $regex: cleanSearch, $options: 'i' } },
+      ],
+    })
+      .select('_id')
+      .lean();
+
+    const matchedUserIds = matchedUsers.map((u: any) => u._id);
+
+    const searchConditions: any[] = [
       { content: { $regex: cleanSearch, $options: 'i' } },
       { authorName: { $regex: cleanSearch, $options: 'i' } },
       { authorEmail: { $regex: cleanSearch, $options: 'i' } },
     ];
+
+    if (matchedUserIds.length > 0) {
+      searchConditions.push({ taggedUsers: { $in: matchedUserIds } });
+    }
+
+    query.$or = searchConditions;
   }
 
   const [rawPosts, total] = await Promise.all([
