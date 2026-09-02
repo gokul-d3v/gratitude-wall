@@ -63,3 +63,17 @@ export interface NotificationItem {
   isRead?: boolean;
   createdAt?: string;
 }
+
+export interface TopAppreciatedMember {
+  rank: number;
+  user: {
+    _id?: string;
+    fullName: string;
+    email: string;
+    avatarColor?: string;
+    team?: string;
+  };
+  tagsCount: number;
+  likesCount: number;
+  score: number;
+}

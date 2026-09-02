@@ -121,35 +121,55 @@ export const getUserProfile = async (userId: string) => {
 };
 
 export const getTopGratitudeUsers = async () => {
-  const topTagged = await Post.aggregate([
-    { $match: { isQuarantined: false } },
+  const topAppreciated = await Post.aggregate([
+    { $match: { isQuarantined: false, taggedUsers: { $exists: true, $ne: [] } } },
     { $unwind: '$taggedUsers' },
     {
       $group: {
         _id: '$taggedUsers',
-        gratitudeCount: { $sum: 1 },
+        tagsCount: { $sum: 1 },
+        likesCount: { $sum: { $ifNull: ['$likesCount', 0] } },
       },
     },
-    { $sort: { gratitudeCount: -1 } },
-    { $limit: 3 },
+    {
+      $addFields: {
+        score: {
+          $add: [
+            { $multiply: ['$tagsCount', 3] },
+            { $multiply: ['$likesCount', 2] },
+          ],
+        },
+      },
+    },
+    { $sort: { score: -1, likesCount: -1, tagsCount: -1 } },
+    { $limit: 5 },
   ]);
 
-  if (!topTagged || topTagged.length === 0) {
+  if (!topAppreciated || topAppreciated.length === 0) {
     return [];
   }
 
-  const userIds = topTagged.map((t) => t._id);
+  const userIds = topAppreciated.map((t) => t._id);
   const users = await User.find({ _id: { $in: userIds } })
-    .select('_id fullName email avatarColor')
+    .select('_id fullName email avatarColor team')
     .lean();
 
   const userMap = new Map(users.map((u) => [u._id.toString(), u]));
 
-  return topTagged.map((t) => {
+  return topAppreciated.map((t, index) => {
     const user = userMap.get(t._id.toString());
     return {
-      user: user || { fullName: 'Employee', email: 'EMP' },
-      count: t.gratitudeCount,
+      rank: index + 1,
+      user: user || {
+        _id: t._id,
+        fullName: 'Brototype Member',
+        email: 'member@brototype.com',
+        avatarColor: '#0058bd',
+        team: 'General',
+      },
+      tagsCount: t.tagsCount,
+      likesCount: t.likesCount,
+      score: t.score || (t.tagsCount * 3 + t.likesCount * 2),
     };
   });
 };
