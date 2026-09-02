@@ -25,9 +25,9 @@ interface TwinkleStar {
 type MissionPhase =
   | 'flying-in'
   | 'hovering'
-  | 'alien-out'
-  | 'shooting'
-  | 'alien-in'
+  | 'alien-descending'
+  | 'alien-waving'
+  | 'alien-ascending'
   | 'flying-out';
 
 interface AlienMission {
@@ -39,22 +39,17 @@ interface AlienMission {
   ufoY: number;
   alienX: number;
   alienY: number;
-  heartX: number;
-  heartY: number;
 }
 
 export const ShootingStars: React.FC = () => {
   const { theme } = useThemeStore();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
   const [mission, setMission] = useState<AlienMission | null>(null);
-  const [isLaserFiring, setIsLaserFiring] = useState<boolean>(false);
 
-  // Cinematic Alien Ship & Alien Landing Mission
+  // Cinematic Friendly Alien Visit Mission
   useEffect(() => {
     if (theme !== 'dark') {
       setMission(null);
-      setIsLaserFiring(false);
       return;
     }
 
@@ -62,19 +57,16 @@ export const ShootingStars: React.FC = () => {
     const timeouts: any[] = [];
 
     const startAlienMission = () => {
-      // Find all visible like-heart buttons
-      const heartContainers = Array.from(
-        document.querySelectorAll<HTMLElement>('.like-heart-container:not(.burning-heart)')
-      );
+      const cards = Array.from(document.querySelectorAll<HTMLElement>('.sticky-note'));
 
-      if (heartContainers.length === 0) {
+      if (cards.length === 0) {
         scheduleNext(5000);
         return;
       }
 
       // Filter visible cards in viewport
-      const visibleHearts = heartContainers.filter((heart) => {
-        const r = heart.getBoundingClientRect();
+      const visibleCards = cards.filter((card) => {
+        const r = card.getBoundingClientRect();
         return (
           r.top >= 80 &&
           r.bottom <= window.innerHeight - 40 &&
@@ -83,33 +75,24 @@ export const ShootingStars: React.FC = () => {
         );
       });
 
-      const targetPool = visibleHearts.length > 0 ? visibleHearts : heartContainers;
-      const targetHeart = targetPool[Math.floor(Math.random() * targetPool.length)];
+      const targetPool = visibleCards.length > 0 ? visibleCards : cards;
+      const targetCard = targetPool[Math.floor(Math.random() * targetPool.length)];
 
-      if (!targetHeart) {
+      if (!targetCard) {
         scheduleNext(5000);
         return;
       }
 
-      const card = targetHeart.closest<HTMLElement>('.sticky-note');
-      if (!card) {
-        scheduleNext(5000);
-        return;
-      }
-
-      const cardRect = card.getBoundingClientRect();
-      const heartRect = targetHeart.getBoundingClientRect();
+      const cardRect = targetCard.getBoundingClientRect();
 
       const ufoX = cardRect.left + cardRect.width / 2;
       const ufoY = Math.max(30, cardRect.top - 85);
       const alienX = cardRect.left + cardRect.width / 2;
-      const alienY = cardRect.top - 22;
-      const heartX = heartRect.left + 10;
-      const heartY = heartRect.top + 10;
+      const alienY = cardRect.top - 20;
 
       const fromLeft = Math.random() > 0.5;
-      const startX = fromLeft ? -120 : window.innerWidth + 120;
-      const startY = Math.max(-50, ufoY - 120);
+      const startX = fromLeft ? -140 : window.innerWidth + 140;
+      const startY = Math.max(-50, ufoY - 100);
 
       const newMission: AlienMission = {
         id: Date.now(),
@@ -120,71 +103,51 @@ export const ShootingStars: React.FC = () => {
         ufoY,
         alienX,
         alienY,
-        heartX,
-        heartY,
       };
 
       setMission(newMission);
 
-      // Timeline Phase 1: UFO Arrives & Hovers
+      // Phase 1: UFO arrives and hovers above card
       timeouts.push(
         setTimeout(() => {
           setMission((prev) => (prev ? { ...prev, phase: 'hovering' } : null));
-        }, 1600)
+        }, 1500)
       );
 
-      // Timeline Phase 2: Alien steps out on tractor beam
+      // Phase 2: Alien descends down the glowing tractor beam
       timeouts.push(
         setTimeout(() => {
-          setMission((prev) => (prev ? { ...prev, phase: 'alien-out' } : null));
-        }, 2200)
+          setMission((prev) => (prev ? { ...prev, phase: 'alien-descending' } : null));
+        }, 2100)
       );
 
-      // Timeline Phase 3: Alien Aims & Shoots the Heart with Laser Blaster!
+      // Phase 3: Alien lands on top of the card and waves happily to everyone!
       timeouts.push(
         setTimeout(() => {
-          setMission((prev) => (prev ? { ...prev, phase: 'shooting' } : null));
-          setIsLaserFiring(true);
-
-          // Ignite Heart with Burning Fire effect!
-          targetHeart.classList.add('burning-heart');
-
-          // Laser pulse duration
-          timeouts.push(
-            setTimeout(() => {
-              setIsLaserFiring(false);
-            }, 600)
-          );
-
-          // Extinguish burning heart after 6.5 seconds
-          timeouts.push(
-            setTimeout(() => {
-              targetHeart.classList.remove('burning-heart');
-            }, 6500)
-          );
-        }, 3400)
+          setMission((prev) => (prev ? { ...prev, phase: 'alien-waving' } : null));
+        }, 2800)
       );
 
-      // Timeline Phase 4: Alien Beams back into Ship
+      // Phase 4: Alien beams back up into the ship
       timeouts.push(
         setTimeout(() => {
-          setMission((prev) => (prev ? { ...prev, phase: 'alien-in' } : null));
-        }, 4600)
+          setMission((prev) => (prev ? { ...prev, phase: 'alien-ascending' } : null));
+        }, 5800)
       );
 
-      // Timeline Phase 5: UFO flies away into space
+      // Phase 5: UFO zooms away into the galaxy
       timeouts.push(
         setTimeout(() => {
           setMission((prev) => (prev ? { ...prev, phase: 'flying-out' } : null));
-        }, 5500)
+        }, 6700)
       );
 
-      // Timeline Phase 6: Clean up and schedule next mission
+      // Phase 6: Mission complete -> schedule next visit
       timeouts.push(
         setTimeout(() => {
           setMission(null);
-          scheduleNext(16000 + Math.random() * 16000);
-        }, 7200)
+          scheduleNext(15000 + Math.random() * 15000);
+        }, 8200)
       );
     };
 
@@ -360,68 +323,7 @@ export const ShootingStars: React.FC = () => {
     <div className="fixed inset-0 pointer-events-none z-30 overflow-hidden" aria-hidden="true">
       <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
 
-      {/* Laser Blaster Beam */}
-      {mission && isLaserFiring && (
-        <svg className="fixed inset-0 w-full h-full pointer-events-none z-50">
-          <defs>
-            <linearGradient id="alienLaserGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#4ade80" />
-              <stop offset="50%" stopColor="#38bdf8" />
-              <stop offset="100%" stopColor="#f43f5e" />
-            </linearGradient>
-            <filter id="laserRayGlow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Plasma Laser Bolt */}
-          <line
-            x1={mission.alienX + 8}
-            y1={mission.alienY + 14}
-            x2={mission.heartX}
-            y2={mission.heartY}
-            stroke="url(#alienLaserGrad)"
-            strokeWidth="5"
-            strokeLinecap="round"
-            filter="url(#laserRayGlow)"
-            className="laser-beam"
-          />
-          <line
-            x1={mission.alienX + 8}
-            y1={mission.alienY + 14}
-            x2={mission.heartX}
-            y2={mission.heartY}
-            stroke="#ffffff"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            className="laser-beam"
-          />
-
-          {/* Impact Explosion Ring on Heart */}
-          <circle
-            cx={mission.heartX}
-            cy={mission.heartY}
-            r="20"
-            fill="none"
-            stroke="#f97316"
-            strokeWidth="3.5"
-            className="laser-impact"
-          />
-          <circle
-            cx={mission.heartX}
-            cy={mission.heartY}
-            r="8"
-            fill="#ffffff"
-            className="laser-impact"
-          />
-        </svg>
-      )}
-
-      {/* Alien UFO Spaceship */}
+      {/* UFO Spaceship */}
       {mission && (
         <div
           className="fixed pointer-events-none transition-all duration-700 ease-out z-40"
@@ -430,91 +332,91 @@ export const ShootingStars: React.FC = () => {
               mission.phase === 'flying-in'
                 ? `${mission.startX}px`
                 : mission.phase === 'flying-out'
-                ? `${mission.ufoX + 800}px`
+                ? `${mission.ufoX + 750}px`
                 : `${mission.ufoX}px`,
             top:
               mission.phase === 'flying-in'
                 ? `${mission.startY}px`
                 : mission.phase === 'flying-out'
-                ? `${mission.ufoY - 400}px`
+                ? `${mission.ufoY - 350}px`
                 : `${mission.ufoY}px`,
             transform: `translate(-50%, -50%) ${
               mission.phase === 'flying-out'
-                ? 'rotate(20deg) scale(0.8)'
+                ? 'rotate(18deg) scale(0.85)'
                 : mission.phase === 'flying-in'
                 ? 'rotate(-8deg)'
                 : 'rotate(0deg)'
             }`,
-            opacity: mission.phase === 'flying-out' ? 0.3 : 1,
+            opacity: mission.phase === 'flying-out' ? 0.2 : 1,
             transitionDuration:
               mission.phase === 'flying-in'
-                ? '1.5s'
+                ? '1.4s'
                 : mission.phase === 'flying-out'
-                ? '1.2s'
+                ? '1.3s'
                 : '0.4s',
           }}
         >
           <div className="relative ufo-glow flex flex-col items-center">
             {/* UFO Saucer SVG */}
             <svg
-              width="86"
-              height="44"
-              viewBox="0 0 86 44"
+              width="88"
+              height="46"
+              viewBox="0 0 88 46"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              {/* Glass Dome */}
+              {/* Glass Cockpit Dome */}
               <ellipse
-                cx="43"
-                cy="17"
-                rx="16"
-                ry="13"
+                cx="44"
+                cy="18"
+                rx="17"
+                ry="14"
                 fill="#38bdf8"
                 fillOpacity="0.45"
                 stroke="#7dd3fc"
                 strokeWidth="1.2"
               />
 
-              {/* Alien Inside Dome (Only when not stepped out) */}
+              {/* Alien inside dome when flying */}
               {(mission.phase === 'flying-in' || mission.phase === 'flying-out') && (
                 <>
-                  <ellipse cx="43" cy="16" rx="5.5" ry="6.5" fill="#4ade80" />
-                  <ellipse cx="40.8" cy="14.5" rx="1.6" ry="2.4" transform="rotate(-15 40.8 14.5)" fill="#0f172a" />
-                  <ellipse cx="45.2" cy="14.5" rx="1.6" ry="2.4" transform="rotate(15 45.2 14.5)" fill="#0f172a" />
-                  <circle cx="41.1" cy="14" r="0.5" fill="#ffffff" />
-                  <circle cx="45.5" cy="14" r="0.5" fill="#ffffff" />
+                  <ellipse cx="44" cy="17" rx="6" ry="7" fill="#4ade80" />
+                  <ellipse cx="41.8" cy="15.5" rx="1.6" ry="2.4" transform="rotate(-15 41.8 15.5)" fill="#0f172a" />
+                  <ellipse cx="46.2" cy="15.5" rx="1.6" ry="2.4" transform="rotate(15 46.2 15.5)" fill="#0f172a" />
+                  <circle cx="42" cy="15" r="0.5" fill="#ffffff" />
+                  <circle cx="46.4" cy="15" r="0.5" fill="#ffffff" />
                 </>
               )}
 
-              {/* Saucer Upper Metallic Hull */}
+              {/* Metallic Hull */}
               <ellipse
-                cx="43"
-                cy="24"
-                rx="38"
-                ry="10"
-                fill="url(#saucerMetalGrad)"
+                cx="44"
+                cy="25"
+                rx="40"
+                ry="11"
+                fill="url(#ufoSaucerMetal)"
                 stroke="#94a3b8"
                 strokeWidth="1"
               />
 
               {/* Saucer Lower Base */}
               <path
-                d="M17 24C17 29 28 33 43 33C58 33 69 29 69 24"
+                d="M18 25C18 30.5 29 34.5 44 34.5C59 34.5 70 30.5 70 25"
                 fill="#334155"
                 stroke="#64748b"
                 strokeWidth="1"
               />
 
               {/* Blinking Anti-Gravity Thruster Lights */}
-              <circle cx="16" cy="24" r="2.2" fill="#f43f5e" className="animate-pulse" />
-              <circle cx="29" cy="26" r="2.5" fill="#38bdf8" className="animate-pulse" style={{ animationDelay: '0.2s' }} />
-              <circle cx="43" cy="27" r="2.8" fill="#facc15" className="animate-pulse" style={{ animationDelay: '0.4s' }} />
-              <circle cx="57" cy="26" r="2.5" fill="#38bdf8" className="animate-pulse" style={{ animationDelay: '0.6s' }} />
-              <circle cx="70" cy="24" r="2.2" fill="#a855f7" className="animate-pulse" style={{ animationDelay: '0.8s' }} />
+              <circle cx="16" cy="25" r="2.2" fill="#f43f5e" className="animate-pulse" />
+              <circle cx="30" cy="27.5" r="2.5" fill="#38bdf8" className="animate-pulse" style={{ animationDelay: '0.2s' }} />
+              <circle cx="44" cy="28.5" r="2.8" fill="#facc15" className="animate-pulse" style={{ animationDelay: '0.4s' }} />
+              <circle cx="58" cy="27.5" r="2.5" fill="#38bdf8" className="animate-pulse" style={{ animationDelay: '0.6s' }} />
+              <circle cx="72" cy="25" r="2.2" fill="#a855f7" className="animate-pulse" style={{ animationDelay: '0.8s' }} />
 
               <defs>
-                <linearGradient id="saucerMetalGrad" x1="5" y1="14" x2="81" y2="34" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#f1f5f9" />
+                <linearGradient id="ufoSaucerMetal" x1="5" y1="15" x2="83" y2="35" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#f8fafc" />
                   <stop offset="0.5" stopColor="#94a3b8" />
                   <stop offset="1" stopColor="#475569" />
                 </linearGradient>
@@ -524,7 +426,7 @@ export const ShootingStars: React.FC = () => {
             {/* Glowing Downward Tractor Elevator Beam */}
             {mission.phase !== 'flying-in' && mission.phase !== 'flying-out' && (
               <div
-                className="ufo-beam w-24 h-28 -mt-2.5 bg-gradient-to-b from-cyan-400/50 via-emerald-400/25 to-transparent animate-pulse"
+                className="ufo-beam w-24 h-28 -mt-2 bg-gradient-to-b from-cyan-400/50 via-emerald-400/25 to-transparent animate-pulse"
                 style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%)' }}
               />
             )}
@@ -532,60 +434,106 @@ export const ShootingStars: React.FC = () => {
         </div>
       )}
 
-      {/* 👽 Cute Alien Stepping Out with Ray Gun Blaster */}
+      {/* 👽 High Quality Animated Alien Character */}
       {mission &&
-        (mission.phase === 'alien-out' ||
-          mission.phase === 'shooting' ||
-          mission.phase === 'alien-in') && (
+        (mission.phase === 'alien-descending' ||
+          mission.phase === 'alien-waving' ||
+          mission.phase === 'alien-ascending') && (
           <div
             className="fixed pointer-events-none z-50 transition-all duration-500 ease-out"
             style={{
               left: `${mission.alienX}px`,
               top: `${mission.alienY}px`,
               transform: `translate(-50%, -50%) ${
-                mission.phase === 'alien-in'
-                  ? 'translateY(-40px) scale(0.7) opacity-0'
+                mission.phase === 'alien-descending'
+                  ? 'translateY(-35px) scale(0.6) opacity-60'
+                  : mission.phase === 'alien-ascending'
+                  ? 'translateY(-40px) scale(0.6) opacity-0'
                   : 'translateY(0) scale(1) opacity-100'
               }`,
+              transitionDuration:
+                mission.phase === 'alien-descending' || mission.phase === 'alien-ascending'
+                  ? '0.7s'
+                  : '0.4s',
             }}
           >
-            <div className="relative flex flex-col items-center">
-              {/* Animated Raygun Muzzle Sparkle during Shooting */}
-              {mission.phase === 'shooting' && (
-                <div className="absolute top-4 -right-3 text-sm animate-ping">⚡</div>
+            <div className="relative flex flex-col items-center alien-body-bounce">
+              {/* Friendly Sparkles while waving */}
+              {mission.phase === 'alien-waving' && (
+                <div className="absolute -top-3 -right-3 text-xs animate-bounce" title="Hello!">
+                  ✨
+                </div>
               )}
 
-              {/* Alien Character SVG */}
-              <svg width="42" height="46" viewBox="0 0 42 46" fill="none">
-                {/* Alien Head */}
-                <ellipse cx="21" cy="14" rx="9" ry="11" fill="#4ade80" stroke="#22c55e" strokeWidth="1" />
-                {/* Cute Big Alien Eyes */}
-                <ellipse cx="17.5" cy="12.5" rx="2.5" ry="3.8" transform="rotate(-15 17.5 12.5)" fill="#0f172a" />
-                <ellipse cx="24.5" cy="12.5" rx="2.5" ry="3.8" transform="rotate(15 24.5 12.5)" fill="#0f172a" />
-                <circle cx="18" cy="11.5" r="0.9" fill="#ffffff" />
-                <circle cx="25" cy="11.5" r="0.9" fill="#ffffff" />
-                {/* Alien Smile */}
-                <path d="M19 18C20 19.5 22 19.5 23 18" stroke="#15803d" strokeWidth="1" strokeLinecap="round" />
+              {/* Detailed Animated Alien Vector SVG */}
+              <svg width="48" height="56" viewBox="0 0 48 56" fill="none">
+                <defs>
+                  <linearGradient id="alienSkin" x1="14" y1="8" x2="34" y2="30" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#86efac" />
+                    <stop offset="0.6" stopColor="#4ade80" />
+                    <stop offset="1" stopColor="#22c55e" />
+                  </linearGradient>
+                  <linearGradient id="alienSuit" x1="15" y1="28" x2="33" y2="44" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#38bdf8" />
+                    <stop offset="1" stopColor="#0284c7" />
+                  </linearGradient>
+                </defs>
+
+                {/* Antenna Stalk */}
+                <path d="M24 10C24 6 27 4 27 2" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" />
+                {/* Glowing Antenna Orb */}
+                <circle cx="27" cy="2" r="3" fill="#38bdf8" className="alien-antenna" stroke="#7dd3fc" strokeWidth="0.8" />
+
+                {/* Big Expressive Alien Head */}
+                <ellipse cx="24" cy="18" rx="12" ry="13" fill="url(#alienSkin)" stroke="#16a34a" strokeWidth="1" />
+
+                {/* Big Glossy Space Eyes */}
+                <ellipse cx="19" cy="16.5" rx="3.5" ry="5.2" transform="rotate(-15 19 16.5)" fill="#0f172a" />
+                <ellipse cx="29" cy="16.5" rx="3.5" ry="5.2" transform="rotate(15 29 16.5)" fill="#0f172a" />
+
+                {/* Multi-reflection Eye Highlights (Cute/Alive look) */}
+                <circle cx="19.5" cy="14.8" r="1.3" fill="#ffffff" />
+                <circle cx="18" cy="18.5" r="0.6" fill="#ffffff" />
+                <circle cx="29.5" cy="14.8" r="1.3" fill="#ffffff" />
+                <circle cx="28" cy="18.5" r="0.6" fill="#ffffff" />
+
+                {/* Cute Cheeks */}
+                <circle cx="15.5" cy="21.5" r="1.6" fill="#f43f5e" fillOpacity="0.4" />
+                <circle cx="32.5" cy="21.5" r="1.6" fill="#f43f5e" fillOpacity="0.4" />
+
+                {/* Happy Warm Smile */}
+                <path d="M21.5 22.5C22.8 24.5 25.2 24.5 26.5 22.5" stroke="#15803d" strokeWidth="1.4" strokeLinecap="round" />
+
+                {/* Spacesuit Collar */}
+                <path d="M17 30C20 32 28 32 31 30" stroke="#0284c7" strokeWidth="2" strokeLinecap="round" />
 
                 {/* Spacesuit Body */}
-                <rect x="14" y="24" width="14" height="12" rx="4" fill="#38bdf8" stroke="#0284c7" strokeWidth="1" />
-                {/* Belt */}
-                <rect x="14" y="31" width="14" height="2.5" fill="#0369a1" />
+                <rect x="16" y="30" width="16" height="13" rx="4" fill="url(#alienSuit)" stroke="#0369a1" strokeWidth="1" />
+
+                {/* Star Badge on Chest */}
+                <circle cx="24" cy="35" r="2.2" fill="#facc15" />
+                <path d="M24 33.5L24.5 34.5L25.5 34.5L24.7 35.2L25 36.2L24 35.5L23 36.2L23.3 35.2L22.5 34.5L23.5 34.5Z" fill="#ffffff" />
+
+                {/* Suit Belt */}
+                <rect x="16" y="38" width="16" height="2.5" fill="#0c4a6e" />
+                <rect x="22" y="38" width="4" height="2.5" fill="#38bdf8" />
 
                 {/* Legs */}
-                <rect x="15" y="36" width="4" height="7" rx="2" fill="#0284c7" />
-                <rect x="23" y="36" width="4" height="7" rx="2" fill="#0284c7" />
+                <rect x="17.5" y="43" width="4.5" height="7.5" rx="2" fill="#0284c7" stroke="#0369a1" strokeWidth="0.8" />
+                <rect x="26" y="43" width="4.5" height="7.5" rx="2" fill="#0284c7" stroke="#0369a1" strokeWidth="0.8" />
 
-                {/* Left Arm Holding Ray Gun */}
-                <path d="M14 26L8 30" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" />
-                
-                {/* Right Arm Aiming Sci-Fi Ray Gun towards the Heart */}
-                <path d="M28 26L34 31" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" />
+                {/* Left Arm (Relaxed at side) */}
+                <path d="M16 32L11 38" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" />
+                <circle cx="10" cy="39" r="2" fill="#4ade80" />
 
-                {/* Sci-Fi Ray Gun Blaster */}
-                <rect x="32" y="28" width="9" height="4.5" rx="1.5" fill="#f43f5e" stroke="#e11d48" strokeWidth="0.8" />
-                <rect x="39" y="29.2" width="3" height="2" fill="#38bdf8" />
-                <circle cx="35" cy="30.2" r="1" fill="#facc15" />
+                {/* Right Arm: Enthusiastic Smooth Waving Arm 👋 */}
+                <g className="alien-waving-arm">
+                  <path d="M30 32L37 24" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" />
+                  {/* Cute Waving Hand with 3 Fingers */}
+                  <circle cx="38" cy="22" r="2.2" fill="#4ade80" />
+                  <path d="M38 20L39 18" stroke="#4ade80" strokeWidth="1.6" strokeLinecap="round" />
+                  <path d="M40 21L42 20" stroke="#4ade80" strokeWidth="1.6" strokeLinecap="round" />
+                </g>
               </svg>
             </div>
           </div>
