@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 /* ── Skeleton Loading ─────────────────────────────────────── */
 @keyframes skeletonShimmer {
   0%   { transform: translateX(-100%); }

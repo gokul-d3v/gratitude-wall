@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Trophy, Star, Heart, Tag, Sparkles, X, ChevronRight, Crown } from 'lucide-react';
+import { Trophy, Star, Heart, Tag, X, ChevronRight, Crown } from 'lucide-react';
 import { api } from '../services/api';
 import { useWallStore } from '../store/useWallStore';
 import { initSocketClient } from '../services/socket';
@@ -52,13 +52,12 @@ export const TopGratitudeSpotlight: React.FC = () => {
     if (topMembers.length <= 1 || isPaused || isLeaderboardOpen) return;
 
     const interval = setInterval(() => {
-      // Start fade out transition
       setIsFading(true);
       setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % topMembers.length);
         setIsFading(false);
-      }, 250); // 250ms fade out before swapping and fading back in
-    }, 3500); // Rotates every 3.5 seconds
+      }, 250);
+    }, 3500);
 
     return () => clearInterval(interval);
   }, [topMembers.length, isPaused, isLeaderboardOpen]);
@@ -74,42 +73,42 @@ export const TopGratitudeSpotlight: React.FC = () => {
           icon: '🥇',
           label: '1st Position',
           shortLabel: '1st',
-          bg: 'bg-amber-100/90 text-amber-950 border-amber-300',
+          bg: 'bg-amber-100/90 dark:bg-amber-900/40 text-amber-950 dark:text-amber-200 border-amber-300 dark:border-amber-600/50',
         };
       case 2:
         return {
           icon: '🥈',
           label: '2nd Position',
           shortLabel: '2nd',
-          bg: 'bg-slate-100 text-slate-800 border-slate-300',
+          bg: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700',
         };
       case 3:
         return {
           icon: '🥉',
           label: '3rd Position',
           shortLabel: '3rd',
-          bg: 'bg-amber-800/10 text-amber-950 border-amber-700/30',
+          bg: 'bg-amber-800/10 dark:bg-amber-950/40 text-amber-950 dark:text-amber-300 border-amber-700/30 dark:border-amber-700/50',
         };
       case 4:
         return {
           icon: '🏅',
           label: '4th Position',
           shortLabel: '4th',
-          bg: 'bg-blue-50 text-blue-900 border-blue-200',
+          bg: 'bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-300 border-blue-200 dark:border-blue-800',
         };
       case 5:
         return {
           icon: '🏅',
           label: '5th Position',
           shortLabel: '5th',
-          bg: 'bg-purple-50 text-purple-900 border-purple-200',
+          bg: 'bg-purple-50 dark:bg-purple-950/40 text-purple-900 dark:text-purple-300 border-purple-200 dark:border-purple-800',
         };
       default:
         return {
           icon: '🏅',
           label: `${rank}th Position`,
           shortLabel: `${rank}th`,
-          bg: 'bg-slate-100 text-slate-700 border-slate-200',
+          bg: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
         };
     }
   };
@@ -123,7 +122,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
         onClick={() => setIsLeaderboardOpen(true)}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        className="group relative flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-amber-500/10 via-amber-100/30 to-yellow-50/50 border border-amber-200/70 hover:border-amber-400/80 px-4 sm:px-5 py-2.5 rounded-2xl shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer w-full overflow-hidden"
+        className="group relative flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-amber-500/10 via-amber-100/30 to-yellow-50/50 dark:from-amber-500/15 dark:via-slate-800/80 dark:to-slate-900/90 border border-amber-200/70 dark:border-slate-700 hover:border-amber-400/80 dark:hover:border-amber-400/60 px-4 sm:px-5 py-2.5 rounded-2xl shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer w-full overflow-hidden"
       >
         {/* Left Section: Trophy + Rotating Member Info */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -156,26 +155,26 @@ export const TopGratitudeSpotlight: React.FC = () => {
 
             {/* Member Name & Team */}
             <div className="flex items-center gap-1.5 min-w-0 truncate">
-              <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
+              <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
                 {currentMember.user.fullName}
               </span>
               {currentMember.rank === 1 && (
                 <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400 shrink-0" />
               )}
               {currentMember.user.team && (
-                <span className="hidden sm:inline-block text-[10px] font-semibold text-slate-600 bg-white/80 px-2 py-0.5 rounded-full border border-black/5 shrink-0">
+                <span className="hidden sm:inline-block text-[10px] font-semibold text-slate-600 dark:text-slate-400 bg-white/80 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-black/5 dark:border-slate-700 shrink-0">
                   {currentMember.user.team}
                 </span>
               )}
             </div>
 
             {/* Tags & Likes preview */}
-            <div className="hidden md:flex items-center gap-1.5 text-[11px] text-slate-600 font-semibold shrink-0 ml-auto">
-              <span className="flex items-center gap-0.5 text-[#0058bd] bg-white/90 px-2 py-0.5 rounded-md border border-blue-100">
+            <div className="hidden md:flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400 font-semibold shrink-0 ml-auto">
+              <span className="flex items-center gap-0.5 text-[#0058bd] dark:text-blue-400 bg-white/90 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-900/50">
                 <Tag className="w-3 h-3" />
                 {currentMember.tagsCount} tags
               </span>
-              <span className="flex items-center gap-0.5 text-rose-600 bg-white/90 px-2 py-0.5 rounded-md border border-rose-100">
+              <span className="flex items-center gap-0.5 text-rose-600 dark:text-rose-400 bg-white/90 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/50">
                 <Heart className="w-3 h-3 fill-current" />
                 {currentMember.likesCount} likes
               </span>
@@ -187,7 +186,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Active Member Score */}
           <div
-            className={`flex items-center gap-1.5 bg-white/90 border border-amber-200/60 px-2.5 py-1 rounded-xl text-xs font-black text-amber-950 shadow-2xs transition-all duration-300 ${
+            className={`flex items-center gap-1.5 bg-white/90 dark:bg-slate-800 border border-amber-200/60 dark:border-slate-700 px-2.5 py-1 rounded-xl text-xs font-black text-amber-950 dark:text-amber-300 shadow-2xs transition-all duration-300 ${
               isFading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
             }`}
           >
@@ -197,7 +196,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
 
           {/* Carousel Position Dots (1 to 5) */}
           {topMembers.length > 1 && (
-            <div className="hidden xs:flex items-center gap-1 px-1.5 py-1 bg-black/5 rounded-full">
+            <div className="hidden xs:flex items-center gap-1 px-1.5 py-1 bg-black/5 dark:bg-white/5 rounded-full">
               {topMembers.map((m, idx) => (
                 <button
                   key={idx}
@@ -207,8 +206,8 @@ export const TopGratitudeSpotlight: React.FC = () => {
                   }}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     idx === currentIndex
-                      ? 'w-4 bg-amber-600'
-                      : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                      ? 'w-4 bg-amber-600 dark:bg-amber-400'
+                      : 'w-1.5 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400'
                   }`}
                   title={`Position ${idx + 1}: ${m.user.fullName}`}
                 />
@@ -217,7 +216,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
           )}
 
           {/* View Full Leaderboard Button */}
-          <div className="flex items-center gap-1 text-xs font-bold text-amber-900 bg-amber-200/60 group-hover:bg-amber-200 px-2.5 py-1 rounded-xl transition-colors">
+          <div className="flex items-center gap-1 text-xs font-bold text-amber-900 dark:text-amber-200 bg-amber-200/60 dark:bg-amber-900/40 group-hover:bg-amber-200 dark:group-hover:bg-amber-900/60 px-2.5 py-1 rounded-xl transition-colors">
             <span>Top 5</span>
             <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </div>
@@ -233,22 +232,22 @@ export const TopGratitudeSpotlight: React.FC = () => {
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-md bg-[#fffcf9] rounded-3xl shadow-2xl border border-black/10 flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200"
+              className="relative w-full max-w-md bg-[#fffcf9] dark:bg-slate-900 rounded-3xl shadow-2xl border border-black/10 dark:border-slate-800 flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-black/5">
+              <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-black/5 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold shrink-0">
                     <Trophy className="w-4 h-4 fill-current" />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-900">Leaderboard</h3>
-                    <p className="text-[11px] text-slate-500">Top 5 appreciated members</p>
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Leaderboard</h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Top 5 appreciated members</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsLeaderboardOpen(false)}
-                  className="p-1.5 rounded-full hover:bg-black/5 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -265,8 +264,8 @@ export const TopGratitudeSpotlight: React.FC = () => {
                       key={member.user._id || member.user.email}
                       className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
                         isFirst
-                          ? 'bg-amber-50/60 border-amber-300/80 shadow-2xs'
-                          : 'bg-white border-black/5 shadow-2xs'
+                          ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-300/80 dark:border-amber-600/50 shadow-2xs'
+                          : 'bg-white dark:bg-slate-800/90 border-black/5 dark:border-slate-700/60 shadow-2xs'
                       }`}
                     >
                       {/* Left: Rank, Avatar & Name */}
@@ -289,13 +288,13 @@ export const TopGratitudeSpotlight: React.FC = () => {
                         {/* Name & Team */}
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                            <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                               {member.user.fullName}
                             </span>
                             {isFirst && <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400 shrink-0" />}
                           </div>
                           {member.user.team && (
-                            <span className="text-[10px] text-slate-500 font-medium truncate block">
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate block">
                               {member.user.team}
                             </span>
                           )}
@@ -304,18 +303,18 @@ export const TopGratitudeSpotlight: React.FC = () => {
 
                       {/* Right: Metrics & Points */}
                       <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-600 font-medium">
-                          <span className="flex items-center gap-0.5 text-[#0058bd] bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100/80 font-bold">
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                          <span className="flex items-center gap-0.5 text-[#0058bd] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1.5 py-0.5 rounded-md border border-blue-100/80 dark:border-blue-900/50 font-bold">
                             <Tag className="w-3 h-3" />
                             {member.tagsCount}
                           </span>
-                          <span className="flex items-center gap-0.5 text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-100/80 font-bold">
+                          <span className="flex items-center gap-0.5 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.5 rounded-md border border-rose-100/80 dark:border-rose-900/50 font-bold">
                             <Heart className="w-3 h-3 fill-current" />
                             {member.likesCount}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-1 bg-amber-400/90 text-amber-950 font-black text-xs px-2.5 py-1 rounded-xl shadow-2xs">
+                        <div className="flex items-center gap-1 bg-amber-400/90 dark:bg-amber-500 text-amber-950 font-black text-xs px-2.5 py-1 rounded-xl shadow-2xs">
                           <span>{member.score}</span>
                           <span className="text-[10px] font-bold opacity-80">pts</span>
                         </div>
@@ -326,14 +325,14 @@ export const TopGratitudeSpotlight: React.FC = () => {
               </div>
 
               {/* Minimal Scoring Note Footer */}
-              <div className="px-6 py-3 bg-slate-50 border-t border-black/5 flex items-center justify-between text-[11px] text-slate-500">
+              <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/80 border-t border-black/5 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-slate-700">Formula:</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">Formula:</span>
                   <span>(🏷️ Tags × 3) + (❤️ Likes × 2)</span>
                 </div>
                 <button
                   onClick={() => setIsLeaderboardOpen(false)}
-                  className="px-4 py-1.5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+                  className="px-4 py-1.5 rounded-full bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors cursor-pointer"
                 >
                   Close
                 </button>
