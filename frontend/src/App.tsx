@@ -263,13 +263,13 @@ export const App: React.FC = () => {
             {!isTaggedMeFilter && (
               <div
                 onClick={handleOpenAddPost}
-                className="sticky-note bg-blue-50/50 border-2 border-dashed border-[#0058bd]/30 p-8 rounded-lg flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-blue-100/50 transition-all min-h-[220px]"
+                className="sticky-note bg-blue-50/50 dark:bg-slate-800/40 border-2 border-dashed border-[#0058bd]/30 dark:border-blue-500/40 p-8 rounded-lg flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-blue-100/50 dark:hover:bg-slate-800/70 transition-all min-h-[220px]"
               >
-                <div className="w-14 h-14 rounded-full bg-[#0058bd] text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                <div className="w-14 h-14 rounded-full bg-[#0058bd] dark:bg-blue-600 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
                   <span className="material-symbols-outlined text-3xl">add</span>
                 </div>
-                <p className="font-display font-bold text-lg text-[#0058bd]">Post your gratitude</p>
-                <p className="text-xs text-[#424753] mt-0.5">Spread some positivity</p>
+                <p className="font-display font-bold text-lg text-[#0058bd] dark:text-blue-400">Post your gratitude</p>
+                <p className="text-xs text-[#424753] dark:text-slate-400 mt-0.5">Spread some positivity</p>
               </div>
             )}
 
