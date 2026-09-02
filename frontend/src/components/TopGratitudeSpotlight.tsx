@@ -140,8 +140,9 @@ export const TopGratitudeSpotlight: React.FC = () => {
           >
             {/* Rank Badge */}
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-xs font-black px-2 py-0.5 rounded-md bg-white/90 border border-amber-200/70 text-amber-950 shadow-2xs">
-                {badge.icon} {badge.label}
+              <span className={`text-xs font-black px-2.5 py-0.5 rounded-full border shadow-2xs flex items-center gap-1 ${badge.bg}`}>
+                <span>{badge.icon}</span>
+                <span>{badge.label}</span>
               </span>
             </div>
 
