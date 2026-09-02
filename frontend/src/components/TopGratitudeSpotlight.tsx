@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Trophy, Star, Heart, Tag, Sparkles, X, ChevronRight, Award, Crown, Flame, Info, Search } from 'lucide-react';
+import { Trophy, Star, Heart, Tag, Sparkles, X, ChevronRight, Award, Crown, Flame, Info, Calculator } from 'lucide-react';
 import { api } from '../services/api';
 import { useWallStore } from '../store/useWallStore';
 import { initSocketClient } from '../services/socket';
@@ -9,7 +9,7 @@ import { TopAppreciatedMember } from '../types';
 export const TopGratitudeSpotlight: React.FC = () => {
   const [topMembers, setTopMembers] = useState<TopAppreciatedMember[]>([]);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
-  const { posts, setSearchQuery } = useWallStore();
+  const { posts } = useWallStore();
 
   useEffect(() => {
     fetchTopMembers();
@@ -43,11 +43,6 @@ export const TopGratitudeSpotlight: React.FC = () => {
     } catch {
       setTopMembers([]);
     }
-  };
-
-  const handleMemberClick = (fullName: string) => {
-    setSearchQuery(fullName);
-    setIsLeaderboardOpen(false);
   };
 
   if (!topMembers || topMembers.length === 0) return null;
@@ -192,7 +187,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
                         Top 5
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500">Based on gratitude notes received and likes from the team</p>
+                    <p className="text-xs text-slate-500">Celebrating our most appreciated team members</p>
                   </div>
                 </div>
                 <button
@@ -209,11 +204,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
                 <div className="grid grid-cols-3 gap-2 sm:gap-3 items-end max-w-md mx-auto text-center">
                   {/* Rank 2 (Silver) */}
                   {topMembers[1] && (
-                    <div
-                      onClick={() => handleMemberClick(topMembers[1].user.fullName)}
-                      className="flex flex-col items-center p-3 rounded-2xl bg-white/90 border border-slate-200/90 shadow-2xs hover:shadow-md transition-all cursor-pointer group"
-                      title="Click to view appreciation notes"
-                    >
+                    <div className="flex flex-col items-center p-3 rounded-2xl bg-white/90 border border-slate-200/90 shadow-2xs">
                       <div className="relative mb-2">
                         <div
                           className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md"
@@ -225,7 +216,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
                           2
                         </span>
                       </div>
-                      <span className="text-xs font-bold text-slate-800 truncate w-full group-hover:text-[#0058bd] transition-colors">
+                      <span className="text-xs font-bold text-slate-800 truncate w-full">
                         {topMembers[1].user.fullName}
                       </span>
                       {topMembers[1].user.team && (
@@ -248,11 +239,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
 
                   {/* Rank 1 (Gold / Champion) */}
                   {champion && (
-                    <div
-                      onClick={() => handleMemberClick(champion.user.fullName)}
-                      className="flex flex-col items-center p-3.5 sm:p-4 rounded-2xl bg-gradient-to-b from-amber-100/95 to-amber-50/90 border-2 border-amber-400 shadow-md -translate-y-2 hover:shadow-lg transition-all cursor-pointer group"
-                      title="Click to view appreciation notes"
-                    >
+                    <div className="flex flex-col items-center p-3.5 sm:p-4 rounded-2xl bg-gradient-to-b from-amber-100/95 to-amber-50/90 border-2 border-amber-400 shadow-md -translate-y-2">
                       <div className="relative mb-2">
                         <Crown className="w-5 h-5 text-amber-500 fill-amber-400 absolute -top-4 left-1/2 -translate-x-1/2 animate-bounce" />
                         <div
@@ -265,7 +252,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
                           🥇
                         </span>
                       </div>
-                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate w-full group-hover:text-amber-900 transition-colors">
+                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate w-full">
                         {champion.user.fullName}
                       </span>
                       {champion.user.team && (
@@ -291,11 +278,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
 
                   {/* Rank 3 (Bronze) */}
                   {topMembers[2] && (
-                    <div
-                      onClick={() => handleMemberClick(topMembers[2].user.fullName)}
-                      className="flex flex-col items-center p-3 rounded-2xl bg-white/90 border border-amber-700/20 shadow-2xs hover:shadow-md transition-all cursor-pointer group"
-                      title="Click to view appreciation notes"
-                    >
+                    <div className="flex flex-col items-center p-3 rounded-2xl bg-white/90 border border-amber-700/20 shadow-2xs">
                       <div className="relative mb-2">
                         <div
                           className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md"
@@ -307,7 +290,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
                           3
                         </span>
                       </div>
-                      <span className="text-xs font-bold text-slate-800 truncate w-full group-hover:text-[#0058bd] transition-colors">
+                      <span className="text-xs font-bold text-slate-800 truncate w-full">
                         {topMembers[2].user.fullName}
                       </span>
                       {topMembers[2].user.team && (
@@ -342,13 +325,11 @@ export const TopGratitudeSpotlight: React.FC = () => {
                   return (
                     <div
                       key={member.user._id || member.user.email}
-                      onClick={() => handleMemberClick(member.user.fullName)}
-                      className={`flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer group ${
+                      className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
                         member.rank === 1
-                          ? 'bg-amber-50/70 border-amber-300 shadow-xs hover:bg-amber-100/70'
-                          : 'bg-white hover:bg-slate-50/90 border-black/5 shadow-2xs'
+                          ? 'bg-amber-50/70 border-amber-300 shadow-xs'
+                          : 'bg-white border-black/5 shadow-2xs'
                       }`}
-                      title={`Click to view notes appreciating ${member.user.fullName}`}
                     >
                       {/* Left: Rank & User Details */}
                       <div className="flex items-center gap-3 min-w-0">
@@ -370,7 +351,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
                         {/* User Meta */}
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="text-xs sm:text-sm font-bold text-slate-900 truncate group-hover:text-[#0058bd] transition-colors">
+                            <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">
                               {member.user.fullName}
                             </p>
                             {member.user.team && (
@@ -383,7 +364,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Right: Explicit Tags & Likes Counters + View Notes action */}
+                      {/* Right: Explicit Tags & Likes Counters */}
                       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                         {/* Tag Count Pill */}
                         <div
@@ -411,26 +392,43 @@ export const TopGratitudeSpotlight: React.FC = () => {
                           <Star className="w-3 h-3 fill-white" />
                           <span>{member.score} pts</span>
                         </div>
-
-                        {/* View indicator */}
-                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#0058bd] group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Informational Clarification Footer */}
-              <div className="px-6 py-3.5 bg-white border-t border-black/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-slate-500 text-xs">
-                  <Search className="w-4 h-4 text-amber-600 shrink-0" />
-                  <p className="text-[11px] leading-tight">
-                    💡 Click any member to view all gratitude notes appreciating them (including notes they are tagged in).
-                  </p>
+              {/* How Points Are Calculated Note */}
+              <div className="mx-6 mb-3 p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/70 text-slate-700 shadow-2xs">
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-900 mb-1.5">
+                  <Calculator className="w-4 h-4 text-amber-600" />
+                  <span>How Points Are Calculated</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-600">
+                  <div className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1.5 rounded-xl border border-amber-200/50 font-medium">
+                    <span className="text-base">🏷️</span>
+                    <span><strong>1 Tag</strong> = <strong>3 pts</strong> (When tagged in a note)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1.5 rounded-xl border border-amber-200/50 font-medium">
+                    <span className="text-base">❤️</span>
+                    <span><strong>1 Like</strong> = <strong>2 pts</strong> (On your tagged notes)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1.5 rounded-xl border border-amber-200/50 font-bold text-amber-900">
+                    <span className="text-base">⭐</span>
+                    <span>Score = (Tags × 3) + (Likes × 2)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-3.5 bg-white border-t border-black/5 flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                  <Info className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>Appreciation is based on tags and likes received from colleagues.</span>
                 </div>
                 <button
                   onClick={() => setIsLeaderboardOpen(false)}
-                  className="px-5 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer shrink-0 self-end sm:self-auto"
+                  className="px-5 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer shrink-0"
                 >
                   Close
                 </button>
