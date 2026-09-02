@@ -33,10 +33,10 @@ const updatePostSchema = z.object({
 router.get('/', optionalAuth, getPostsHandler);
 router.post('/', authenticateToken, postRateLimiter, validateRequest(createPostSchema), createPostHandler);
 router.post('/batch-read', authenticateToken, markPostReadsHandler);
-router.get('/:id/reactions', optionalAuth, getPostReactionsHandler);
+router.get('/:id/reactions', authenticateToken, getPostReactionsHandler);
 router.post('/:id/like', authenticateToken, toggleLikeHandler);
 router.post('/:id/read', authenticateToken, markPostReadHandler);
-router.get('/:id/reads', optionalAuth, getPostReadsHandler);
+router.get('/:id/reads', authenticateToken, getPostReadsHandler);
 router.post('/:id/report', reportPostHandler);
 router.put('/:id', authenticateToken, validateRequest(updatePostSchema), updatePostHandler);
 router.delete('/:id', authenticateToken, deletePostHandler);

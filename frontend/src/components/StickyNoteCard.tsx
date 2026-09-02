@@ -421,6 +421,11 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                if (!isAuthenticated) {
+                  triggerToast('Please sign in to see who liked this post', 'info');
+                  setAuthModalOpen(true);
+                  return;
+                }
                 setEngagementTab('likes');
                 setIsEngagementOpen(true);
               }}
@@ -437,6 +442,11 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
+              if (!isAuthenticated) {
+                triggerToast('Please sign in to see who read this post', 'info');
+                setAuthModalOpen(true);
+                return;
+              }
               setEngagementTab('reads');
               setIsEngagementOpen(true);
             }}

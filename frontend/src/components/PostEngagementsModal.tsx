@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Heart, Eye, Users, Search, Loader2 } from 'lucide-react';
 import { api } from '../services/api';
 import { getSocket } from '../services/socket';
+import { useWallStore } from '../store/useWallStore';
 import { PostReactionUser, PostReader } from '../types';
 
 interface PostEngagementsModalProps {
@@ -92,8 +93,14 @@ export const PostEngagementsModal: React.FC<PostEngagementsModalProps> = ({
       ]);
       setReactions(reactionsRes.data.data || []);
       setReaders(readsRes.data.data?.readers || []);
-    } catch (err) {
-      console.error('Failed to fetch post activity:', err);
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        onClose();
+        useWallStore.getState().triggerToast('Please sign in to view post activity', 'info');
+        useWallStore.getState().setAuthModalOpen(true);
+      } else {
+        console.error('Failed to fetch post activity:', err);
+      }
     } finally {
       setIsLoading(false);
     }

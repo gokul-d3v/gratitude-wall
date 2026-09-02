@@ -33,7 +33,7 @@ const formatTimeAgo = (dateStr: string): string => {
 };
 
 export const ViewNoteModal: React.FC = () => {
-  const { viewingPost, setViewingPost, triggerToast } = useWallStore();
+  const { viewingPost, setViewingPost, triggerToast, setAuthModalOpen } = useWallStore();
   const { isAuthenticated } = useAuthStore();
   const modalRef = useRef<HTMLDivElement>(null);
   const [isCopied, setIsCopied] = useState(false);
@@ -158,6 +158,11 @@ export const ViewNoteModal: React.FC = () => {
             {/* Likes count & modal trigger */}
             <button
               onClick={() => {
+                if (!isAuthenticated) {
+                  if (triggerToast) triggerToast('Please sign in to see who liked this post', 'info');
+                  setAuthModalOpen(true);
+                  return;
+                }
                 setEngagementTab('likes');
                 setIsEngagementOpen(true);
               }}
@@ -171,6 +176,11 @@ export const ViewNoteModal: React.FC = () => {
             {/* Reads count & modal trigger */}
             <button
               onClick={() => {
+                if (!isAuthenticated) {
+                  if (triggerToast) triggerToast('Please sign in to see who read this post', 'info');
+                  setAuthModalOpen(true);
+                  return;
+                }
                 setEngagementTab('reads');
                 setIsEngagementOpen(true);
               }}
