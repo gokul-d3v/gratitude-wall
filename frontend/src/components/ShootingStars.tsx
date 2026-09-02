@@ -29,30 +29,52 @@ interface UFOFlight {
   duration: number;
 }
 
+interface LaserStrike {
+  id: number;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+}
+
 export const ShootingStars: React.FC = () => {
   const { theme } = useThemeStore();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [currentUFO, setCurrentUFO] = useState<UFOFlight | null>(null);
+  const ufoElementRef = useRef<HTMLDivElement | null>(null);
 
-  // Periodic Alien UFO Flights
+  const [currentUFO, setCurrentUFO] = useState<UFOFlight | null>(null);
+  const [laser, setLaser] = useState<LaserStrike | null>(null);
+
+  // Periodic Alien UFO Flights + Card Laser Shoot
   useEffect(() => {
     if (theme !== 'dark') {
       setCurrentUFO(null);
+      setLaser(null);
       return;
     }
 
     let ufoTimer: any;
+    let shootTimer: any;
+
     const launchUFO = () => {
       const direction: 'ltr' | 'rtl' = Math.random() > 0.5 ? 'ltr' : 'rtl';
-      const duration = 12 + Math.random() * 6; // 12-18s cruising flight
-      const top = 12 + Math.random() * 55; // 12% to 67% screen height
+      const duration = 12 + Math.random() * 5; // 12-17s cruise
+      const top = 10 + Math.random() * 45; // 10% to 55% screen height
 
-      setCurrentUFO({
+      const flight: UFOFlight = {
         id: Date.now(),
         top,
         direction,
         duration,
-      });
+      };
+
+      setCurrentUFO(flight);
+
+      // Mid-flight shoot target post (between 3.5s and 6s into the flight)
+      const shootDelay = 3500 + Math.random() * 2500;
+      shootTimer = setTimeout(() => {
+        shootRandomPost();
+      }, shootDelay);
 
       // Clear when flight is done and schedule next
       setTimeout(() => {
@@ -61,16 +83,73 @@ export const ShootingStars: React.FC = () => {
       }, (duration + 1) * 1000);
     };
 
+    const shootRandomPost = () => {
+      // Find all available sticky notes that are not currently on fire
+      const cards = Array.from(
+        document.querySelectorAll<HTMLElement>('.sticky-note:not(.ufo-fired-card)')
+      );
+
+      if (cards.length === 0) return;
+
+      // Filter visible cards in viewport
+      const visibleCards = cards.filter((card) => {
+        const r = card.getBoundingClientRect();
+        return r.top >= 0 && r.bottom <= window.innerHeight && r.left >= 0 && r.right <= window.innerWidth;
+      });
+
+      const targetPool = visibleCards.length > 0 ? visibleCards : cards;
+      const targetCard = targetPool[Math.floor(Math.random() * targetPool.length)];
+
+      if (!targetCard) return;
+
+      const cardRect = targetCard.getBoundingClientRect();
+      const targetCenterX = cardRect.left + cardRect.width / 2;
+      const targetCenterY = cardRect.top + cardRect.height / 2;
+
+      // Determine UFO current position
+      let ufoX = window.innerWidth * 0.5;
+      let ufoY = window.innerHeight * 0.25;
+
+      if (ufoElementRef.current) {
+        const ufoRect = ufoElementRef.current.getBoundingClientRect();
+        ufoX = ufoRect.left + ufoRect.width / 2;
+        ufoY = ufoRect.bottom;
+      }
+
+      // 1. Fire Laser Beam
+      setLaser({
+        id: Date.now(),
+        startX: ufoX,
+        startY: ufoY,
+        endX: targetCenterX,
+        endY: targetCenterY,
+      });
+
+      // 2. Set card on fire with glowing flames!
+      targetCard.classList.add('ufo-fired-card');
+
+      // 3. Clear laser visual after 500ms
+      setTimeout(() => {
+        setLaser(null);
+      }, 550);
+
+      // 4. Extinguish flame after 5.5 seconds
+      setTimeout(() => {
+        targetCard.classList.remove('ufo-fired-card');
+      }, 5500);
+    };
+
     const scheduleNext = () => {
       const delay = 14000 + Math.random() * 16000; // Next flight in 14-30s
       ufoTimer = setTimeout(launchUFO, delay);
     };
 
-    // First UFO launches 3.5s after dark mode is activated
+    // First UFO launches 3.5s after dark mode is active
     ufoTimer = setTimeout(launchUFO, 3500);
 
     return () => {
       clearTimeout(ufoTimer);
+      clearTimeout(shootTimer);
     };
   }, [theme]);
 
@@ -235,11 +314,73 @@ export const ShootingStars: React.FC = () => {
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
       <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
 
+      {/* Dynamic Laser Strike */}
+      {laser && (
+        <svg className="fixed inset-0 w-full h-full pointer-events-none z-30">
+          <defs>
+            <linearGradient id="laserGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#38bdf8" />
+              <stop offset="50%" stopColor="#f43f5e" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+            <filter id="laserGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Core High-Energy Plasma Laser */}
+          <line
+            x1={laser.startX}
+            y1={laser.startY}
+            x2={laser.endX}
+            y2={laser.endY}
+            stroke="url(#laserGrad)"
+            strokeWidth="5"
+            strokeLinecap="round"
+            filter="url(#laserGlow)"
+            className="laser-beam"
+          />
+          <line
+            x1={laser.startX}
+            y1={laser.startY}
+            x2={laser.endX}
+            y2={laser.endY}
+            stroke="#ffffff"
+            strokeWidth="2"
+            strokeLinecap="round"
+            className="laser-beam"
+          />
+
+          {/* Impact Explosion Burst */}
+          <circle
+            cx={laser.endX}
+            cy={laser.endY}
+            r="28"
+            fill="none"
+            stroke="#f97316"
+            strokeWidth="4"
+            className="laser-impact"
+          />
+          <circle
+            cx={laser.endX}
+            cy={laser.endY}
+            r="12"
+            fill="#ffffff"
+            className="laser-impact"
+          />
+        </svg>
+      )}
+
       {/* Floating Alien Spaceship */}
       {currentUFO && (
         <div
           key={currentUFO.id}
-          className={`fixed pointer-events-none z-0 ${
+          ref={ufoElementRef}
+          className={`fixed pointer-events-none z-20 ${
             currentUFO.direction === 'ltr' ? 'ufo-ltr' : 'ufo-rtl'
           }`}
           style={{
