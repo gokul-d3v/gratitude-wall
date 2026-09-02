@@ -132,14 +132,14 @@ export const ShootingStars: React.FC = () => {
       timeouts.push(
         setTimeout(() => {
           setMission((prev) => (prev ? { ...prev, phase: 'alien-ascending' } : null));
-        }, 5800)
+        }, 6000)
       );
 
       // Phase 5: UFO zooms away into the galaxy
       timeouts.push(
         setTimeout(() => {
           setMission((prev) => (prev ? { ...prev, phase: 'flying-out' } : null));
-        }, 6700)
+        }, 6900)
       );
 
       // Phase 6: Mission complete -> schedule next visit
@@ -147,7 +147,7 @@ export const ShootingStars: React.FC = () => {
         setTimeout(() => {
           setMission(null);
           scheduleNext(15000 + Math.random() * 15000);
-        }, 8200)
+        }, 8400)
       );
     };
 
@@ -458,81 +458,89 @@ export const ShootingStars: React.FC = () => {
             }}
           >
             <div className="relative flex flex-col items-center alien-body-bounce">
-              {/* Friendly Sparkles while waving */}
+              {/* Friendly Floating Greeting Bubble */}
               {mission.phase === 'alien-waving' && (
-                <div className="absolute -top-3 -right-3 text-xs animate-bounce" title="Hello!">
-                  ✨
+                <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-slate-900/90 border border-cyan-400/60 shadow-lg text-[10px] font-black text-cyan-300 flex items-center gap-1 animate-in zoom-in-75 duration-300">
+                  <span>👋</span>
+                  <span>Hi!</span>
+                  <span className="text-amber-300">✨</span>
                 </div>
               )}
 
-              {/* Detailed Animated Alien Vector SVG */}
-              <svg width="48" height="56" viewBox="0 0 48 56" fill="none">
+              {/* Detailed Animated Alien Vector SVG with Fluid Hand Wave */}
+              <svg width="54" height="60" viewBox="0 0 54 60" fill="none">
                 <defs>
-                  <linearGradient id="alienSkin" x1="14" y1="8" x2="34" y2="30" gradientUnits="userSpaceOnUse">
+                  <linearGradient id="alienSkin" x1="16" y1="10" x2="36" y2="32" gradientUnits="userSpaceOnUse">
                     <stop stopColor="#86efac" />
                     <stop offset="0.6" stopColor="#4ade80" />
                     <stop offset="1" stopColor="#22c55e" />
                   </linearGradient>
-                  <linearGradient id="alienSuit" x1="15" y1="28" x2="33" y2="44" gradientUnits="userSpaceOnUse">
+                  <linearGradient id="alienSuit" x1="17" y1="30" x2="35" y2="46" gradientUnits="userSpaceOnUse">
                     <stop stopColor="#38bdf8" />
                     <stop offset="1" stopColor="#0284c7" />
                   </linearGradient>
                 </defs>
 
                 {/* Antenna Stalk */}
-                <path d="M24 10C24 6 27 4 27 2" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" />
+                <path d="M26 12C26 8 29 5 29 3" stroke="#4ade80" strokeWidth="2.2" strokeLinecap="round" />
                 {/* Glowing Antenna Orb */}
-                <circle cx="27" cy="2" r="3" fill="#38bdf8" className="alien-antenna" stroke="#7dd3fc" strokeWidth="0.8" />
+                <circle cx="29" cy="3" r="3.2" fill="#38bdf8" className="alien-antenna" stroke="#7dd3fc" strokeWidth="1" />
 
                 {/* Big Expressive Alien Head */}
-                <ellipse cx="24" cy="18" rx="12" ry="13" fill="url(#alienSkin)" stroke="#16a34a" strokeWidth="1" />
+                <ellipse cx="26" cy="20" rx="12.5" ry="13.5" fill="url(#alienSkin)" stroke="#16a34a" strokeWidth="1" />
 
                 {/* Big Glossy Space Eyes */}
-                <ellipse cx="19" cy="16.5" rx="3.5" ry="5.2" transform="rotate(-15 19 16.5)" fill="#0f172a" />
-                <ellipse cx="29" cy="16.5" rx="3.5" ry="5.2" transform="rotate(15 29 16.5)" fill="#0f172a" />
+                <ellipse cx="21" cy="18.5" rx="3.6" ry="5.4" transform="rotate(-15 21 18.5)" fill="#0f172a" />
+                <ellipse cx="31" cy="18.5" rx="3.6" ry="5.4" transform="rotate(15 31 18.5)" fill="#0f172a" />
 
                 {/* Multi-reflection Eye Highlights (Cute/Alive look) */}
-                <circle cx="19.5" cy="14.8" r="1.3" fill="#ffffff" />
-                <circle cx="18" cy="18.5" r="0.6" fill="#ffffff" />
-                <circle cx="29.5" cy="14.8" r="1.3" fill="#ffffff" />
-                <circle cx="28" cy="18.5" r="0.6" fill="#ffffff" />
+                <circle cx="21.6" cy="16.8" r="1.4" fill="#ffffff" />
+                <circle cx="20" cy="20.5" r="0.7" fill="#ffffff" />
+                <circle cx="31.6" cy="16.8" r="1.4" fill="#ffffff" />
+                <circle cx="30" cy="20.5" r="0.7" fill="#ffffff" />
 
                 {/* Cute Cheeks */}
-                <circle cx="15.5" cy="21.5" r="1.6" fill="#f43f5e" fillOpacity="0.4" />
-                <circle cx="32.5" cy="21.5" r="1.6" fill="#f43f5e" fillOpacity="0.4" />
+                <circle cx="17" cy="23.5" r="1.8" fill="#f43f5e" fillOpacity="0.4" />
+                <circle cx="35" cy="23.5" r="1.8" fill="#f43f5e" fillOpacity="0.4" />
 
                 {/* Happy Warm Smile */}
-                <path d="M21.5 22.5C22.8 24.5 25.2 24.5 26.5 22.5" stroke="#15803d" strokeWidth="1.4" strokeLinecap="round" />
+                <path d="M23.5 24.5C24.8 26.5 27.2 26.5 28.5 24.5" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round" />
 
                 {/* Spacesuit Collar */}
-                <path d="M17 30C20 32 28 32 31 30" stroke="#0284c7" strokeWidth="2" strokeLinecap="round" />
+                <path d="M19 32C22 34 30 34 33 32" stroke="#0284c7" strokeWidth="2.2" strokeLinecap="round" />
 
                 {/* Spacesuit Body */}
-                <rect x="16" y="30" width="16" height="13" rx="4" fill="url(#alienSuit)" stroke="#0369a1" strokeWidth="1" />
+                <rect x="18" y="32" width="16" height="14" rx="4" fill="url(#alienSuit)" stroke="#0369a1" strokeWidth="1" />
 
                 {/* Star Badge on Chest */}
-                <circle cx="24" cy="35" r="2.2" fill="#facc15" />
-                <path d="M24 33.5L24.5 34.5L25.5 34.5L24.7 35.2L25 36.2L24 35.5L23 36.2L23.3 35.2L22.5 34.5L23.5 34.5Z" fill="#ffffff" />
+                <circle cx="26" cy="37" r="2.4" fill="#facc15" />
+                <path d="M26 35.2L26.6 36.4L27.8 36.4L26.8 37.2L27.2 38.4L26 37.5L24.8 38.4L25.2 37.2L24.2 36.4L25.4 36.4Z" fill="#ffffff" />
 
                 {/* Suit Belt */}
-                <rect x="16" y="38" width="16" height="2.5" fill="#0c4a6e" />
-                <rect x="22" y="38" width="4" height="2.5" fill="#38bdf8" />
+                <rect x="18" y="41" width="16" height="2.5" fill="#0c4a6e" />
+                <rect x="24" y="41" width="4" height="2.5" fill="#38bdf8" />
 
                 {/* Legs */}
-                <rect x="17.5" y="43" width="4.5" height="7.5" rx="2" fill="#0284c7" stroke="#0369a1" strokeWidth="0.8" />
-                <rect x="26" y="43" width="4.5" height="7.5" rx="2" fill="#0284c7" stroke="#0369a1" strokeWidth="0.8" />
+                <rect x="19.5" y="46" width="4.5" height="8" rx="2" fill="#0284c7" stroke="#0369a1" strokeWidth="0.8" />
+                <rect x="28" y="46" width="4.5" height="8" rx="2" fill="#0284c7" stroke="#0369a1" strokeWidth="0.8" />
 
-                {/* Left Arm (Relaxed at side) */}
-                <path d="M16 32L11 38" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" />
-                <circle cx="10" cy="39" r="2" fill="#4ade80" />
+                {/* Left Arm (Resting on hip) */}
+                <path d="M18 34L12 40" stroke="#4ade80" strokeWidth="3.2" strokeLinecap="round" />
+                <circle cx="11.5" cy="40.5" r="2.2" fill="#4ade80" />
 
-                {/* Right Arm: Enthusiastic Smooth Waving Arm 👋 */}
-                <g className="alien-waving-arm">
-                  <path d="M30 32L37 24" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" />
-                  {/* Cute Waving Hand with 3 Fingers */}
-                  <circle cx="38" cy="22" r="2.2" fill="#4ade80" />
-                  <path d="M38 20L39 18" stroke="#4ade80" strokeWidth="1.6" strokeLinecap="round" />
-                  <path d="M40 21L42 20" stroke="#4ade80" strokeWidth="1.6" strokeLinecap="round" />
+                {/* Right Arm: Natural Shoulder Base */}
+                <path d="M34 34L40 26" stroke="#4ade80" strokeWidth="3.2" strokeLinecap="round" />
+
+                {/* Fluid Waving Forearm & Cute Open Palm 👋 */}
+                <g className="alien-waving-hand">
+                  <path d="M40 26L46 16" stroke="#4ade80" strokeWidth="3.2" strokeLinecap="round" />
+                  
+                  {/* Palm */}
+                  <circle cx="46.5" cy="14.5" r="2.8" fill="#4ade80" />
+                  {/* Fingers */}
+                  <path d="M46.5 12L47 9" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M48.5 13L50.5 11" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M44.5 13.5L42.5 12" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" />
                 </g>
               </svg>
             </div>
