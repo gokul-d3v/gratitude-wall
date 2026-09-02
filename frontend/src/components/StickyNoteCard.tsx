@@ -388,7 +388,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
       <div className="flex items-center justify-between pt-3 mt-auto border-t border-black/5 shrink-0">
         <div className="flex items-center gap-3.5">
           {/* Like Button & Likers trigger */}
-          <div className="flex items-center gap-1 group/like">
+          <div className="like-heart-container relative flex items-center gap-1 group/like">
             <button
               onClick={(e) => {
                 e.stopPropagation();
