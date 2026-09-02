@@ -11,6 +11,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 
 import { NotificationModal } from './components/NotificationModal';
 import { TopGratitudeSpotlight } from './components/TopGratitudeSpotlight';
+import { ShootingStars } from './components/ShootingStars';
 import { useWallStore } from './store/useWallStore';
 import { useAuthStore } from './store/useAuthStore';
 import { api } from './services/api';
@@ -241,9 +242,10 @@ export const App: React.FC = () => {
 
   // Default Route: http://localhost:5173/ -> BROTIFY Gratitude Wall (User Home Page)
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      <ShootingStars />
 
-      <main className="p-4 sm:p-8 md:p-12 flex flex-col gap-8 max-w-7xl mx-auto">
+      <main className="p-4 sm:p-8 md:p-12 flex flex-col gap-8 max-w-7xl mx-auto relative z-10">
         <Header />
         
         <div className="flex justify-center md:justify-start">
