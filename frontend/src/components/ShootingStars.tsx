@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useThemeStore } from '../store/useThemeStore';
 
 interface Star {
@@ -22,10 +22,59 @@ interface TwinkleStar {
   alphaSpeed: number;
 }
 
+interface UFOFlight {
+  id: number;
+  top: number;
+  direction: 'ltr' | 'rtl';
+  duration: number;
+}
+
 export const ShootingStars: React.FC = () => {
   const { theme } = useThemeStore();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [currentUFO, setCurrentUFO] = useState<UFOFlight | null>(null);
 
+  // Periodic Alien UFO Flights
+  useEffect(() => {
+    if (theme !== 'dark') {
+      setCurrentUFO(null);
+      return;
+    }
+
+    let ufoTimer: any;
+    const launchUFO = () => {
+      const direction: 'ltr' | 'rtl' = Math.random() > 0.5 ? 'ltr' : 'rtl';
+      const duration = 12 + Math.random() * 6; // 12-18s cruising flight
+      const top = 12 + Math.random() * 55; // 12% to 67% screen height
+
+      setCurrentUFO({
+        id: Date.now(),
+        top,
+        direction,
+        duration,
+      });
+
+      // Clear when flight is done and schedule next
+      setTimeout(() => {
+        setCurrentUFO(null);
+        scheduleNext();
+      }, (duration + 1) * 1000);
+    };
+
+    const scheduleNext = () => {
+      const delay = 14000 + Math.random() * 16000; // Next flight in 14-30s
+      ufoTimer = setTimeout(launchUFO, delay);
+    };
+
+    // First UFO launches 3.5s after dark mode is activated
+    ufoTimer = setTimeout(launchUFO, 3500);
+
+    return () => {
+      clearTimeout(ufoTimer);
+    };
+  }, [theme]);
+
+  // Shooting Stars & Ambient Twinkle Canvas Engine
   useEffect(() => {
     if (theme !== 'dark') return;
 
@@ -47,7 +96,7 @@ export const ShootingStars: React.FC = () => {
 
     const initTwinkleStars = () => {
       twinkleStars = [];
-      const count = Math.floor((canvas.width * canvas.height) / 18000); // Gentle density
+      const count = Math.floor((canvas.width * canvas.height) / 20000);
       for (let i = 0; i < count; i++) {
         twinkleStars.push({
           x: Math.random() * canvas.width,
@@ -63,10 +112,9 @@ export const ShootingStars: React.FC = () => {
     window.addEventListener('resize', resize);
 
     const spawnStar = () => {
-      // Spawn from top and right area
       const x = Math.random() * (canvas.width * 0.8) + canvas.width * 0.2;
       const y = Math.random() * (canvas.height * 0.5);
-      const angle = Math.PI / 4 + (Math.random() * 0.2 - 0.1); // ~45 deg diagonal
+      const angle = Math.PI / 4 + (Math.random() * 0.2 - 0.1);
       const speed = 14 + Math.random() * 10;
       const length = 140 + Math.random() * 120;
       const maxOpacity = 0.8 + Math.random() * 0.2;
@@ -85,7 +133,6 @@ export const ShootingStars: React.FC = () => {
       });
     };
 
-    // Initial shooting star after brief pause
     setTimeout(() => {
       spawnStar();
     }, 600);
@@ -93,7 +140,7 @@ export const ShootingStars: React.FC = () => {
     const updateAndDraw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 1. Draw subtle ambient twinkling stars
+      // 1. Ambient twinkling stars
       for (const ts of twinkleStars) {
         ts.alpha += ts.alphaSpeed;
         if (ts.alpha > 0.8 || ts.alpha < 0.1) {
@@ -106,9 +153,9 @@ export const ShootingStars: React.FC = () => {
         ctx.fill();
       }
 
-      // 2. Spawn real shooting star
+      // 2. Spawn shooting stars
       const now = Date.now();
-      if (now - lastSpawn > 2200 + Math.random() * 2000) {
+      if (now - lastSpawn > 2200 + Math.random() * 2200) {
         spawnStar();
         lastSpawn = now;
       }
@@ -131,11 +178,9 @@ export const ShootingStars: React.FC = () => {
           return false;
         }
 
-        // Calculate tail end point
         const tailX = star.x + Math.cos(star.angle) * star.length;
         const tailY = star.y - Math.sin(star.angle) * star.length;
 
-        // Draw gradient tail
         const gradient = ctx.createLinearGradient(star.x, star.y, tailX, tailY);
         gradient.addColorStop(0, `rgba(${star.trailColor}, ${star.opacity})`);
         gradient.addColorStop(0.25, `rgba(${star.trailColor}, ${star.opacity * 0.7})`);
@@ -148,7 +193,7 @@ export const ShootingStars: React.FC = () => {
         ctx.lineTo(tailX, tailY);
         ctx.stroke();
 
-        // Draw radiant glowing star head with diamond flare
+        // Radiant star head
         ctx.save();
         ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
         ctx.shadowColor = 'rgba(255, 255, 255, 1)';
@@ -158,7 +203,7 @@ export const ShootingStars: React.FC = () => {
         ctx.arc(star.x, star.y, 2.2, 0, Math.PI * 2);
         ctx.fill();
 
-        // Mini 4-point sparkle on star head
+        // 4-point sparkle flare
         ctx.strokeStyle = `rgba(255, 255, 255, ${star.opacity * 0.9})`;
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -187,10 +232,140 @@ export const ShootingStars: React.FC = () => {
   if (theme !== 'dark') return null;
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0"
-      aria-hidden="true"
-    />
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+      <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
+
+      {/* Floating Alien Spaceship */}
+      {currentUFO && (
+        <div
+          key={currentUFO.id}
+          className={`fixed pointer-events-none z-0 ${
+            currentUFO.direction === 'ltr' ? 'ufo-ltr' : 'ufo-rtl'
+          }`}
+          style={{
+            top: `${currentUFO.top}%`,
+            animationDuration: `${currentUFO.duration}s`,
+          }}
+        >
+          <div className="relative ufo-glow flex flex-col items-center">
+            <svg
+              width="74"
+              height="38"
+              viewBox="0 0 74 38"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {/* Glass Dome */}
+              <ellipse
+                cx="37"
+                cy="15"
+                rx="14"
+                ry="11"
+                fill="#38bdf8"
+                fillOpacity="0.4"
+                stroke="#7dd3fc"
+                strokeWidth="1"
+              />
+
+              {/* Little Green Alien Head */}
+              <ellipse cx="37" cy="14.5" rx="5" ry="6" fill="#4ade80" />
+              <ellipse
+                cx="35"
+                cy="13.2"
+                rx="1.4"
+                ry="2.2"
+                transform="rotate(-15 35 13.2)"
+                fill="#0f172a"
+              />
+              <ellipse
+                cx="39"
+                cy="13.2"
+                rx="1.4"
+                ry="2.2"
+                transform="rotate(15 39 13.2)"
+                fill="#0f172a"
+              />
+              <circle cx="35.3" cy="12.7" r="0.5" fill="#ffffff" />
+              <circle cx="39.3" cy="12.7" r="0.5" fill="#ffffff" />
+
+              {/* Metallic Saucer Body */}
+              <ellipse
+                cx="37"
+                cy="21"
+                rx="34"
+                ry="9"
+                fill="url(#ufoSaucerGrad)"
+                stroke="#94a3b8"
+                strokeWidth="0.8"
+              />
+
+              {/* Saucer Lower Base */}
+              <path
+                d="M14 21C14 25.5 24 29.5 37 29.5C50 29.5 60 25.5 60 21"
+                fill="#334155"
+                stroke="#64748b"
+                strokeWidth="0.8"
+              />
+
+              {/* Blinking Anti-Gravity Thruster Lights */}
+              <circle cx="15" cy="21" r="2" fill="#f43f5e" className="animate-pulse" />
+              <circle
+                cx="26"
+                cy="23"
+                r="2.2"
+                fill="#38bdf8"
+                className="animate-pulse"
+                style={{ animationDelay: '0.2s' }}
+              />
+              <circle
+                cx="37"
+                cy="24"
+                r="2.5"
+                fill="#facc15"
+                className="animate-pulse"
+                style={{ animationDelay: '0.4s' }}
+              />
+              <circle
+                cx="48"
+                cy="23"
+                r="2.2"
+                fill="#38bdf8"
+                className="animate-pulse"
+                style={{ animationDelay: '0.6s' }}
+              />
+              <circle
+                cx="59"
+                cy="21"
+                r="2"
+                fill="#a855f7"
+                className="animate-pulse"
+                style={{ animationDelay: '0.8s' }}
+              />
+
+              <defs>
+                <linearGradient
+                  id="ufoSaucerGrad"
+                  x1="3"
+                  y1="12"
+                  x2="71"
+                  y2="30"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor="#e2e8f0" />
+                  <stop offset="0.5" stopColor="#94a3b8" />
+                  <stop offset="1" stopColor="#475569" />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            {/* Glowing Downward Light Beam */}
+            <div
+              className="ufo-beam w-16 h-28 -mt-2 bg-gradient-to-b from-cyan-400/40 via-emerald-400/15 to-transparent"
+              style={{ clipPath: 'polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%)' }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
