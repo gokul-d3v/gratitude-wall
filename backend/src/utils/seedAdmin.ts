@@ -1,5 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { Admin } from '../models/Admin';
+import { Reaction } from '../models/Reaction';
+import { PostRead } from '../models/PostRead';
 
 export const seedInitialAdminAndTeams = async () => {
   try {
@@ -31,5 +33,25 @@ export const seedInitialAdminAndTeams = async () => {
     }
   } catch (error) {
     console.error('⚠️ [Admin Seed] Error seeding admin:', error);
+  }
+};
+
+export const syncHistoricalReactionsToReads = async () => {
+  try {
+    const reactions = await Reaction.find().select('postId userId createdAt').lean();
+    if (reactions.length === 0) return;
+
+    const bulkOps = reactions.map((r: any) => ({
+      updateOne: {
+        filter: { postId: r.postId, userId: r.userId },
+        update: { $setOnInsert: { readAt: r.createdAt || new Date() } },
+        upsert: true,
+      },
+    }));
+
+    await PostRead.bulkWrite(bulkOps);
+    console.log(`✅ [Read Sync] Synced ${reactions.length} historical reactions into PostRead records`);
+  } catch (error) {
+    console.error('⚠️ [Read Sync] Error syncing historical reactions:', error);
   }
 };

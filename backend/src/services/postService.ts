@@ -219,19 +219,22 @@ export const getWallPosts = async (params: {
     reactionMap.get(pId)![emoji] = r.count;
   });
 
-  // Fetch reads count summary per post
-  const allReads = await PostRead.aggregate([
-    { $match: { postId: { $in: postObjectIds } } },
-    {
-      $group: {
-        _id: '$postId',
-        count: { $sum: 1 },
-      },
-    },
+  // Fetch unique readers per post (from both PostRead and Reaction)
+  const [allReads, allReactionsUsers] = await Promise.all([
+    PostRead.find({ postId: { $in: postObjectIds } }).select('postId userId').lean(),
+    Reaction.find({ postId: { $in: postObjectIds } }).select('postId userId').lean(),
   ]);
-  const readsMap = new Map<string, number>();
-  allReads.forEach((r) => {
-    readsMap.set(r._id.toString(), r.count);
+
+  const uniqueReadersMap = new Map<string, Set<string>>();
+  allReads.forEach((r: any) => {
+    const pId = r.postId.toString();
+    if (!uniqueReadersMap.has(pId)) uniqueReadersMap.set(pId, new Set());
+    if (r.userId) uniqueReadersMap.get(pId)!.add(r.userId.toString());
+  });
+  allReactionsUsers.forEach((rx: any) => {
+    const pId = rx.postId.toString();
+    if (!uniqueReadersMap.has(pId)) uniqueReadersMap.set(pId, new Set());
+    if (rx.userId) uniqueReadersMap.get(pId)!.add(rx.userId.toString());
   });
 
   const posts = rawPosts.map((p) => {
@@ -244,7 +247,7 @@ export const getWallPosts = async (params: {
     return {
       ...p,
       likesCount: totalLikes || p.likesCount || 0,
-      readsCount: readsMap.get(pId) || 0,
+      readsCount: uniqueReadersMap.get(pId)?.size || 0,
       reactions,
       userEmoji,
       hasLiked: !!userEmoji,
@@ -337,6 +340,37 @@ export const toggleEmojiReaction = async (postId: string, userId: string, target
           }
         : null,
     });
+
+    // Ensure reacting to a post also registers the user as a reader in real time
+    if (newActiveEmoji) {
+      const now = new Date();
+      const readResult = await PostRead.findOneAndUpdate(
+        { postId: pObjId, userId: uObjId },
+        { $setOnInsert: { readAt: now } },
+        { upsert: true, new: true }
+      );
+      const readsCount = await PostRead.countDocuments({ postId: pObjId });
+      if (io) {
+        io.emit('reads_update', { postId, readsCount });
+        if (userWhoReacted) {
+          io.emit('new_read', {
+            postId,
+            readsCount,
+            reader: {
+              _id: readResult?._id ? readResult._id.toString() : `${postId}-${userId}`,
+              readAt: now.toISOString(),
+              user: {
+                id: userWhoReacted._id.toString(),
+                fullName: userWhoReacted.fullName,
+                email: userWhoReacted.email,
+                avatarColor: userWhoReacted.avatarColor,
+                team: userWhoReacted.team,
+              },
+            },
+          });
+        }
+      }
+    }
   } catch {
     // Silence socket error
   }
@@ -706,26 +740,62 @@ export const getPostReads = async (postId: string) => {
   }
   const pObjId = new mongoose.Types.ObjectId(postId);
 
+  // 1. Fetch direct reads
   const reads = await PostRead.find({ postId: pObjId })
     .populate('userId', 'fullName email avatarColor team')
     .sort({ readAt: -1 })
     .lean();
 
-  const formattedReaders = reads
-    .map((r: any) => ({
-      _id: r._id,
-      readAt: r.readAt || r.createdAt,
-      user: r.userId
-        ? {
-            id: r.userId._id,
-            fullName: r.userId.fullName,
-            email: r.userId.email,
-            avatarColor: r.userId.avatarColor,
-            team: r.userId.team,
-          }
-        : null,
-    }))
-    .filter((r: any) => r.user !== null);
+  // 2. Fetch reactions (anyone who liked the post has definitely read it)
+  const reactions = await Reaction.find({ postId: pObjId })
+    .populate('userId', 'fullName email avatarColor team')
+    .sort({ createdAt: -1 })
+    .lean();
+
+  // Deduplicated map by user ID
+  const readerMap = new Map<string, any>();
+
+  // Add recorded reads
+  reads.forEach((r: any) => {
+    if (r.userId && r.userId._id) {
+      const uId = r.userId._id.toString();
+      readerMap.set(uId, {
+        _id: r._id,
+        readAt: r.readAt || r.createdAt,
+        user: {
+          id: r.userId._id,
+          fullName: r.userId.fullName,
+          email: r.userId.email,
+          avatarColor: r.userId.avatarColor,
+          team: r.userId.team,
+        },
+      });
+    }
+  });
+
+  // Add likers if not already present
+  reactions.forEach((rx: any) => {
+    if (rx.userId && rx.userId._id) {
+      const uId = rx.userId._id.toString();
+      if (!readerMap.has(uId)) {
+        readerMap.set(uId, {
+          _id: rx._id,
+          readAt: rx.createdAt,
+          user: {
+            id: rx.userId._id,
+            fullName: rx.userId.fullName,
+            email: rx.userId.email,
+            avatarColor: rx.userId.avatarColor,
+            team: rx.userId.team,
+          },
+        });
+      }
+    }
+  });
+
+  const formattedReaders = Array.from(readerMap.values()).sort(
+    (a, b) => new Date(b.readAt).getTime() - new Date(a.readAt).getTime()
+  );
 
   return {
     readsCount: formattedReaders.length,

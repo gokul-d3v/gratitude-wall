@@ -14,7 +14,7 @@ dotenv.config(); // fallback to standard .env
 import app from './app';
 import { connectDB } from './config/db';
 import { initSocket } from './config/socket';
-import { seedInitialAdminAndTeams } from './utils/seedAdmin';
+import { seedInitialAdminAndTeams, syncHistoricalReactionsToReads } from './utils/seedAdmin';
 import mongoose from 'mongoose';
 
 const PORT = process.env.PORT || 5000;
@@ -62,6 +62,7 @@ process.on('uncaughtException', (error) => {
 connectDB()
   .then(async () => {
     await seedInitialAdminAndTeams();
+    await syncHistoricalReactionsToReads();
 
     server.listen(PORT, () => {
       console.log(`====================================================`);
