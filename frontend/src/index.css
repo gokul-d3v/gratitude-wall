@@ -367,4 +367,97 @@ html.dark body {
   transform-origin: top center;
 }
 
+/* ── UFO Laser & Card Fire Effect ───────────────────────────── */
+@keyframes flameFlicker {
+  0%, 100% {
+    box-shadow: 0 0 16px #f97316, 0 0 32px #ef4444, 0 0 55px rgba(245, 158, 11, 0.6), inset 0 0 15px rgba(251, 146, 60, 0.4);
+    border-color: #f97316 !important;
+    transform: rotate(0deg) scale(1.02);
+  }
+  25% {
+    box-shadow: 0 0 25px #ef4444, 0 0 45px #f59e0b, 0 0 70px rgba(239, 68, 68, 0.7), inset 0 0 20px rgba(239, 68, 68, 0.5);
+    border-color: #ef4444 !important;
+    transform: rotate(-0.8deg) scale(1.03);
+  }
+  50% {
+    box-shadow: 0 0 18px #f59e0b, 0 0 30px #dc2626, 0 0 55px rgba(249, 115, 22, 0.8), inset 0 0 12px rgba(245, 158, 11, 0.4);
+    border-color: #f59e0b !important;
+    transform: rotate(0.6deg) scale(1.02);
+  }
+  75% {
+    box-shadow: 0 0 28px #ea580c, 0 0 50px #ef4444, 0 0 80px rgba(251, 146, 60, 0.75), inset 0 0 22px rgba(234, 88, 12, 0.5);
+    border-color: #ea580c !important;
+    transform: rotate(-0.5deg) scale(1.035);
+  }
+}
+
+.ufo-fired-card {
+  animation: flameFlicker 0.35s infinite ease-in-out !important;
+  position: relative !important;
+  z-index: 40 !important;
+  transition: all 0.3s ease;
+}
+
+.ufo-fired-card::before {
+  content: '🔥 🔥 🔥';
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  letter-spacing: 4px;
+  filter: drop-shadow(0 0 8px #f97316) drop-shadow(0 0 16px #ea580c);
+  animation: flameBounce 0.35s infinite alternate ease-in-out;
+  pointer-events: none;
+  z-index: 50;
+}
+
+@keyframes flameBounce {
+  from { transform: translateX(-50%) translateY(0) scale(0.95); opacity: 0.85; }
+  to { transform: translateX(-50%) translateY(-7px) scale(1.2); opacity: 1; }
+}
+
+@keyframes laserPulse {
+  0% {
+    opacity: 0;
+    stroke-width: 1px;
+  }
+  20% {
+    opacity: 1;
+    stroke-width: 6px;
+  }
+  80% {
+    opacity: 0.9;
+    stroke-width: 4px;
+  }
+  100% {
+    opacity: 0;
+    stroke-width: 1px;
+  }
+}
+
+.laser-beam {
+  animation: laserPulse 0.45s ease-out forwards;
+}
+
+@keyframes laserImpactRing {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.6);
+    opacity: 0;
+  }
+}
+
+.laser-impact {
+  animation: laserImpactRing 0.6s ease-out forwards;
+}
+
+
 
