@@ -84,27 +84,27 @@ export const ShootingStars: React.FC = () => {
     };
 
     const shootRandomPost = () => {
-      // Find all available sticky notes that are not currently on fire
-      const cards = Array.from(
-        document.querySelectorAll<HTMLElement>('.sticky-note:not(.ufo-fired-card)')
+      // Find all available like heart containers that are not currently burning
+      const heartContainers = Array.from(
+        document.querySelectorAll<HTMLElement>('.like-heart-container:not(.burning-heart)')
       );
 
-      if (cards.length === 0) return;
+      if (heartContainers.length === 0) return;
 
-      // Filter visible cards in viewport
-      const visibleCards = cards.filter((card) => {
-        const r = card.getBoundingClientRect();
+      // Filter visible hearts in viewport
+      const visibleHearts = heartContainers.filter((heart) => {
+        const r = heart.getBoundingClientRect();
         return r.top >= 0 && r.bottom <= window.innerHeight && r.left >= 0 && r.right <= window.innerWidth;
       });
 
-      const targetPool = visibleCards.length > 0 ? visibleCards : cards;
-      const targetCard = targetPool[Math.floor(Math.random() * targetPool.length)];
+      const targetPool = visibleHearts.length > 0 ? visibleHearts : heartContainers;
+      const targetHeart = targetPool[Math.floor(Math.random() * targetPool.length)];
 
-      if (!targetCard) return;
+      if (!targetHeart) return;
 
-      const cardRect = targetCard.getBoundingClientRect();
-      const targetCenterX = cardRect.left + cardRect.width / 2;
-      const targetCenterY = cardRect.top + cardRect.height / 2;
+      const heartRect = targetHeart.getBoundingClientRect();
+      const targetCenterX = heartRect.left + 10;
+      const targetCenterY = heartRect.top + 10;
 
       // Determine UFO current position
       let ufoX = window.innerWidth * 0.5;
@@ -116,7 +116,7 @@ export const ShootingStars: React.FC = () => {
         ufoY = ufoRect.bottom;
       }
 
-      // 1. Fire Laser Beam
+      // 1. Fire Laser Beam directly at the Heart
       setLaser({
         id: Date.now(),
         startX: ufoX,
@@ -125,18 +125,18 @@ export const ShootingStars: React.FC = () => {
         endY: targetCenterY,
       });
 
-      // 2. Set card on fire with glowing flames!
-      targetCard.classList.add('ufo-fired-card');
+      // 2. Set Heart on Fire with animated burning flames!
+      targetHeart.classList.add('burning-heart');
 
-      // 3. Clear laser visual after 500ms
+      // 3. Clear laser visual after 550ms
       setTimeout(() => {
         setLaser(null);
       }, 550);
 
-      // 4. Extinguish flame after 5.5 seconds
+      // 4. Extinguish flame after 6 seconds
       setTimeout(() => {
-        targetCard.classList.remove('ufo-fired-card');
-      }, 5500);
+        targetHeart.classList.remove('burning-heart');
+      }, 6000);
     };
 
     const scheduleNext = () => {
