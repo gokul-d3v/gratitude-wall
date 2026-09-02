@@ -72,26 +72,44 @@ export const TopGratitudeSpotlight: React.FC = () => {
       case 1:
         return {
           icon: '🥇',
-          label: '1st Place',
-          bg: 'bg-amber-100 text-amber-900 border-amber-300',
+          label: '1st Position',
+          shortLabel: '1st',
+          bg: 'bg-amber-100/90 text-amber-950 border-amber-300',
         };
       case 2:
         return {
           icon: '🥈',
-          label: '2nd Place',
-          bg: 'bg-slate-100 text-slate-700 border-slate-300',
+          label: '2nd Position',
+          shortLabel: '2nd',
+          bg: 'bg-slate-100 text-slate-800 border-slate-300',
         };
       case 3:
         return {
           icon: '🥉',
-          label: '3rd Place',
-          bg: 'bg-amber-800/10 text-amber-900 border-amber-700/30',
+          label: '3rd Position',
+          shortLabel: '3rd',
+          bg: 'bg-amber-800/10 text-amber-950 border-amber-700/30',
+        };
+      case 4:
+        return {
+          icon: '🏅',
+          label: '4th Position',
+          shortLabel: '4th',
+          bg: 'bg-blue-50 text-blue-900 border-blue-200',
+        };
+      case 5:
+        return {
+          icon: '🏅',
+          label: '5th Position',
+          shortLabel: '5th',
+          bg: 'bg-purple-50 text-purple-900 border-purple-200',
         };
       default:
         return {
-          icon: `#${rank}`,
-          label: `${rank}th Place`,
-          bg: 'bg-slate-100 text-slate-600 border-slate-200',
+          icon: '🏅',
+          label: `${rank}th Position`,
+          shortLabel: `${rank}th`,
+          bg: 'bg-slate-100 text-slate-700 border-slate-200',
         };
     }
   };
