@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Trophy, Star, Heart, Tag, Sparkles, X, ChevronRight, Crown } from 'lucide-react';
 import { api } from '../services/api';
@@ -8,6 +8,9 @@ import { TopAppreciatedMember } from '../types';
 
 export const TopGratitudeSpotlight: React.FC = () => {
   const [topMembers, setTopMembers] = useState<TopAppreciatedMember[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isFading, setIsFading] = useState<boolean>(false);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const { posts } = useWallStore();
 
@@ -37,71 +40,164 @@ export const TopGratitudeSpotlight: React.FC = () => {
   const fetchTopMembers = async () => {
     try {
       const res = await api.get('/users/top-gratitude');
-      setTopMembers(res.data.data || []);
+      const data = res.data.data || [];
+      setTopMembers(data);
     } catch {
       setTopMembers([]);
     }
   };
 
+  // Automatic fading rotation loop through all top 5 members
+  useEffect(() => {
+    if (topMembers.length <= 1 || isPaused || isLeaderboardOpen) return;
+
+    const interval = setInterval(() => {
+      // Start fade out transition
+      setIsFading(true);
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % topMembers.length);
+        setIsFading(false);
+      }, 250); // 250ms fade out before swapping and fading back in
+    }, 3500); // Rotates every 3.5 seconds
+
+    return () => clearInterval(interval);
+  }, [topMembers.length, isPaused, isLeaderboardOpen]);
+
   if (!topMembers || topMembers.length === 0) return null;
 
-  const champion = topMembers[0];
+  const currentMember = topMembers[currentIndex] || topMembers[0];
 
   const getRankBadge = (rank: number) => {
     switch (rank) {
       case 1:
         return {
           icon: '🥇',
+          label: '1st Place',
           bg: 'bg-amber-100 text-amber-900 border-amber-300',
         };
       case 2:
         return {
           icon: '🥈',
+          label: '2nd Place',
           bg: 'bg-slate-100 text-slate-700 border-slate-300',
         };
       case 3:
         return {
           icon: '🥉',
+          label: '3rd Place',
           bg: 'bg-amber-800/10 text-amber-900 border-amber-700/30',
         };
       default:
         return {
           icon: `#${rank}`,
+          label: `${rank}th Place`,
           bg: 'bg-slate-100 text-slate-600 border-slate-200',
         };
     }
   };
 
+  const badge = getRankBadge(currentMember.rank);
+
   return (
     <>
-      {/* Wall Spotlight Minimal Bar */}
+      {/* Wall Spotlight Banner - Auto-Fading Carousel */}
       <div
         onClick={() => setIsLeaderboardOpen(true)}
-        className="group flex items-center justify-between gap-3 bg-gradient-to-r from-amber-500/10 via-amber-100/30 to-yellow-50/50 border border-amber-200/70 hover:border-amber-400/80 px-4 sm:px-5 py-2.5 rounded-2xl shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer w-full overflow-hidden"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        className="group relative flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-amber-500/10 via-amber-100/30 to-yellow-50/50 border border-amber-200/70 hover:border-amber-400/80 px-4 sm:px-5 py-2.5 rounded-2xl shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer w-full overflow-hidden"
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 text-white flex items-center justify-center shrink-0 shadow-xs">
+        {/* Left Section: Trophy + Rotating Member Info */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* Trophy Icon */}
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 text-white flex items-center justify-center shrink-0 shadow-xs">
             <Trophy className="w-4 h-4 fill-white/80" />
           </div>
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xs font-bold text-amber-900/90 shrink-0">Most Appreciated:</span>
-            <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
-              {champion.user.fullName}
-            </span>
-            {champion.user.team && (
-              <span className="hidden sm:inline-block text-[10px] font-semibold text-slate-600 bg-white/80 px-2 py-0.5 rounded-full border border-black/5 shrink-0">
-                {champion.user.team}
+
+          {/* Fading Content Container */}
+          <div
+            className={`flex flex-wrap items-center gap-2 sm:gap-3 min-w-0 flex-1 transition-all duration-300 ${
+              isFading ? 'opacity-0 -translate-y-1' : 'opacity-100 translate-y-0'
+            }`}
+          >
+            {/* Rank Badge */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-xs font-black px-2 py-0.5 rounded-md bg-white/90 border border-amber-200/70 text-amber-950 shadow-2xs">
+                {badge.icon} {badge.label}
               </span>
-            )}
+            </div>
+
+            {/* Member Avatar */}
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-[11px] shrink-0 shadow-2xs"
+              style={{ backgroundColor: currentMember.user.avatarColor || '#0058bd' }}
+            >
+              {currentMember.user.fullName?.charAt(0).toUpperCase()}
+            </div>
+
+            {/* Member Name & Team */}
+            <div className="flex items-center gap-1.5 min-w-0 truncate">
+              <span className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
+                {currentMember.user.fullName}
+              </span>
+              {currentMember.rank === 1 && (
+                <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400 shrink-0" />
+              )}
+              {currentMember.user.team && (
+                <span className="hidden sm:inline-block text-[10px] font-semibold text-slate-600 bg-white/80 px-2 py-0.5 rounded-full border border-black/5 shrink-0">
+                  {currentMember.user.team}
+                </span>
+              )}
+            </div>
+
+            {/* Tags & Likes preview */}
+            <div className="hidden md:flex items-center gap-1.5 text-[11px] text-slate-600 font-semibold shrink-0 ml-auto">
+              <span className="flex items-center gap-0.5 text-[#0058bd] bg-white/90 px-2 py-0.5 rounded-md border border-blue-100">
+                <Tag className="w-3 h-3" />
+                {currentMember.tagsCount} tags
+              </span>
+              <span className="flex items-center gap-0.5 text-rose-600 bg-white/90 px-2 py-0.5 rounded-md border border-rose-100">
+                <Heart className="w-3 h-3 fill-current" />
+                {currentMember.likesCount} likes
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-1.5 bg-white/90 border border-amber-200/60 px-2.5 py-1 rounded-xl text-xs font-bold text-amber-900 shadow-2xs">
+        {/* Right Section: Score + Dots + View Leaderboard */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Active Member Score */}
+          <div
+            className={`flex items-center gap-1.5 bg-white/90 border border-amber-200/60 px-2.5 py-1 rounded-xl text-xs font-black text-amber-950 shadow-2xs transition-all duration-300 ${
+              isFading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+            }`}
+          >
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-            <span>{champion.score} pts</span>
+            <span>{currentMember.score} pts</span>
           </div>
 
+          {/* Carousel Position Dots (1 to 5) */}
+          {topMembers.length > 1 && (
+            <div className="hidden xs:flex items-center gap-1 px-1.5 py-1 bg-black/5 rounded-full">
+              {topMembers.map((m, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentIndex(idx);
+                  }}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    idx === currentIndex
+                      ? 'w-4 bg-amber-600'
+                      : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                  }`}
+                  title={`Position ${idx + 1}: ${m.user.fullName}`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* View Full Leaderboard Button */}
           <div className="flex items-center gap-1 text-xs font-bold text-amber-900 bg-amber-200/60 group-hover:bg-amber-200 px-2.5 py-1 rounded-xl transition-colors">
             <span>Top 5</span>
             <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
@@ -142,7 +238,7 @@ export const TopGratitudeSpotlight: React.FC = () => {
               {/* Minimal Leaderboard List */}
               <div className="p-4 space-y-2 overflow-y-auto">
                 {topMembers.map((member) => {
-                  const badge = getRankBadge(member.rank);
+                  const mBadge = getRankBadge(member.rank);
                   const isFirst = member.rank === 1;
 
                   return (
@@ -158,9 +254,9 @@ export const TopGratitudeSpotlight: React.FC = () => {
                       <div className="flex items-center gap-3 min-w-0">
                         {/* Rank Badge */}
                         <div
-                          className={`w-7 h-7 rounded-xl border flex items-center justify-center font-extrabold text-xs shrink-0 ${badge.bg}`}
+                          className={`w-7 h-7 rounded-xl border flex items-center justify-center font-extrabold text-xs shrink-0 ${mBadge.bg}`}
                         >
-                          {badge.icon}
+                          {mBadge.icon}
                         </div>
 
                         {/* Avatar */}
