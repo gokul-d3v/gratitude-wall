@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="light">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -8,7 +8,25 @@
     <meta name="description" content="BROTIFY is a real-time virtual gratitude wall where employees share appreciation notes, tag colleagues, and spread positivity across the organization." />
     <meta name="keywords" content="gratitude wall, employee appreciation, team recognition, workplace positivity, BROTIFY" />
     <meta name="author" content="BROTIFY" />
-    <meta name="theme-color" content="#0058bd" />
+    <meta name="theme-color" content="#0f172a" />
+
+    <script>
+      try {
+        const stored = localStorage.getItem('brotify-theme-storage');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.state && parsed.state.theme === 'light') {
+            document.documentElement.classList.remove('dark');
+          } else {
+            document.documentElement.classList.add('dark');
+          }
+        } else {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
 
     <!-- Open Graph / Social Sharing -->
     <meta property="og:type" content="website" />
@@ -21,7 +39,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300..900;1,300..900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   </head>
-  <body class="min-h-screen bg-[#fffcf9] text-[#191c1d] antialiased">
+  <body class="min-h-screen bg-[#fffcf9] dark:bg-[#0f172a] text-[#191c1d] dark:text-[#f8fafc] antialiased">
     <div id="root"></div>
     <noscript>
       <div style="padding: 2rem; text-align: center; font-family: 'Inter', sans-serif;">

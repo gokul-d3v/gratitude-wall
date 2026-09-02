@@ -10,7 +10,7 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      theme: 'light',
+      theme: 'dark',
       toggleTheme: () =>
         set((state) => {
           const next = state.theme === 'light' ? 'dark' : 'light';
@@ -33,7 +33,8 @@ export const useThemeStore = create<ThemeState>()(
     {
       name: 'brotify-theme-storage',
       onRehydrateStorage: () => (state) => {
-        if (state?.theme === 'dark') {
+        const activeTheme = state?.theme || 'dark';
+        if (activeTheme === 'dark') {
           document.documentElement.classList.add('dark');
         } else {
           document.documentElement.classList.remove('dark');
