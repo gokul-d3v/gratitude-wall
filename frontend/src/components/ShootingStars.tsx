@@ -68,58 +68,55 @@ export const ShootingStars: React.FC = () => {
     const timeouts: any[] = [];
 
     const startAlienMission = () => {
-      const logoElement = document.getElementById('brotify-logo');
+      const brandContainer = document.getElementById('brotify-brand-container');
       
-      if (!logoElement) {
+      if (!brandContainer) {
         scheduleNext(5000);
         return;
       }
 
-      const logoRect = logoElement.getBoundingClientRect();
+      const brandRect = brandContainer.getBoundingClientRect();
 
-      // Thanos Snap Effect: Disintegrate the BROTIFY logo
-      html2canvas(logoElement, { backgroundColor: null }).then((canvas) => {
+      // Thanos Snap Effect: Disintegrate the entire BROTIFY logo and subtitle
+      html2canvas(brandContainer, { backgroundColor: null }).then((canvas) => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const pixelArr = imageData.data;
         
-        // Hide the original text logo
-        logoElement.style.opacity = '0';
-        logoElement.style.transition = 'opacity 0.2s';
+        // Hide the original brand container
+        brandContainer.style.opacity = '0';
 
         // Create particle dust elements for the snap
         const dustContainer = document.createElement('div');
         dustContainer.style.position = 'fixed';
-        dustContainer.style.left = `${logoRect.left}px`;
-        dustContainer.style.top = `${logoRect.top}px`;
-        dustContainer.style.width = `${logoRect.width}px`;
-        dustContainer.style.height = `${logoRect.height}px`;
+        dustContainer.style.left = `${brandRect.left}px`;
+        dustContainer.style.top = `${brandRect.top}px`;
+        dustContainer.style.width = `${brandRect.width}px`;
+        dustContainer.style.height = `${brandRect.height}px`;
         dustContainer.style.pointerEvents = 'none';
         dustContainer.style.zIndex = '1000';
         document.body.appendChild(dustContainer);
 
-        const particleCount = 100;
+        const particleCount = 120;
         for (let i = 0; i < particleCount; i++) {
           const particle = document.createElement('div');
           particle.style.position = 'absolute';
           particle.style.width = '2px';
           particle.style.height = '2px';
-          particle.style.background = '#0058bd'; // Matches typical brotify color
+          particle.style.background = Math.random() > 0.5 ? '#0058bd' : '#424753'; // Match brotify text colors
           particle.style.left = `${Math.random() * 100}%`;
           particle.style.top = `${Math.random() * 100}%`;
           particle.style.borderRadius = '50%';
           
           const angle = Math.random() * Math.PI * 2;
-          const velocity = 20 + Math.random() * 50;
-          const tx = Math.cos(angle) * velocity;
+          const velocity = 20 + Math.random() * 60;
+          const tx = Math.cos(angle) * velocity + 20; // Drift right slightly
           const ty = Math.sin(angle) * velocity - 30; // Float upwards
           
           particle.animate([
             { transform: 'translate(0, 0) scale(1)', opacity: 1 },
             { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
           ], {
-            duration: 1000 + Math.random() * 1000,
+            duration: 1200 + Math.random() * 1000,
             easing: 'cubic-bezier(0, .9, .57, 1)',
             fill: 'forwards'
           });
@@ -128,55 +125,66 @@ export const ShootingStars: React.FC = () => {
         }
 
         setTimeout(() => {
-          document.body.removeChild(dustContainer);
-        }, 2000);
+          if (document.body.contains(dustContainer)) {
+            document.body.removeChild(dustContainer);
+          }
+        }, 2500);
       });
 
-      // Position EXACTLY on top of the BROTIFY logo
-      const ufoX = logoRect.left + logoRect.width / 2;
-      const ufoY = logoRect.bottom; // Character standing exactly where the logo text was
-      const alienX = ufoX; 
-      const alienY = ufoY; // Exactly the same floor level
-
-      const fromLeft = Math.random() > 0.5;
-      const startX = fromLeft ? -200 : window.innerWidth + 200;
-      const startY = ufoY; 
-
-      const newMission: AlienMission = {
-        id: Date.now(),
-        phase: 'flying-in',
-        startX,
-        startY,
-        ufoX,
-        ufoY,
-        alienX,
-        alienY,
-      };
-
-      setMission(newMission);
-
-      // Phase 1: Both fade in together
+      // After 2.2 seconds (when dust clears), spawn the character animation
       timeouts.push(
         setTimeout(() => {
-          setMission((prev) => (prev ? { ...prev, phase: 'alien-waving' } : null));
-        }, 500) // Delay slightly to let dust settle
-      );
+          // Position EXACTLY on top of the BROTIFY logo area
+          const ufoX = brandRect.left + brandRect.width / 2;
+          const ufoY = brandRect.bottom + 10; // Character standing exactly where the logo text was
+          const alienX = ufoX; 
+          const alienY = ufoY; // Exactly the same floor level
 
-      // Phase 2: Both fade out together, restore logo
-      timeouts.push(
-        setTimeout(() => {
-          setMission((prev) => (prev ? { ...prev, phase: 'flying-out' } : null));
-          // Restore the logo text smoothly
-          logoElement.style.opacity = '1';
-        }, 6000)
-      );
+          const fromLeft = Math.random() > 0.5;
+          const startX = fromLeft ? -200 : window.innerWidth + 200;
+          const startY = ufoY; 
 
-      // Phase 6: Mission complete -> schedule next visit
-      timeouts.push(
-        setTimeout(() => {
-          setMission(null);
-          scheduleNext(15000 + Math.random() * 15000);
-        }, 8400)
+          const newMission: AlienMission = {
+            id: Date.now(),
+            phase: 'flying-in',
+            startX,
+            startY,
+            ufoX,
+            ufoY,
+            alienX,
+            alienY,
+          };
+
+          setMission(newMission);
+
+          // Phase 1: Both fade in together
+          timeouts.push(
+            setTimeout(() => {
+              setMission((prev) => (prev ? { ...prev, phase: 'alien-waving' } : null));
+            }, 250) // Short delay to let the DOM element mount first
+          );
+
+          // Phase 2: Fade out the character after waving
+          timeouts.push(
+            setTimeout(() => {
+              setMission((prev) => (prev ? { ...prev, phase: 'flying-out' } : null));
+              
+              // Restore the logo text smoothly after the character fades out
+              setTimeout(() => {
+                brandContainer.style.opacity = '1';
+              }, 1200);
+              
+            }, 5000)
+          );
+
+          // Phase 3: Mission complete -> schedule next visit
+          timeouts.push(
+            setTimeout(() => {
+              setMission(null);
+              scheduleNext(15000 + Math.random() * 15000);
+            }, 7500)
+          );
+        }, 2200) // 2.2 seconds wait for Thanos snap
       );
     };
 
