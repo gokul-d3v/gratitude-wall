@@ -182,17 +182,8 @@ export const TopGratitudeSpotlight: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Section: Score + Dots + View Leaderboard */}
+        {/* Right Section: Dots + View Leaderboard */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Active Member Score */}
-          <div
-            className={`flex items-center gap-1.5 bg-white/90 dark:bg-slate-800 border border-amber-200/60 dark:border-slate-700 px-2.5 py-1 rounded-xl text-xs font-black text-amber-950 dark:text-amber-300 shadow-2xs transition-all duration-300 ${
-              isFading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-            }`}
-          >
-            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-            <span>{currentMember.score} pts</span>
-          </div>
 
           {/* Carousel Position Dots (1 to 5) */}
           {topMembers.length > 1 && (
@@ -313,10 +304,6 @@ export const TopGratitudeSpotlight: React.FC = () => {
                             {member.likesCount}
                           </span>
                         </div>
-
-                        <div className="flex items-center gap-1 bg-amber-400/90 dark:bg-amber-500 text-amber-950 font-black text-xs px-2.5 py-1 rounded-xl shadow-2xs">
-                          <span>{member.score}</span>
-                          <span className="text-[10px] font-bold opacity-80">pts</span>
                         </div>
                       </div>
                     </div>
@@ -327,8 +314,8 @@ export const TopGratitudeSpotlight: React.FC = () => {
               {/* Minimal Scoring Note Footer */}
               <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/80 border-t border-black/5 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">Formula:</span>
-                  <span>(🏷️ Tags × 3) + (❤️ Likes × 2)</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">Ranked by:</span>
+                  <span>❤️ Most Likes</span>
                 </div>
                 <button
                   onClick={() => setIsLeaderboardOpen(false)}

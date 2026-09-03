@@ -132,16 +132,8 @@ export const getTopGratitudeUsers = async () => {
       },
     },
     {
-      $addFields: {
-        score: {
-          $add: [
-            { $multiply: ['$tagsCount', 3] },
-            { $multiply: ['$likesCount', 2] },
-          ],
-        },
-      },
+      $sort: { likesCount: -1, tagsCount: -1 } 
     },
-    { $sort: { score: -1, likesCount: -1, tagsCount: -1 } },
     { $limit: 5 },
   ]);
 
@@ -169,7 +161,6 @@ export const getTopGratitudeUsers = async () => {
       },
       tagsCount: t.tagsCount,
       likesCount: t.likesCount,
-      score: t.score || (t.tagsCount * 3 + t.likesCount * 2),
     };
   });
 };
