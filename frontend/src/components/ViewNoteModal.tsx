@@ -147,7 +147,7 @@ export const ViewNoteModal: React.FC = () => {
 
         {/* Message Body */}
         <div className="flex-grow my-4">
-          <p className="text-xl sm:text-2xl text-[#191c1d] italic leading-relaxed break-words break-all whitespace-pre-wrap font-medium">
+          <p className="text-xl sm:text-2xl text-[#191c1d] italic leading-relaxed break-words whitespace-pre-wrap font-medium">
             "{post.content}"
           </p>
         </div>
