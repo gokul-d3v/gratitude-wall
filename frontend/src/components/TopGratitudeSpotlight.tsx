@@ -304,7 +304,6 @@ export const TopGratitudeSpotlight: React.FC = () => {
                             {member.likesCount}
                           </span>
                         </div>
-                        </div>
                       </div>
                     </div>
                   );
