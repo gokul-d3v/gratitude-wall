@@ -75,5 +75,4 @@ export interface TopAppreciatedMember {
   };
   tagsCount: number;
   likesCount: number;
-  score: number;
 }
