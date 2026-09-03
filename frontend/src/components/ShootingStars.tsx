@@ -95,13 +95,13 @@ export const ShootingStars: React.FC = () => {
       const cardRect = targetCard.getBoundingClientRect();
 
       const ufoX = cardRect.left + cardRect.width / 2;
-      const ufoY = Math.max(30, cardRect.top - 85);
-      const alienX = cardRect.left + cardRect.width / 2;
-      const alienY = cardRect.top - 20;
+      const ufoY = cardRect.top - 20; // Set a common floor line
+      const alienX = ufoX; 
+      const alienY = ufoY; // Exactly the same floor level
 
       const fromLeft = Math.random() > 0.5;
-      const startX = fromLeft ? -140 : window.innerWidth + 140;
-      const startY = Math.max(-50, ufoY - 100);
+      const startX = fromLeft ? -200 : window.innerWidth + 200;
+      const startY = ufoY; // Drive in straight, no flying in from above
 
       const newMission: AlienMission = {
         id: Date.now(),
@@ -116,39 +116,18 @@ export const ShootingStars: React.FC = () => {
 
       setMission(newMission);
 
-      // Phase 1: UFO arrives and hovers above card
-      timeouts.push(
-        setTimeout(() => {
-          setMission((prev) => (prev ? { ...prev, phase: 'hovering' } : null));
-        }, 1500)
-      );
-
-      // Phase 2: Alien descends down the glowing tractor beam
-      timeouts.push(
-        setTimeout(() => {
-          setMission((prev) => (prev ? { ...prev, phase: 'alien-descending' } : null));
-        }, 2100)
-      );
-
-      // Phase 3: Alien lands on top of the card and waves happily to everyone!
+      // Phase 1: Both fade in together (give browser time to mount with opacity 0)
       timeouts.push(
         setTimeout(() => {
           setMission((prev) => (prev ? { ...prev, phase: 'alien-waving' } : null));
-        }, 2800)
+        }, 250)
       );
 
-      // Phase 4: Alien beams back up into the ship
-      timeouts.push(
-        setTimeout(() => {
-          setMission((prev) => (prev ? { ...prev, phase: 'alien-ascending' } : null));
-        }, 6000)
-      );
-
-      // Phase 5: UFO zooms away into the galaxy
+      // Phase 2: Both fade out together
       timeouts.push(
         setTimeout(() => {
           setMission((prev) => (prev ? { ...prev, phase: 'flying-out' } : null));
-        }, 6900)
+        }, 6000)
       );
 
       // Phase 6: Mission complete -> schedule next visit
@@ -332,141 +311,42 @@ export const ShootingStars: React.FC = () => {
     <div className="fixed inset-0 pointer-events-none z-30 overflow-hidden" aria-hidden="true">
       <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
 
-      {/* UFO Spaceship */}
+      {/* BMW i7 Car */}
       {mission && (
         <div
-          className="fixed pointer-events-none transition-all duration-700 ease-out z-40"
+          className="fixed pointer-events-none z-40"
           style={{
-            left:
-              mission.phase === 'flying-in'
-                ? `${mission.startX}px`
-                : mission.phase === 'flying-out'
-                ? `${mission.ufoX + 750}px`
-                : `${mission.ufoX}px`,
-            top:
-              mission.phase === 'flying-in'
-                ? `${mission.startY}px`
-                : mission.phase === 'flying-out'
-                ? `${mission.ufoY - 350}px`
-                : `${mission.ufoY}px`,
-            transform: `translate(-50%, -50%) ${
-              mission.phase === 'flying-out'
-                ? 'rotate(18deg) scale(0.85)'
-                : mission.phase === 'flying-in'
-                ? 'rotate(-8deg)'
-                : 'rotate(0deg)'
-            }`,
-            opacity: mission.phase === 'flying-out' ? 0.2 : 1,
-            transitionDuration:
-              mission.phase === 'flying-in'
-                ? '1.4s'
-                : mission.phase === 'flying-out'
-                ? '1.3s'
-                : '0.4s',
+            left: `${mission.ufoX}px`,
+            top: `${mission.ufoY}px`,
+            transform: `translate(-50%, ${mission.phase === 'alien-waving' ? '-100%' : 'calc(-100% + 15px)'}) scaleX(${mission.startX > window.innerWidth / 2 ? -1 : 1})`,
+            opacity: mission.phase === 'alien-waving' ? 1 : 0,
+            transition: 'all 1.2s cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         >
-          <div className="relative ufo-glow flex flex-col items-center">
-            {/* UFO Saucer SVG */}
-            <svg
-              width="88"
-              height="46"
-              viewBox="0 0 88 46"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Glass Cockpit Dome */}
-              <ellipse
-                cx="44"
-                cy="18"
-                rx="17"
-                ry="14"
-                fill="#38bdf8"
-                fillOpacity="0.45"
-                stroke="#7dd3fc"
-                strokeWidth="1.2"
-              />
-
-              {/* Alien inside dome when flying */}
-              {(mission.phase === 'flying-in' || mission.phase === 'flying-out') && (
-                <>
-                  <ellipse cx="44" cy="17" rx="6" ry="7" fill="#4ade80" />
-                  <ellipse cx="41.8" cy="15.5" rx="1.6" ry="2.4" transform="rotate(-15 41.8 15.5)" fill="#0f172a" />
-                  <ellipse cx="46.2" cy="15.5" rx="1.6" ry="2.4" transform="rotate(15 46.2 15.5)" fill="#0f172a" />
-                  <circle cx="42" cy="15" r="0.5" fill="#ffffff" />
-                  <circle cx="46.4" cy="15" r="0.5" fill="#ffffff" />
-                </>
-              )}
-
-              {/* Metallic Hull */}
-              <ellipse
-                cx="44"
-                cy="25"
-                rx="40"
-                ry="11"
-                fill="url(#ufoSaucerMetal)"
-                stroke="#94a3b8"
-                strokeWidth="1"
-              />
-
-              {/* Saucer Lower Base */}
-              <path
-                d="M18 25C18 30.5 29 34.5 44 34.5C59 34.5 70 30.5 70 25"
-                fill="#334155"
-                stroke="#64748b"
-                strokeWidth="1"
-              />
-
-              {/* Blinking Anti-Gravity Thruster Lights */}
-              <circle cx="16" cy="25" r="2.2" fill="#f43f5e" className="animate-pulse" />
-              <circle cx="30" cy="27.5" r="2.5" fill="#38bdf8" className="animate-pulse" style={{ animationDelay: '0.2s' }} />
-              <circle cx="44" cy="28.5" r="2.8" fill="#facc15" className="animate-pulse" style={{ animationDelay: '0.4s' }} />
-              <circle cx="58" cy="27.5" r="2.5" fill="#38bdf8" className="animate-pulse" style={{ animationDelay: '0.6s' }} />
-              <circle cx="72" cy="25" r="2.2" fill="#a855f7" className="animate-pulse" style={{ animationDelay: '0.8s' }} />
-
-              <defs>
-                <linearGradient id="ufoSaucerMetal" x1="5" y1="15" x2="83" y2="35" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#f8fafc" />
-                  <stop offset="0.5" stopColor="#94a3b8" />
-                  <stop offset="1" stopColor="#475569" />
-                </linearGradient>
-              </defs>
-            </svg>
-
-            {/* Glowing Downward Tractor Elevator Beam */}
-            {mission.phase !== 'flying-in' && mission.phase !== 'flying-out' && (
-              <div
-                className="ufo-beam w-24 h-28 -mt-2 bg-gradient-to-b from-cyan-400/50 via-emerald-400/25 to-transparent animate-pulse"
-                style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%)' }}
-              />
-            )}
+          <div className="relative flex flex-col items-center drop-shadow-2xl">
+            {/* BMW i7 Image */}
+            <img 
+              src="/bmw-i7.png" 
+              alt="BMW i7" 
+              className="w-[180px] h-auto object-contain" 
+            />
           </div>
         </div>
       )}
 
-      {/* 👽 High Quality Animated Alien Character */}
-      {mission &&
-        (mission.phase === 'alien-descending' ||
-          mission.phase === 'alien-waving' ||
-          mission.phase === 'alien-ascending') && (
+      {/* 👽 High Quality Animated Character */}
+      {mission && (
           <div
-            className="fixed pointer-events-none z-50 transition-all duration-500 ease-out"
+            className="fixed pointer-events-none z-50"
             style={{
               left: `${mission.alienX}px`,
               top: `${mission.alienY}px`,
-              transform: `translate(-50%, -50%) ${
-                mission.phase === 'alien-descending'
-                  ? 'translateY(-35px) scale(0.6) opacity-60'
-                  : mission.phase === 'alien-ascending'
-                  ? 'translateY(-40px) scale(0.6) opacity-0'
-                  : 'translateY(0) scale(1) opacity-100'
-              }`,
-              transitionDuration:
-                mission.phase === 'alien-descending' || mission.phase === 'alien-ascending'
-                  ? '0.7s'
-                  : '0.4s',
+              transform: `translate(-50%, ${mission.phase === 'alien-waving' ? '-100%' : 'calc(-100% + 15px)'})`,
+              opacity: mission.phase === 'alien-waving' ? 1 : 0,
+              transition: 'all 1.2s cubic-bezier(0.22, 1, 0.36, 1)',
             }}
           >
-            <div className="relative flex flex-col items-center alien-body-bounce">
+            <div className="relative flex flex-col items-center">
               {/* Friendly Floating Greeting Bubble */}
               {mission.phase === 'alien-waving' && (
                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-slate-900/95 border border-cyan-400/80 shadow-[0_0_12px_rgba(56,189,248,0.4)] text-[11px] font-black text-cyan-300 flex items-center gap-1.5 whitespace-nowrap animate-in zoom-in-75 duration-300 z-50">
@@ -476,82 +356,15 @@ export const ShootingStars: React.FC = () => {
                 </div>
               )}
 
-              {/* Detailed Animated Alien Vector SVG with Fluid Hand Wave */}
-              <svg width="54" height="60" viewBox="0 0 54 60" fill="none">
-                <defs>
-                  <linearGradient id="alienSkin" x1="16" y1="10" x2="36" y2="32" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#86efac" />
-                    <stop offset="0.6" stopColor="#4ade80" />
-                    <stop offset="1" stopColor="#22c55e" />
-                  </linearGradient>
-                  <linearGradient id="alienSuit" x1="17" y1="30" x2="35" y2="46" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#38bdf8" />
-                    <stop offset="1" stopColor="#0284c7" />
-                  </linearGradient>
-                </defs>
-
-                {/* Antenna Stalk */}
-                <path d="M26 12C26 8 29 5 29 3" stroke="#4ade80" strokeWidth="2.2" strokeLinecap="round" />
-                {/* Glowing Antenna Orb */}
-                <circle cx="29" cy="3" r="3.2" fill="#38bdf8" className="alien-antenna" stroke="#7dd3fc" strokeWidth="1" />
-
-                {/* Big Expressive Alien Head */}
-                <ellipse cx="26" cy="20" rx="12.5" ry="13.5" fill="url(#alienSkin)" stroke="#16a34a" strokeWidth="1" />
-
-                {/* Big Glossy Space Eyes */}
-                <ellipse cx="21" cy="18.5" rx="3.6" ry="5.4" transform="rotate(-15 21 18.5)" fill="#0f172a" />
-                <ellipse cx="31" cy="18.5" rx="3.6" ry="5.4" transform="rotate(15 31 18.5)" fill="#0f172a" />
-
-                {/* Multi-reflection Eye Highlights (Cute/Alive look) */}
-                <circle cx="21.6" cy="16.8" r="1.4" fill="#ffffff" />
-                <circle cx="20" cy="20.5" r="0.7" fill="#ffffff" />
-                <circle cx="31.6" cy="16.8" r="1.4" fill="#ffffff" />
-                <circle cx="30" cy="20.5" r="0.7" fill="#ffffff" />
-
-                {/* Cute Cheeks */}
-                <circle cx="17" cy="23.5" r="1.8" fill="#f43f5e" fillOpacity="0.4" />
-                <circle cx="35" cy="23.5" r="1.8" fill="#f43f5e" fillOpacity="0.4" />
-
-                {/* Happy Warm Smile */}
-                <path d="M23.5 24.5C24.8 26.5 27.2 26.5 28.5 24.5" stroke="#15803d" strokeWidth="1.5" strokeLinecap="round" />
-
-                {/* Spacesuit Collar */}
-                <path d="M19 32C22 34 30 34 33 32" stroke="#0284c7" strokeWidth="2.2" strokeLinecap="round" />
-
-                {/* Spacesuit Body */}
-                <rect x="18" y="32" width="16" height="14" rx="4" fill="url(#alienSuit)" stroke="#0369a1" strokeWidth="1" />
-
-                {/* Star Badge on Chest */}
-                <circle cx="26" cy="37" r="2.4" fill="#facc15" />
-                <path d="M26 35.2L26.6 36.4L27.8 36.4L26.8 37.2L27.2 38.4L26 37.5L24.8 38.4L25.2 37.2L24.2 36.4L25.4 36.4Z" fill="#ffffff" />
-
-                {/* Suit Belt */}
-                <rect x="18" y="41" width="16" height="2.5" fill="#0c4a6e" />
-                <rect x="24" y="41" width="4" height="2.5" fill="#38bdf8" />
-
-                {/* Legs */}
-                <rect x="19.5" y="46" width="4.5" height="8" rx="2" fill="#0284c7" stroke="#0369a1" strokeWidth="0.8" />
-                <rect x="28" y="46" width="4.5" height="8" rx="2" fill="#0284c7" stroke="#0369a1" strokeWidth="0.8" />
-
-                {/* Left Arm (Resting on hip) */}
-                <path d="M18 34L12 40" stroke="#4ade80" strokeWidth="3.2" strokeLinecap="round" />
-                <circle cx="11.5" cy="40.5" r="2.2" fill="#4ade80" />
-
-                {/* Right Arm: Natural Shoulder Base */}
-                <path d="M34 34L40 26" stroke="#4ade80" strokeWidth="3.2" strokeLinecap="round" />
-
-                {/* Fluid Waving Forearm & Cute Open Palm 👋 */}
-                <g className="alien-waving-hand">
-                  <path d="M40 26L46 16" stroke="#4ade80" strokeWidth="3.2" strokeLinecap="round" />
-                  
-                  {/* Palm */}
-                  <circle cx="46.5" cy="14.5" r="2.8" fill="#4ade80" />
-                  {/* Fingers */}
-                  <path d="M46.5 12L47 9" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" />
-                  <path d="M48.5 13L50.5 11" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" />
-                  <path d="M44.5 13.5L42.5 12" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" />
-                </g>
-              </svg>
+              {/* Custom Character Waving Video */}
+              <video 
+                src="/charecter.webm" 
+                autoPlay 
+                loop 
+                muted 
+                playsInline
+                className="w-auto h-[120px] drop-shadow-2xl" 
+              />
             </div>
           </div>
         )}
