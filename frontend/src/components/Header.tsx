@@ -111,7 +111,7 @@ export const Header: React.FC = () => {
       <div className="flex items-center justify-between gap-3 w-full relative">
         {/* Brand Title & Subtitle */}
         <div className="flex flex-col gap-0.5">
-          <h1 className="font-display text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-[#191c1d] dark:text-slate-100 transition-colors">
+          <h1 id="brotify-logo" className="font-display text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-[#191c1d] dark:text-slate-100 transition-colors">
             BROTIFY
           </h1>
           <p className="text-[10px] sm:text-xs text-[#424753] dark:text-slate-400 font-medium transition-colors">
