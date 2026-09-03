@@ -170,10 +170,6 @@ export const TopGratitudeSpotlight: React.FC = () => {
 
             {/* Tags & Likes preview */}
             <div className="hidden md:flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400 font-semibold shrink-0 ml-auto">
-              <span className="flex items-center gap-0.5 text-[#0058bd] dark:text-blue-400 bg-white/90 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-900/50">
-                <Tag className="w-3 h-3" />
-                {currentMember.tagsCount} tags
-              </span>
               <span className="flex items-center gap-0.5 text-rose-600 dark:text-rose-400 bg-white/90 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/50">
                 <Heart className="w-3 h-3 fill-current" />
                 {currentMember.likesCount} likes
@@ -295,10 +291,6 @@ export const TopGratitudeSpotlight: React.FC = () => {
                       {/* Right: Metrics & Points */}
                       <div className="flex items-center gap-2 shrink-0">
                         <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                          <span className="flex items-center gap-0.5 text-[#0058bd] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1.5 py-0.5 rounded-md border border-blue-100/80 dark:border-blue-900/50 font-bold">
-                            <Tag className="w-3 h-3" />
-                            {member.tagsCount}
-                          </span>
                           <span className="flex items-center gap-0.5 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.5 rounded-md border border-rose-100/80 dark:border-rose-900/50 font-bold">
                             <Heart className="w-3 h-3 fill-current" />
                             {member.likesCount}

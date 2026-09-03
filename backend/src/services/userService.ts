@@ -129,10 +129,11 @@ export const getTopGratitudeUsers = async () => {
         _id: '$taggedUsers',
         tagsCount: { $sum: 1 },
         likesCount: { $sum: { $ifNull: ['$likesCount', 0] } },
+        latestPostDate: { $max: '$createdAt' },
       },
     },
     {
-      $sort: { likesCount: -1, tagsCount: -1 } 
+      $sort: { likesCount: -1, latestPostDate: -1 } 
     },
     { $limit: 5 },
   ]);
