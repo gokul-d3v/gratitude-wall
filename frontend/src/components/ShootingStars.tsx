@@ -15,7 +15,6 @@ interface Star {
   trailColor: string;
 }
 
-import html2canvas from 'html2canvas';
 
 interface TwinkleStar {
   x: number;
@@ -77,59 +76,54 @@ export const ShootingStars: React.FC = () => {
 
       const brandRect = brandContainer.getBoundingClientRect();
 
-      // Thanos Snap Effect: Disintegrate the entire BROTIFY logo and subtitle
-      html2canvas(brandContainer, { backgroundColor: null }).then((canvas) => {
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+      // Hide the original brand container instantly
+      brandContainer.style.transition = 'none';
+      brandContainer.style.opacity = '0';
+
+      // Create particle dust elements for the snap
+      const dustContainer = document.createElement('div');
+      dustContainer.style.position = 'fixed';
+      dustContainer.style.left = `${brandRect.left}px`;
+      dustContainer.style.top = `${brandRect.top}px`;
+      dustContainer.style.width = `${brandRect.width}px`;
+      dustContainer.style.height = `${brandRect.height}px`;
+      dustContainer.style.pointerEvents = 'none';
+      dustContainer.style.zIndex = '1000';
+      document.body.appendChild(dustContainer);
+
+      const particleCount = 120;
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.style.position = 'absolute';
+        particle.style.width = '3px';
+        particle.style.height = '3px';
+        particle.style.background = Math.random() > 0.5 ? '#0058bd' : '#424753'; // Match brotify text colors
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.top = `${Math.random() * 100}%`;
+        particle.style.borderRadius = '50%';
         
-        // Hide the original brand container
-        brandContainer.style.opacity = '0';
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 20 + Math.random() * 60;
+        const tx = Math.cos(angle) * velocity + 20; // Drift right slightly
+        const ty = Math.sin(angle) * velocity - 30; // Float upwards
+        
+        particle.animate([
+          { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+          { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+        ], {
+          duration: 1200 + Math.random() * 1000,
+          easing: 'cubic-bezier(0, .9, .57, 1)',
+          fill: 'forwards'
+        });
+        
+        dustContainer.appendChild(particle);
+      }
 
-        // Create particle dust elements for the snap
-        const dustContainer = document.createElement('div');
-        dustContainer.style.position = 'fixed';
-        dustContainer.style.left = `${brandRect.left}px`;
-        dustContainer.style.top = `${brandRect.top}px`;
-        dustContainer.style.width = `${brandRect.width}px`;
-        dustContainer.style.height = `${brandRect.height}px`;
-        dustContainer.style.pointerEvents = 'none';
-        dustContainer.style.zIndex = '1000';
-        document.body.appendChild(dustContainer);
-
-        const particleCount = 120;
-        for (let i = 0; i < particleCount; i++) {
-          const particle = document.createElement('div');
-          particle.style.position = 'absolute';
-          particle.style.width = '2px';
-          particle.style.height = '2px';
-          particle.style.background = Math.random() > 0.5 ? '#0058bd' : '#424753'; // Match brotify text colors
-          particle.style.left = `${Math.random() * 100}%`;
-          particle.style.top = `${Math.random() * 100}%`;
-          particle.style.borderRadius = '50%';
-          
-          const angle = Math.random() * Math.PI * 2;
-          const velocity = 20 + Math.random() * 60;
-          const tx = Math.cos(angle) * velocity + 20; // Drift right slightly
-          const ty = Math.sin(angle) * velocity - 30; // Float upwards
-          
-          particle.animate([
-            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-            { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
-          ], {
-            duration: 1200 + Math.random() * 1000,
-            easing: 'cubic-bezier(0, .9, .57, 1)',
-            fill: 'forwards'
-          });
-          
-          dustContainer.appendChild(particle);
+      setTimeout(() => {
+        if (document.body.contains(dustContainer)) {
+          document.body.removeChild(dustContainer);
         }
-
-        setTimeout(() => {
-          if (document.body.contains(dustContainer)) {
-            document.body.removeChild(dustContainer);
-          }
-        }, 2500);
-      });
+      }, 2500);
 
       // After 2.2 seconds (when dust clears), spawn the character animation
       timeouts.push(
@@ -171,6 +165,7 @@ export const ShootingStars: React.FC = () => {
               
               // Restore the logo text smoothly after the character fades out
               setTimeout(() => {
+                brandContainer.style.transition = 'opacity 1s ease-in-out';
                 brandContainer.style.opacity = '1';
               }, 1200);
               
