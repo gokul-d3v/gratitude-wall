@@ -331,7 +331,7 @@ export const StickyNoteCard: React.FC<StickyNoteCardProps> = ({ post }) => {
 
       {/* Message Body */}
       <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
-        <p className="text-sm text-[#191c1d] italic leading-relaxed break-words break-all line-clamp-4 overflow-hidden">
+        <p className="text-sm text-[#191c1d] italic leading-relaxed break-words line-clamp-4 overflow-hidden">
           "{post.content}"
         </p>
         {post.content && post.content.length > 160 && (
