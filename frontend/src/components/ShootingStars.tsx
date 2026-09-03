@@ -66,36 +66,18 @@ export const ShootingStars: React.FC = () => {
     const timeouts: any[] = [];
 
     const startAlienMission = () => {
-      const cards = Array.from(document.querySelectorAll<HTMLElement>('.sticky-note'));
-
-      if (cards.length === 0) {
+      const logoElement = document.getElementById('brotify-logo');
+      
+      if (!logoElement) {
         scheduleNext(5000);
         return;
       }
 
-      // Filter visible cards in viewport
-      const visibleCards = cards.filter((card) => {
-        const r = card.getBoundingClientRect();
-        return (
-          r.top >= 80 &&
-          r.bottom <= window.innerHeight - 40 &&
-          r.left >= 40 &&
-          r.right <= window.innerWidth - 40
-        );
-      });
+      const logoRect = logoElement.getBoundingClientRect();
 
-      const targetPool = visibleCards.length > 0 ? visibleCards : cards;
-      const targetCard = targetPool[Math.floor(Math.random() * targetPool.length)];
-
-      if (!targetCard) {
-        scheduleNext(5000);
-        return;
-      }
-
-      const cardRect = targetCard.getBoundingClientRect();
-
-      const ufoX = cardRect.left + cardRect.width / 2;
-      const ufoY = cardRect.top - 20; // Set a common floor line
+      // Position near the right side of the BROTIFY logo
+      const ufoX = logoRect.right + 120; // offset to the right of the logo
+      const ufoY = logoRect.bottom + 50; // set a comfortable floor line slightly below the logo
       const alienX = ufoX; 
       const alienY = ufoY; // Exactly the same floor level
 
