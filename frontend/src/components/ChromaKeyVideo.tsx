@@ -2,12 +2,10 @@ import React, { useEffect, useRef } from 'react';
 
 interface ChromaKeyVideoProps extends React.VideoHTMLAttributes<HTMLVideoElement> {
   videoSrc: string;
-  width?: number;
-  height?: number;
   className?: string;
 }
 
-export const ChromaKeyVideo: React.FC<ChromaKeyVideoProps> = ({ videoSrc, width, height, className, ...props }) => {
+export const ChromaKeyVideo: React.FC<ChromaKeyVideoProps> = ({ videoSrc, className, ...props }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -27,6 +25,17 @@ export const ChromaKeyVideo: React.FC<ChromaKeyVideoProps> = ({ videoSrc, width,
         return;
       }
 
+      // Sync canvas resolution to the native video resolution for high quality
+      if (video.videoWidth > 0 && (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight)) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      }
+
+      if (canvas.width === 0 || canvas.height === 0) {
+         animationFrameId = requestAnimationFrame(processFrame);
+         return;
+      }
+
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const l = frame.data.length / 4;
@@ -36,14 +45,20 @@ export const ChromaKeyVideo: React.FC<ChromaKeyVideoProps> = ({ videoSrc, width,
         const g = frame.data[i * 4 + 1];
         const b = frame.data[i * 4 + 2];
 
-        // More robust green screen detection
-        if (g > r * 1.2 && g > b * 1.2 && g > 60) {
-           // Smooth falloff based on green intensity difference
+        // High quality green screen detection with anti-aliasing and spill suppression
+        if (g > r * 1.05 && g > b * 1.05 && g > 40) {
            const diff = Math.min(g - r, g - b);
-           if (diff > 40) {
-              frame.data[i * 4 + 3] = 0; // Transparent
+           if (diff > 25) {
+              frame.data[i * 4 + 3] = 0; // Fully transparent
            } else {
-              frame.data[i * 4 + 3] = Math.max(0, 255 - (diff * 6)); // Partial transparency
+              // Anti-aliasing soft edge
+              const alpha = Math.max(0, 255 - (diff * 10));
+              frame.data[i * 4 + 3] = alpha;
+              
+              // Color spill suppression: reduce green tint on edges
+              if (alpha > 0) {
+                 frame.data[i * 4 + 1] = (r + b) / 2; // Neutralize green to gray
+              }
            }
         }
       }
@@ -56,6 +71,10 @@ export const ChromaKeyVideo: React.FC<ChromaKeyVideoProps> = ({ videoSrc, width,
       animationFrameId = requestAnimationFrame(processFrame);
     });
 
+    if (!video.paused) {
+      animationFrameId = requestAnimationFrame(processFrame);
+    }
+
     return () => {
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
@@ -64,7 +83,7 @@ export const ChromaKeyVideo: React.FC<ChromaKeyVideoProps> = ({ videoSrc, width,
   }, []);
 
   return (
-    <div className={`relative ${className}`} style={{ width, height }}>
+    <div className={`relative ${className}`}>
       <video
         ref={videoRef}
         src={videoSrc}
@@ -78,8 +97,6 @@ export const ChromaKeyVideo: React.FC<ChromaKeyVideoProps> = ({ videoSrc, width,
       />
       <canvas
         ref={canvasRef}
-        width={width || 200}
-        height={height || 120}
         className="w-full h-full object-contain drop-shadow-2xl"
       />
     </div>

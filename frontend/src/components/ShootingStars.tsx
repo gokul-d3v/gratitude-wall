@@ -417,8 +417,6 @@ export const ShootingStars: React.FC = () => {
               {/* Custom Character Waving Video (Canvas Chroma Key) */}
               <ChromaKeyVideo 
                 videoSrc="/charecter.mp4" 
-                width={120}
-                height={120}
                 className="w-auto h-[120px]" 
               />
             </div>
