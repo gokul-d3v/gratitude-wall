@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useThemeStore } from '../store/useThemeStore';
 import { useAuthStore } from '../store/useAuthStore';
+import { ChromaKeyVideo } from './ChromaKeyVideo';
 
 interface Star {
   x: number;
@@ -413,17 +414,13 @@ export const ShootingStars: React.FC = () => {
                 </div>
               )}
 
-              {/* Custom Character Waving Video */}
-              <video 
-                autoPlay 
-                loop 
-                muted 
-                playsInline
-                className="w-auto h-[120px] drop-shadow-2xl" 
-              >
-                <source src="/charecter.mp4" type='video/mp4; codecs="hvc1"' />
-                <source src="/charecter.webm" type="video/webm" />
-              </video>
+              {/* Custom Character Waving Video (Canvas Chroma Key) */}
+              <ChromaKeyVideo 
+                videoSrc="/charecter.mp4" 
+                width={120}
+                height={120}
+                className="w-auto h-[120px]" 
+              />
             </div>
           </div>
         )}
