@@ -137,7 +137,7 @@ export const ShootingStars: React.FC = () => {
         setTimeout(() => {
           // Position EXACTLY on top of the BROTIFY logo area
           const ufoX = brandRect.left + brandRect.width / 2;
-          const ufoY = brandRect.bottom + 45; // Move lower to make room for the greeting bubble
+          const ufoY = brandRect.bottom + 75; // Increased to ensure the greeting bubble doesn't clip on mobile
           const alienX = ufoX; 
           const alienY = ufoY; // Exactly the same floor level
 
@@ -407,7 +407,7 @@ export const ShootingStars: React.FC = () => {
             <div className="relative flex flex-col items-center">
               {/* Friendly Floating Greeting Bubble */}
               {mission.phase === 'alien-waving' && (
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-slate-900/95 border border-cyan-400/80 shadow-[0_0_12px_rgba(56,189,248,0.4)] text-[11px] font-black text-cyan-300 flex items-center gap-1.5 whitespace-nowrap animate-in zoom-in-75 duration-300 z-50">
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-slate-900/95 border border-cyan-400/80 shadow-[0_0_12px_rgba(56,189,248,0.4)] text-[11px] font-black text-cyan-300 flex items-center gap-1.5 whitespace-nowrap animate-in zoom-in-75 duration-300 z-50">
                   <span>👋</span>
                   <span>Hi {userName ? userName : 'there'}!</span>
                   <span className="text-amber-300">✨</span>
