@@ -100,7 +100,6 @@ Open `http://localhost:5173/` in your browser.
 | `JWT_REFRESH_SECRET` | JWT refresh token secret | (required) |
 | `CLIENT_URL` | Frontend origin for CORS | `http://localhost:5173` |
 | `NODE_ENV` | Environment mode | `development` |
-| `ADMIN_SEED_PASSWORD` | Initial admin account password | `Brototype@321` (dev only) |
 
 ---
 
