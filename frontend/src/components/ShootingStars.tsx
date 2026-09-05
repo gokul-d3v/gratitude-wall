@@ -68,6 +68,12 @@ export const ShootingStars: React.FC = () => {
     const timeouts: any[] = [];
 
     const startAlienMission = () => {
+      // Disable animation on mobile devices
+      if (window.innerWidth < 768) {
+        scheduleNext(15000);
+        return;
+      }
+
       const brandContainer = document.getElementById('brotify-brand-container');
       
       if (!brandContainer) {
