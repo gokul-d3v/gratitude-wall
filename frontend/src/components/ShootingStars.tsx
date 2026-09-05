@@ -142,13 +142,13 @@ export const ShootingStars: React.FC = () => {
       timeouts.push(
         setTimeout(() => {
           // Position EXACTLY on top of the BROTIFY logo area
-          const ufoX = brandRect.left + brandRect.width / 2;
-          const ufoY = brandRect.bottom + 45; // Reverted back to 45 for perfect desktop alignment
+          const ufoX = brandRect.left + brandRect.width / 2 + window.scrollX;
+          const ufoY = brandRect.bottom + window.scrollY + 45; // Perfect desktop alignment, absolute to document
           const alienX = ufoX; 
           const alienY = ufoY; // Exactly the same floor level
 
           const fromLeft = Math.random() > 0.5;
-          const startX = fromLeft ? -200 : window.innerWidth + 200;
+          const startX = fromLeft ? window.scrollX - 200 : window.innerWidth + window.scrollX + 200;
           const startY = ufoY; 
 
           const newMission: AlienMission = {
@@ -370,13 +370,13 @@ export const ShootingStars: React.FC = () => {
   if (theme !== 'dark') return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-30 overflow-hidden" aria-hidden="true">
+    <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden" aria-hidden="true">
       <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
 
       {/* BMW i7 Car */}
       {mission && (
         <div
-          className="fixed pointer-events-none z-40"
+          className="absolute pointer-events-none z-40"
           style={{
             left: `${mission.ufoX}px`,
             top: `${mission.ufoY}px`,
@@ -400,7 +400,7 @@ export const ShootingStars: React.FC = () => {
       {/* 👽 High Quality Animated Character */}
       {mission && (
           <div
-            className="fixed pointer-events-none z-50"
+            className="absolute pointer-events-none z-50"
             style={{
               left: `${mission.alienX}px`,
               top: `${mission.alienY}px`,
