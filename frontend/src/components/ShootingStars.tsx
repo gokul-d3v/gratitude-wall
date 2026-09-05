@@ -415,13 +415,15 @@ export const ShootingStars: React.FC = () => {
 
               {/* Custom Character Waving Video */}
               <video 
-                src="/charecter.webm" 
                 autoPlay 
                 loop 
                 muted 
                 playsInline
                 className="w-auto h-[120px] drop-shadow-2xl" 
-              />
+              >
+                <source src="/charecter.mp4" type='video/mp4; codecs="hvc1"' />
+                <source src="/charecter.webm" type="video/webm" />
+              </video>
             </div>
           </div>
         )}
