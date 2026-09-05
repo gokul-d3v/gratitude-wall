@@ -381,12 +381,45 @@ export const ShootingStars: React.FC = () => {
           }}
         >
           <div className="relative flex flex-col items-center drop-shadow-2xl">
-            {/* BMW i7 Image */}
-            <img 
-              src="/bmw-i7.png" 
-              alt="BMW i7" 
-              className="w-[180px] h-auto object-contain" 
-            />
+            {/* BMW i7 Image with Blinking Headlights */}
+            <div className="relative">
+              <img 
+                src="/bmw-i7.png" 
+                alt="BMW i7" 
+                className="w-[180px] h-auto object-contain relative z-10" 
+              />
+              
+              {/* Headlights only blink when the car is fully parked (alien waving) */}
+              <style>
+                {`
+                  @keyframes headlight-flash {
+                    0%, 40%, 100% { opacity: 0.1; transform: scale(0.8); }
+                    10%, 30% { opacity: 1; transform: scale(1.2); }
+                  }
+                  .animate-headlight {
+                    animation: headlight-flash 3s infinite ease-in-out;
+                  }
+                `}
+              </style>
+              
+              {/* Near Headlight (Passenger side) */}
+              <div 
+                className="absolute bg-white rounded-full blur-[2px] z-20 animate-headlight"
+                style={{
+                  left: '70%', top: '56%', width: '16px', height: '6px',
+                  boxShadow: '0 0 15px 6px rgba(255, 255, 255, 0.9), 0 0 35px 15px rgba(125, 211, 252, 0.7)'
+                }}
+              />
+              {/* Far Headlight (Driver side) */}
+              <div 
+                className="absolute bg-white rounded-full blur-[1px] z-20 animate-headlight"
+                style={{
+                  left: '91%', top: '55%', width: '10px', height: '4px',
+                  boxShadow: '0 0 10px 4px rgba(255, 255, 255, 0.9), 0 0 25px 10px rgba(125, 211, 252, 0.7)',
+                  animationDelay: '0.1s'
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
