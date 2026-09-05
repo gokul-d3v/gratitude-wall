@@ -83,11 +83,12 @@ export const ChromaKeyVideo: React.FC<ChromaKeyVideoProps> = ({ videoSrc, classN
   }, []);
 
   return (
-    <div className={`relative ${className}`}>
+    <div className="relative flex justify-center items-center">
+      {/* Invisible video defines the exact DOM intrinsic size */}
       <video
         ref={videoRef}
         src={videoSrc}
-        className="hidden"
+        className={`opacity-0 pointer-events-none ${className}`}
         crossOrigin="anonymous"
         playsInline
         muted
@@ -95,9 +96,10 @@ export const ChromaKeyVideo: React.FC<ChromaKeyVideoProps> = ({ videoSrc, classN
         loop
         {...props}
       />
+      {/* Canvas overlays perfectly on top */}
       <canvas
         ref={canvasRef}
-        className="w-full h-full object-contain drop-shadow-2xl"
+        className={`absolute top-0 left-0 w-full h-full object-contain drop-shadow-2xl`}
       />
     </div>
   );
